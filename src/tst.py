@@ -4,7 +4,7 @@ from genetic.decoding.real_number import RealNumberDecoding
 from genetic.elitism.elitism import Elitism
 from genetic.initialization.real_number import RealNumberInitialization
 from genetic.mutation.creep import CreepMutation
-from genetic.selection.tournament_selection import TournamentSelection
+from genetic.selection.tournament import TournamentSelection
 from genetic.stats import average_fitness
 
 g = lambda x: (1 + (x[0] + x[1] + 1) ** 2 * (19 - 14 * x[0] + 3 * x[0] ** 2 - 14 * x[1] + 6 * x[0] * x[1] + 3 * x[1] ** 2))\

@@ -6,7 +6,7 @@ from genetic.decoding.real_number import RealNumberDecoding
 from genetic.elitism.elitism import Elitism
 from genetic.initialization.real_number import RealNumberInitialization
 from genetic.mutation.creep import CreepMutation
-from genetic.selection.tournament_selection import TournamentSelection
+from genetic.selection.tournament import TournamentSelection
 from stats import *
 
 import random
