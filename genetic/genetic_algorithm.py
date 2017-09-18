@@ -1,12 +1,12 @@
 import numpy as np
 from itertools import count, imap, chain
 
-from TournamentSelection import TournamentSelection
-from SinglePointCrossover import SinglePointCrossover
-from CreepMutation import CreepMutation
-from Elitism import Elitism
-from RealNumberDecoding import RealNumberDecoding
-from RealNumberInitialization import RealNumberInitialization
+from tournament_selection import TournamentSelection
+from single_point_crossover import SinglePointCrossover
+from creep_mutation import CreepMutation
+from elitism import Elitism
+from real_number_decoding import RealNumberDecoding
+from real_number_initialization import RealNumberInitialization
 
 from genetic_algorithm_stats import *
 
@@ -132,5 +132,5 @@ if __name__ == "__main__":
     #     print str(p.generation) + ": " + str(p.best_fitness)
     #     if p.generation == 100:
     #         print p.best_variables
-    # ga.run(100, callback)
+    # genetic.run(100, callback)
     print "Average fitness over 200 runs:" + str(average_fitness(ga, 100, 200))
