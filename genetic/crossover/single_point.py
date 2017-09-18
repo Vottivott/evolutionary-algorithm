@@ -17,7 +17,7 @@ class SinglePointCrossover:
                 np.vstack((b[:crossover_point], a[crossover_point:]))
             )
         else:
-            return (np.copy(a),np.copy(b))
+            return (np.copy(a),np.copy(b)) # important to return COPIES, not the original
 
 if __name__ == "__main__":
     a = np.array([[1], [2], [3],[4]])

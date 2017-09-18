@@ -2,9 +2,12 @@ import numpy as np
 from itertools import count, imap, chain
 
 from genetic.crossover.single_point import SinglePointCrossover
+from genetic.decoding.binary import BinaryDecoding
 from genetic.decoding.real_number import RealNumberDecoding
 from genetic.elitism.elitism import Elitism
+from genetic.initialization.binary import BinaryInitialization
 from genetic.initialization.real_number import RealNumberInitialization
+from genetic.mutation.binary import BinaryMutation
 from genetic.mutation.creep import CreepMutation
 from genetic.selection.tournament import TournamentSelection
 from stats import *
@@ -45,7 +48,7 @@ class GeneticAlgorithm:
     The crossover algorithm is itself responsible
     for the decision of whether crossover should take place,
     for instance with a specified crossover_probability,
-    and otherwise simply returns the input pair as it is.
+    and otherwise simply returns (copies of) the chromosomes in the pair.
     The same is true for the mutation algorithm.
 
 
@@ -55,7 +58,7 @@ class GeneticAlgorithm:
         :param population_size: typically between 30 and 1000 (must be even)
         :param fitness_function: function, or object with function, evaluate(variables, generation) returning the fitness score
         :param selection_algorithm: function, or object with function, select(fitness_scores, generation) returning the selected chromosome
-        :param crossover_algorithm: function, or object with function, cross(pair, generation) returning the resulting crossed pair
+        :param crossover_algorithm: function, or object with function, cross(pair, generation) returning the resulting crossed pair (if unchanged, return COPIES, not the original vectors)
         :param mutation_algorithm: function, or object with function, mutate(chromosome, generation) modifying the chromosome in-place
         :param elitism_algorithm: function, or object with function, elitism(population, best_individual, generation) modifying the population in-place
         :param decoding_algorithm: function, or object with function, decode(chromosome) returning a column vector of variable values
@@ -91,7 +94,7 @@ class GeneticAlgorithm:
             decoded_variable_vectors = map(self.decode, population)
             fitness_scores = [self.evaluate(vector, generation) for vector in decoded_variable_vectors]
             best_individual_index = max(xrange(len(fitness_scores)), key=fitness_scores.__getitem__)
-            best_individual = population[best_individual_index]
+            best_individual = np.copy(population[best_individual_index])
 
             # Call optional callback function and check if finished
 
@@ -119,17 +122,26 @@ if __name__ == "__main__":
     g = lambda x: (1 + (x[0] + x[1] + 1) ** 2 * (19 - 14 * x[0] + 3 * x[0] ** 2 - 14 * x[1] + 6 * x[0] * x[1] + 3 * x[1] ** 2))\
                  *(30 + (2 * x[0] - 3 * x[1]) ** 2 * (18 - 32 * x[0] + 12 * x[0] ** 2 + 48 * x[1] - 36 * x[0] * x[1] + 27 * x[1] ** 2))
     fitness_function = lambda x,generation: 1.0 / g(x)
+
+    vars = 2
+    var_size = 8
+    m = vars * var_size
+
     ga = GeneticAlgorithm(30,
                           fitness_function,
-                          TournamentSelection(0.7, 3),
-                          SinglePointCrossover(0.8),
-                          CreepMutation(0.02, 0.8, 0.04, True),
+                          TournamentSelection(0.75, 8),
+                          SinglePointCrossover(1),
+                          BinaryMutation(7.0 / m),
                           Elitism(1),
-                          RealNumberDecoding(5),
-                          RealNumberInitialization(2))
-    # def callback(p):
-    #     print str(p.generation) + ": " + str(p.best_fitness)
-    #     if p.generation == 100:
-    #         print p.best_variables
-    # genetic.run(100, callback)
-    print "Average fitness over 200 runs:" + str(average_fitness(ga, 100, 200))
+                          BinaryDecoding(5, vars, var_size),
+                          BinaryInitialization(m))
+
+
+    def callback(p):
+        if p.generation == 100:
+            print str(p.generation) + ": " + str(p.best_fitness)
+            print p.best_variables
+
+
+    ga.run(100, callback)
+    # print "Average fitness over 200 runs:" + str(average_fitness(ga, 100, 200))
