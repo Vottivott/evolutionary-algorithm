@@ -1,14 +1,13 @@
 import numpy as np
 from itertools import count, imap, chain
 
-from tournament_selection import TournamentSelection
-from single_point_crossover import SinglePointCrossover
-from creep_mutation import CreepMutation
-from elitism import Elitism
-from real_number_decoding import RealNumberDecoding
-from real_number_initialization import RealNumberInitialization
-
-from genetic_algorithm_stats import *
+from genetic.crossover.single_point import SinglePointCrossover
+from genetic.decoding.real_number import RealNumberDecoding
+from genetic.elitism.elitism import Elitism
+from genetic.initialization.real_number import RealNumberInitialization
+from genetic.mutation.creep import CreepMutation
+from genetic.selection.tournament_selection import TournamentSelection
+from stats import *
 
 import random
 
