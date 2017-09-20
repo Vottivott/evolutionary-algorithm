@@ -21,8 +21,8 @@ m = vars * var_size
 
 ga = GeneticAlgorithm(30,
                       fitness_function,
-                      TournamentSelection(0.75, 8),
-                      SinglePointCrossover(1),
+                      TournamentSelection(0.75, 3),
+                      SinglePointCrossover(0.9),
                       BinaryMutation(7.0/m),
                       Elitism(1),
                       BinaryDecoding(5,vars,var_size),
