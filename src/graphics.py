@@ -8,7 +8,7 @@ import pyglet.media
 class Graphics:
     def __init__(self):
         pygame.init()
-        self.size = w, h = 1200, 400
+        self.size = w, h = 1200, 500
         self.screen = pygame.display.set_mode(self.size)
         self.clock = pygame.time.Clock()
         self.view_offset = w/7#17.0

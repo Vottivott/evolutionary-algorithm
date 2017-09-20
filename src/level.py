@@ -28,7 +28,8 @@ def generate_level(length):
     ceiling = basic_shape + _get_randcurve(length, 1.5*n, 10) + _get_randcurve(length, 1.7*n, 4)
     ceiling = 125 + _smoothify(ceiling)
     ground = basic_shape + _get_randcurve(length, 1.5*n, 18) + _get_randcurve(length, 1.7*n, 8)
-    ground = 305 + _smoothify(ground)
+    ground = 305 + _smoothify(ground) #prev 305
+    ceiling[-1] = ground[-1]
 
     return Level(ceiling, ground)
 
@@ -49,7 +50,9 @@ class Level:
             return True
 
     def collides_with_point(self, point):
-        return point[1] < self.ceiling[int(point[0])] or point[1] > self.ground[int(point[0])]
+        x = int(point[0])
+        return x >= len(self.ceiling) or \
+               (point[1] < self.ceiling[x] or point[1] > self.ground[x])
 
 
     def y_center(self, x):

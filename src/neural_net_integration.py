@@ -23,14 +23,14 @@ class NeuralNetIntegration:
         return self.neural_network.get_total_number_of_weights()
 
 def evocopter_neural_net_integration(copter_simulation):
-    count_length = 5 # number of steps per count
-    num_counters = 5 # number of counter inputs
+    count_length = 4 # number of steps per count
+    num_counters = 7 # number of counter inputs
     input_layer_size = 0
     input_layer_size += len(copter_simulation.radar_system.radars)
     input_layer_size += 2 # velocity in up-direction + velocity in down-direction
     input_layer_size += num_counters # velocity in up-direction + velocity in down-direction
 
-    middle_layer_size = 15
+    middle_layer_size = 30
 
     output_layer_size = 1
 
