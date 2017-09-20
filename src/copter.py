@@ -6,6 +6,7 @@ class Copter(Rectangular):
         Rectangular.__init__(self, position, size, size)
         self.velocity = np.array([[10.0],[0.0]])
         self.exploded = False
+        self.firing = False
 
     def step(self, level, gravity, fire_force, delta_time):
         acceleration = gravity + fire_force

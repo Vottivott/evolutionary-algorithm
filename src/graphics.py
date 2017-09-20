@@ -40,6 +40,7 @@ class Graphics:
         self.draw_smoke(copter_simulation)
         self.draw_copter(copter_simulation.copter)
         self.draw_level(copter_simulation)
+        self.draw_radars(copter_simulation)
 
         pygame.display.flip()
         self.clock.tick(60)
@@ -86,6 +87,11 @@ class Graphics:
         for particle in copter_simulation.smoke.particles:
             self.draw_smoke_particle(particle, copter_simulation)
 
+    def np_to_screen_coord(self, np_vector, copter_simulation):
+        x = np_vector[0] - copter_simulation.copter.get_x()
+        y = np_vector[1]
+        return (self.view_offset + x, y)
+
     def draw_smoke_particle(self, particle, copter_simulation):
         x = particle.get_left() - copter_simulation.copter.get_x()
         y = particle.get_top()
@@ -94,3 +100,15 @@ class Graphics:
         s.fill((200, 0, 0))
         self.screen.blit(s, (self.view_offset + x, y))
         #pygame.draw.rect(self.screen, (255,180,0), pygame.Rect(self.view_offset + x, y, particle.width, particle.height))
+
+    def draw_radars(self, copter_simulation):
+        if not copter_simulation.copter.exploded:
+            for radar in copter_simulation.radar_system.radars:
+                point, dist = radar.point, radar.dist
+                if (point,dist) == (None,None):
+                    point,dist = radar.read(copter_simulation.copter.position, copter_simulation.level)
+                if dist < 1:
+                    dist = 0.5 + dist/2 # for drawing only
+                    color = (255, int(150+(255-150)*dist), int(dist*255))
+                    pygame.draw.circle(self.screen, color, self.np_to_screen_coord(point, copter_simulation), 5)
+

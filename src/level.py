@@ -48,6 +48,10 @@ class Level:
         if self.ground_collides_with(rectangular):
             return True
 
+    def collides_with_point(self, point):
+        return point[1] < self.ceiling[int(point[0])] or point[1] > self.ground[int(point[0])]
+
+
     def y_center(self, x):
         return (self.ceiling[x] + self.ground[x]) / 2.0
 
