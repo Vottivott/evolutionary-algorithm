@@ -10,7 +10,7 @@ class Graphics:
         self.size = w, h = 1200, 400
         self.screen = pygame.display.set_mode(self.size)
         self.clock = pygame.time.Clock()
-        self.view_offset = w/7#17.0
+        self.view_offset = w/17.0
 
     def update(self, copter_simulation):
         for event in pygame.event.get():

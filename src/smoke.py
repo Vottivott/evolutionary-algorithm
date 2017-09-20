@@ -42,17 +42,14 @@ class SmokeParticle(Rectangular):
         self.decay_rate = decay_rate
         self.start_size = start_size
         self.expansion = end_size - start_size
-        self.has_bounced = False # Allow only one bounce to prevent getting stuck in ground
 
     def step(self, level, delta_time):
         self.position += self.velocity * delta_time
         self.alpha -= self.decay_rate * delta_time
         self.width = self.height = self.start_size + self.expansion*(1-self.alpha)
-        if not self.has_bounced:
-            bounce_direction = level.bounce_direction(self.velocity, self)
-            if bounce_direction is not None:
-                self.velocity = (bounce_direction * self.velocity.T.dot(self.velocity)**0.5)
-                self.has_bounced = True
+        # bounce_direction = level.bounce_direction(self.velocity, self)
+        # if bounce_direction is not None:
+        #     self.position = (bounce_direction * self.velocity.dot(self.velocity.T)**0.5)
 
 
         if self.alpha < 0:
