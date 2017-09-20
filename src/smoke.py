@@ -16,13 +16,16 @@ class Smoke:
 
     def step(self, level, delta_time, firing):
         self.time += delta_time * self.particle_rate
+        sputter = False
         while self.time > 1.0 and firing:
             self.create_particle()
             self.time -= 1
+            sputter = True
 
         for particle in list(self.particles):
             if not particle.step(level, delta_time):
                 self.particles.remove(particle)
+        return sputter
 
     def create_particle(self):
         angle_range = 2.0/3*np.pi

@@ -16,6 +16,8 @@ class CopterSimulation:
         self.space_pressed = False
         self.force_when_fire_is_on = np.array([[0.0],[0.2*-20]])
         self.force_when_fire_is_off = np.array([[0.0],[0.0]])
+        self.time_since_last_sputter_sound = 0
+        self.sputter_sound_interval = 10
 
     def run(self, graphics=None, user_control=False):
         if graphics:
@@ -24,7 +26,7 @@ class CopterSimulation:
             if self.copter.velocity[0] < 0.1:
                 return True
             if graphics and user_control:
-                firing = self.space_pressed
+                firing = self.space_pressed and not self.copter.exploded
             else:
                 firing = True
             if firing:
@@ -32,13 +34,20 @@ class CopterSimulation:
             else:
                 fire_force = self.force_when_fire_is_off
             still_flying = self.copter.step(self.level, self.gravity, fire_force, self.delta_t)
-            if not still_flying:
-                if not self.copter.exploded:
-                    self.smoke.create_explosion()
-                    self.copter.exploded = True
-                firing = False
             if graphics:
-                self.smoke.step(self.level, self.delta_t, firing)
+                if not still_flying:
+                    if not self.copter.exploded:
+                        self.smoke.create_explosion()
+                        graphics.play_crash_sound()
+                        self.copter.exploded = True
+                    firing = False
+                sputter = self.smoke.step(self.level, self.delta_t, firing)
+                if sputter:
+                    if self.time_since_last_sputter_sound >= self.sputter_sound_interval:
+                        graphics.play_sputter_sound()
+                        self.time_since_last_sputter_sound = 0
+                        self.sputter_sound_interval = 3 + np.random.random()*2
+                self.time_since_last_sputter_sound += 1
                 self.space_pressed = graphics.update(self)
 
 

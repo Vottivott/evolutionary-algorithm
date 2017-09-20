@@ -3,7 +3,8 @@ from itertools import izip
 import pygame, sys
 from pygame.locals import *
 import numpy as np
-
+import pyglet.media
+# import pyglet
 class Graphics:
     def __init__(self):
         pygame.init()
@@ -11,6 +12,11 @@ class Graphics:
         self.screen = pygame.display.set_mode(self.size)
         self.clock = pygame.time.Clock()
         self.view_offset = w/7#17.0
+        self.sputter_sound = pyglet.media.StaticSource(pyglet.media.load('sputter_sound.wav'))#pygame.mixer.Sound('beep.wav')
+        self.sound_player = pyglet.media.Player()
+        self.crash_sound = pyglet.media.StaticSource(pyglet.media.load('crash_sound.wav'))#pyglet.media.load('crash_sound.wav')
+        # self.crash_sound = pyglet.resource.media('crash_sound.wav')#pygame.mixer.Sound('crash_sound.wav')
+        # effect.play()
 
     def update(self, copter_simulation):
         for event in pygame.event.get():
@@ -63,6 +69,14 @@ class Graphics:
         #     pygame.draw.lines(self.screen, (255, color, 0), False, point, 2)
         pygame.draw.polygon(self.screen, c_cave, [[0,0]] + ceiling_coords + [[self.size[0],0]])
         pygame.draw.polygon(self.screen, c_cave, [[0,self.size[1]]] + ground_coords + [[self.size[0],self.size[1]]])
+
+    def play_crash_sound(self):
+        # self.sound_player.queue(self.crash_sound)
+        self.crash_sound.play()
+
+    def play_sputter_sound(self):
+        self.sputter_sound.play()
+        # self.sputter_sound.play()
 
     def draw_copter(self, copter):
         if not copter.exploded:
