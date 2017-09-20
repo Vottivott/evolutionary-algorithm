@@ -48,6 +48,9 @@ class Level:
         if self.ground_collides_with(rectangular):
             return True
 
+    def y_center(self, x):
+        return (self.ceiling[x] + self.ground[x]) / 2.0
+
     def bounce_direction(self, direction, rectangular):
         if self.ceiling_collides_with(rectangular):
             slope = self.calculate_slope(rectangular, self.ceiling)

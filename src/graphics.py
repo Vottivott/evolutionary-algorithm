@@ -27,8 +27,7 @@ class Graphics:
         # s.fill((0, 0, 0))  # this fills the entire surface
         # self.screen.blit(s, (0, 0))  # (0,0) are the top-left coordinates
 
-        keys = pygame.key.get_pressed()  # checking pressed keys
-        # if keys[pygame.K_SPACE]:
+
         #     pointlists = get_curve()
         #     color = min(np.random.normal(200, 30, 1), 255)
 
@@ -38,6 +37,9 @@ class Graphics:
 
         pygame.display.flip()
         self.clock.tick(60)
+
+        keys = pygame.key.get_pressed()  # checking pressed keys
+        return keys[pygame.K_SPACE]
 
     def draw_level(self, copter_simulation):
         level = copter_simulation.level
@@ -63,8 +65,8 @@ class Graphics:
         pygame.draw.polygon(self.screen, c_cave, [[0,self.size[1]]] + ground_coords + [[self.size[0],self.size[1]]])
 
     def draw_copter(self, copter):
-        # pygame.draw.rect(self.screen, (255,180,0), pygame.Rect(copter.get_x(), copter.get_y(), copter.width, copter.height))
-        pygame.draw.rect(self.screen, (175,20,0), pygame.Rect(self.view_offset-copter.width/2.0, copter.get_top(),    copter.width, copter.height))
+        if not copter.exploded:
+            pygame.draw.rect(self.screen, (175,20,0), pygame.Rect(self.view_offset-copter.width/2.0, copter.get_top(),    copter.width, copter.height))
 
     def draw_smoke(self, copter_simulation):
         for particle in copter_simulation.smoke.particles:
@@ -75,6 +77,6 @@ class Graphics:
         y = particle.get_top()
         s = pygame.Surface((particle.width, particle.height))  # the size of your rect
         s.set_alpha(int(particle.alpha * 255))
-        s.fill((255, 255, 255))
+        s.fill((200, 0, 0))
         self.screen.blit(s, (self.view_offset + x, y))
         #pygame.draw.rect(self.screen, (255,180,0), pygame.Rect(self.view_offset + x, y, particle.width, particle.height))
