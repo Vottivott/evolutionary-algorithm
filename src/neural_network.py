@@ -29,7 +29,22 @@ class NeuralNetwork:
         self.W = [None] + [initial_weights(size, prev_size) for size, prev_size in zip(layer_sizes[1:],layer_sizes)]
         self.b = [None] + [np.zeros((size,1)) for size in layer_sizes[1:]]
         self.activation_function = activation_function
+        self.number_of_weights = sum(size*(prev_size+1) for size, prev_size in zip(layer_sizes[1:],layer_sizes))
 
+    def set_weights_from_single_vector(self, vector):
+        index = 0
+        for layer in range(1,self.L):
+            size = self.layer_sizes[layer]
+            prev_size = self.layer_sizes[layer-1]
+            new_index = index + size*prev_size
+            self.W[layer] = vector[index:new_index].reshape((size, prev_size))
+            index = new_index
+            new_index = index + size
+            self.b[layer] = vector[index:new_index]
+            index = new_index
+
+    def get_total_number_of_weights(self):
+        return self.number_of_weights
     
 
     def forward_pass(self, z, a, x):
