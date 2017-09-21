@@ -11,7 +11,7 @@ from genetic.selection.tournament import TournamentSelection
 from graphics import Graphics
 from level import generate_level
 from neural_net_integration import evocopter_neural_net_integration
-from population_io import save_population, load_population
+from population_data_io import save_population_data, load_population_data
 from radar_system import RadarSystem
 from smoke import Smoke
 
@@ -46,7 +46,7 @@ class CopterSimulation:
         while 1:
             if user_control and graphics:
                 self.copter.firing = self.space_pressed and not self.copter.exploded
-            elif self.neural_net_integration is not None:
+            elif self.neural_net_integration is not None and not self.copter.exploded:
                 self.neural_net_integration.run_network(self)
             else:
                 self.copter.firing = False
@@ -77,9 +77,10 @@ class CopterSimulation:
                 return self.copter.get_x()  # Return the distance travelled = the fitness score
 
 if __name__ == "__main__":
+    level_length = 100000
     graphics = Graphics()
     view_offset = 1200/7.0
-    level = generate_level(30000)
+    level = generate_level(level_length)
     s = CopterSimulation(level, Copter(np.array([[view_offset], [level.y_center(view_offset)]]), 20), RadarSystem())
     neural_net_integration = evocopter_neural_net_integration(s)
     s.set_neural_net_integration(neural_net_integration)
@@ -90,7 +91,7 @@ if __name__ == "__main__":
         def evaluate(self, variables, generation):
             if generation != self.last_generation:
                 last_generation = generation
-                s.level = generate_level(30000) # generate a new level for every generation
+                s.level = generate_level(level_length) # generate a new level for every generation
             neural_net_integration.set_weights(variables)
             s.copter = Copter(np.array([[view_offset], [level.y_center(view_offset)]]), 20) # new copter
             return s.run()
@@ -132,7 +133,7 @@ if __name__ == "__main__":
         # if p.generation == 100:
         average_fitness = sum(p.fitness_scores) / len(p.fitness_scores)
         print str(p.generation) + ": " + str(p.best_fitness) + "       average fitness in population: " + str(average_fitness)
-        save_population(subfoldername, p.population, p.generation)
+        save_population_data(subfoldername, p, keep_last_n=10)
 
         # f.append(p.best_fitness)
         # avg_f.append(average_fitness)
@@ -146,20 +147,29 @@ if __name__ == "__main__":
 
         if p.generation % 10 == 0:
             neural_net_integration.set_weights(p.best_variables)
-            s.copter = Copter(np.array([[view_offset], [level.y_center(view_offset)]]), 20)  # new copter
+            s.copter = Copter(np.array([[view_offset], [s.level.y_center(view_offset)]]), 20)  # new copter
             return s.run(graphics)
         # print p.best_variables
 
 
     user_play = False
+    run_loaded_chromosome = True
 
     if user_play:
         while 1:
-            s.level = generate_level(30000)
-            s.copter = Copter(np.array([[view_offset], [level.y_center(view_offset)]]), 20)
+            s.level = generate_level(level_length)
+            s.copter = Copter(np.array([[view_offset], [s.level.y_center(view_offset)]]), 20)
             s.run(graphics, user_control=True)
     else:
-        ga.run(None, callback, population=load_population(subfoldername, 11))
+        if run_loaded_chromosome:
+            while 1:
+                s.level = generate_level(level_length)
+                s.copter = Copter(np.array([[view_offset], [s.level.y_center(view_offset)]]), 20)
+                population_data = load_population_data(subfoldername, 118)
+                neural_net_integration.set_weights(population_data.best_variables)
+                s.run(graphics)
+        else:
+            ga.run(None, callback, population_data=load_population_data(subfoldername, 120))
 
 
 

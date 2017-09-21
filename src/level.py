@@ -78,15 +78,19 @@ class Level:
         return len(self.ceiling)
 
     def ceiling_collides_with(self, rectangular):
-        return self.ceiling[int(rectangular.get_x())] > rectangular.get_top()
+        x = int(rectangular.get_x())
+        return x >= len(self.ceiling) or self.ceiling[x] > rectangular.get_top()
 
     def ground_collides_with(self, rectangular):
-        return self.ground[int(rectangular.get_x())] < rectangular.get_bottom()
+        x = int(rectangular.get_x())
+        return x >= len(self.ground) or self.ground[x] < rectangular.get_bottom()
 
     def calculate_slope(self, rectangular, curve):
         x = rectangular.get_x()
         lx = int(x)
         rx = lx + 1
+        if rx >= len(curve):
+            return 100000.0
         return curve[rx] - curve[lx]
 
 

@@ -27,8 +27,7 @@ class PopulationData:
     """
     Data from a run of a genetic algorithm, containing information about the current population
     """
-    def __init__(self, genetic_algorithm, generation, population, decoded_variable_vectors, fitness_scores, best_individual_index):
-        self.genetic_algorithm = genetic_algorithm
+    def __init__(self, generation, population, decoded_variable_vectors, fitness_scores, best_individual_index):
         self.generation = generation
         self.population = population
         self.decoded_variable_vectors = decoded_variable_vectors
@@ -75,18 +74,21 @@ class GeneticAlgorithm:
         self.decode = extract_function(decoding_algorithm, "decode")
         self.initialize_chromosome = extract_function(initialization_algorithm, "initialize_chromosome")
 
-    def run(self, num_generations=None, generation_callback=None, population=None):
+    def run(self, num_generations=None, generation_callback=None, population_data=None):
         """
         :param num_generations: the number of generations, or None to continue indefinitely
         :param generation_callback: an optional function generation_callback(population_data) returning a boolean True to continue or False to stop.
-        :param population: if None, a new population is initialized using the specified initialization_algorithm. Otherwise, the specified population is used.
+        :param population_data: if None, a new population is initialized using the specified initialization_algorithm. Otherwise, the population in the specified population data is used.
         :return: an instance of PopulationData with information about the final population
         """
         # Initialize population
-        if population is None:
+        if population_data is None:
             population = [self.initialize_chromosome() for i in range(self.population_size)]
+            generation = 1
+        else:
+            population = population_data.population
+            generation = population_data.generation + 1
 
-        generation = 1
         while True:
 
             # Evaluate the current generation
@@ -98,7 +100,7 @@ class GeneticAlgorithm:
 
             # Call optional callback function and check if finished
 
-            data = PopulationData(self, generation, population, decoded_variable_vectors, fitness_scores, best_individual_index)
+            data = PopulationData(generation, population, decoded_variable_vectors, fitness_scores, best_individual_index)
             if (generation_callback is not None and generation_callback(data) is False) or generation == num_generations:
                 return data
 
