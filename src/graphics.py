@@ -15,6 +15,13 @@ class Graphics:
         self.sputter_sound = pyglet.media.StaticSource(pyglet.media.load('sputter_sound.wav'))#pygame.mixer.Sound('beep.wav')
         self.sound_player = pyglet.media.Player()
         self.crash_sound = pyglet.media.StaticSource(pyglet.media.load('crash_sound.wav'))#pyglet.media.load('crash_sound.wav')
+        self.main_copter_smoke_color = (200, 0, 0)
+        self.main_copter_color = (175,20,0)
+        self.enemy_smoke_color = (40, 40, 40)
+        self.enemy_color = (30, 30, 30)
+        # TEST
+        # self.main_copter_color = self.enemy_color
+        # self.main_copter_smoke_color = self.enemy_smoke_color
         # self.crash_sound = pyglet.resource.media('crash_sound.wav')#pygame.mixer.Sound('crash_sound.wav')
         # effect.play()
 
@@ -82,7 +89,7 @@ class Graphics:
 
     def draw_copter(self, copter):
         if not copter.exploded:
-            pygame.draw.rect(self.screen, (175,20,0), pygame.Rect(self.view_offset-copter.width/2.0, copter.get_top(),    copter.width, copter.height))
+            pygame.draw.rect(self.screen, self.main_copter_color, pygame.Rect(self.view_offset-copter.width/2.0, copter.get_top(),    copter.width, copter.height))
 
     def draw_smoke(self, copter_simulation):
         for particle in copter_simulation.smoke.particles:
@@ -98,7 +105,7 @@ class Graphics:
         y = particle.get_top()
         s = pygame.Surface((particle.width, particle.height))  # the size of your rect
         s.set_alpha(int(particle.alpha * 255))
-        s.fill((200, 0, 0))
+        s.fill(particle.color)
         self.screen.blit(s, (self.view_offset + x, y))
         #pygame.draw.rect(self.screen, (255,180,0), pygame.Rect(self.view_offset + x, y, particle.width, particle.height))
 

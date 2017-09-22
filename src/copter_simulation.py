@@ -42,7 +42,7 @@ class CopterSimulation:
 
     def run(self, graphics=None, user_control=False):
         if graphics:
-            self.smoke = Smoke(self.copter.position, 4, 0.05, self.gravity)
+            self.smoke = Smoke(self.copter.position, 4, 0.05, self.gravity, graphics.main_copter_smoke_color)
         while 1:
             if user_control and graphics:
                 self.copter.firing = self.space_pressed and not self.copter.exploded

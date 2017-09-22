@@ -4,7 +4,7 @@ from rectangular import Rectangular
 
 
 class Smoke:
-    def __init__(self, position, particle_rate, decay_rate, gravity):
+    def __init__(self, position, particle_rate, decay_rate, gravity, color):
         self.position = position
         self.particles = []
         self.particle_rate = particle_rate
@@ -13,6 +13,7 @@ class Smoke:
         self.particle_start_size = 5
         self.particle_end_size = 30
         self.gravity = gravity
+        self.color = color
 
     def step(self, level, delta_time, firing):
         self.time += delta_time * self.particle_rate
@@ -36,7 +37,7 @@ class Smoke:
         speed_range = 5.0
         speed = min_speed + speed_range * np.random.random()
         velocity = direction_vector * speed
-        p = SmokeParticle(self.position, velocity, self.decay_rate, self.particle_start_size, self.particle_end_size, np.array([[0.0],[0.0]]), False)
+        p = SmokeParticle(self.position, velocity, self.decay_rate, self.particle_start_size, self.particle_end_size, np.array([[0.0],[0.0]]), False, self.color)
         self.particles.append(p)
 
     def create_explosion(self):
@@ -53,12 +54,12 @@ class Smoke:
         speed = min_speed + speed_range * np.random.random()
         velocity = direction_vector * speed
         size = 10
-        p = SmokeParticle(self.position, velocity, 0.0, size, size, self.gravity, True)
+        p = SmokeParticle(self.position, velocity, 0.0, size, size, self.gravity, True, self.color)
         self.particles.append(p)
 
 
 class SmokeParticle(Rectangular):
-    def __init__(self, position, velocity, decay_rate, start_size, end_size, gravity, freeze_on_bounce):
+    def __init__(self, position, velocity, decay_rate, start_size, end_size, gravity, freeze_on_bounce, color):
         Rectangular.__init__(self, np.copy(position), start_size, start_size)
         self.velocity = np.array(velocity)
         self.alpha = 1.0
@@ -68,6 +69,7 @@ class SmokeParticle(Rectangular):
         self.has_bounced = False # Allow only one bounce to prevent getting stuck in ground
         self.gravity = gravity
         self.freeze_on_bounce = freeze_on_bounce
+        self.color = color
 
     def step(self, level, delta_time):
         if not (self.freeze_on_bounce and self.has_bounced):
