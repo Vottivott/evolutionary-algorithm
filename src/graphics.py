@@ -15,6 +15,8 @@ class Graphics:
         self.sputter_sound = pyglet.media.StaticSource(pyglet.media.load('sputter_sound.wav'))#pygame.mixer.Sound('beep.wav')
         self.sound_player = pyglet.media.Player()
         self.crash_sound = pyglet.media.StaticSource(pyglet.media.load('crash_sound.wav'))#pyglet.media.load('crash_sound.wav')
+        self.shot_sound = pyglet.media.StaticSource(pyglet.media.load('shot_sound.wav'))
+        self.enemy_hit_sound = pyglet.media.StaticSource(pyglet.media.load('enemy_hit_sound.wav'))
         self.main_copter_smoke_color = (200, 0, 0)
         self.main_copter_color = (175,20,0)
         self.enemy_smoke_color = (40, 40, 40)
@@ -34,7 +36,7 @@ class Graphics:
             #     trace = not trace
 
         self.screen.fill((240, 245, 250))
-        s = pygame.Surface(self.size)  # the size of your rect
+        # s = pygame.Surface(self.size)  # the size of your rect
         # if trace:
         #     s.set_alpha(28)  # alpha level
         # s.fill((0, 0, 0))  # this fills the entire surface
@@ -54,7 +56,7 @@ class Graphics:
         self.clock.tick(60)
 
         keys = pygame.key.get_pressed()  # checking pressed keys
-        return keys[pygame.K_SPACE]
+        return keys[pygame.K_SPACE], (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL])
 
     def draw_level(self, copter_simulation):
         level = copter_simulation.level
@@ -86,6 +88,13 @@ class Graphics:
     def play_sputter_sound(self):
         self.sputter_sound.play()
         # self.sputter_sound.play()
+
+    def play_shot_sound(self):
+        self.shot_sound.play()
+
+    def play_enemy_hit_sound(self):
+        self.enemy_hit_sound.play()
+
 
     def draw_copter(self, copter):
         if not copter.exploded:

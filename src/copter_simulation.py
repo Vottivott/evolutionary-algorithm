@@ -29,6 +29,7 @@ class CopterSimulation:
         self.gravity = np.array([[0.0],[0.4*9.8]])
         self.delta_t = 1.0/4
         self.space_pressed = False
+        self.ctrl_pressed = False
         self.force_when_fire_is_on = np.array([[0.0],[0.4*-20]])
         self.force_when_fire_is_off = np.array([[0.0],[0.0]])
         self.time_since_last_sputter_sound = 0
@@ -50,7 +51,7 @@ class CopterSimulation:
                 self.neural_net_integration.run_network(self)
             else:
                 self.copter.firing = False
-            if self.copter.velocity[0] < 0.1:
+            if self.copter.exploded and abs(self.copter.velocity[0]) < 0.1:
                 return True
             if self.copter.firing:
                 fire_force = self.force_when_fire_is_on
@@ -73,7 +74,13 @@ class CopterSimulation:
                         self.time_since_last_sputter_sound = 0
                         self.sputter_sound_interval = 4#3 + np.random.random()*2
                 self.time_since_last_sputter_sound += 1
-                self.space_pressed = graphics.update(self)
+                ctrl_not_previously_pressed = not self.ctrl_pressed
+                self.space_pressed, self.ctrl_pressed = graphics.update(self)
+                if self.ctrl_pressed and ctrl_not_previously_pressed: #TEST
+                    self.copter.recoil()
+                    self.smoke.create_shot_background()
+                    graphics.play_shot_sound()
+
             elif not still_flying:
                 return self.copter.get_x()  # Return the distance travelled = the fitness score
 
