@@ -64,20 +64,21 @@ class CopterSimulation:
                         self.smoke.create_explosion()
                         graphics.play_crash_sound()
                         self.copter.exploded = True
+                        print "Fitness: " + str(self.copter.position[0])
                     firing = False
                 sputter = self.smoke.step(self.level, self.delta_t, self.copter.firing)
                 if sputter:
                     if self.time_since_last_sputter_sound >= self.sputter_sound_interval:
                         graphics.play_sputter_sound()
                         self.time_since_last_sputter_sound = 0
-                        self.sputter_sound_interval = 3 + np.random.random()*2
+                        self.sputter_sound_interval = 4#3 + np.random.random()*2
                 self.time_since_last_sputter_sound += 1
                 self.space_pressed = graphics.update(self)
             elif not still_flying:
                 return self.copter.get_x()  # Return the distance travelled = the fitness score
 
 if __name__ == "__main__":
-    level_length = 100000
+    level_length = 300000
     graphics = Graphics()
     view_offset = 1200/7.0
     level = generate_level(level_length)
@@ -104,7 +105,7 @@ if __name__ == "__main__":
                           CopterFitnessFunction(),
                           TournamentSelection(0.75, 3),
                           SinglePointCrossover(0.9),
-                          BinaryMutation(7.0 / m),
+                          BinaryMutation(2.0 / m),
                           Elitism(2),
                           BinaryDecoding(5, vars, var_size),
                           BinaryInitialization(m))
@@ -145,14 +146,14 @@ if __name__ == "__main__":
         # ax.set_xlim((0, len(f)+1))
         # fig.canvas.draw()
 
-        if p.generation % 10 == 0:
+        if graphics is not None and p.generation % 10 == 0:
             neural_net_integration.set_weights(p.best_variables)
             s.copter = Copter(np.array([[view_offset], [s.level.y_center(view_offset)]]), 20)  # new copter
             return s.run(graphics)
         # print p.best_variables
 
 
-    user_play = False
+    user_play = True
     run_loaded_chromosome = True
 
     if user_play:
@@ -165,7 +166,7 @@ if __name__ == "__main__":
             while 1:
                 s.level = generate_level(level_length)
                 s.copter = Copter(np.array([[view_offset], [s.level.y_center(view_offset)]]), 20)
-                population_data = load_population_data(subfoldername, 118)
+                population_data = load_population_data(subfoldername, 150)
                 neural_net_integration.set_weights(population_data.best_variables)
                 s.run(graphics)
         else:

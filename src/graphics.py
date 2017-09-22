@@ -40,7 +40,8 @@ class Graphics:
         self.draw_smoke(copter_simulation)
         self.draw_copter(copter_simulation.copter)
         self.draw_level(copter_simulation)
-        self.draw_radars(copter_simulation)
+        if False:
+            self.draw_radars(copter_simulation)
 
         pygame.display.flip()
         self.clock.tick(60)
