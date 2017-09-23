@@ -80,5 +80,5 @@ def evocopter_neural_net_integration(copter_simulation):
             copter_simulation.copter_shoot()
         # print should_fire
 
-    return NeuralNetIntegration(layer_sizes, evocopter_input_function, evocopter_output_function)
+    return NeuralNetIntegration(layer_sizes, evocopter_input_function, evocopter_output_function, recurrent=False)
 
