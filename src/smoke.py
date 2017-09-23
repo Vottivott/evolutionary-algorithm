@@ -13,6 +13,7 @@ class Smoke:
         self.particle_start_size = 5
         self.particle_end_size = 30
         self.shot_background_decay_rate = 0.3
+        self.dive_background_decay = 0.6
         self.gravity = gravity
         self.color = color
 
@@ -62,8 +63,6 @@ class Smoke:
         for i in range(18):
             self.create_shot_background_particle()
 
-
-
     def create_shot_background_particle(self):
         angle_range = 0.015 * np.pi
         center_direction = 0
@@ -74,6 +73,24 @@ class Smoke:
         speed = min_speed + speed_range * np.random.random()
         velocity = direction_vector * speed
         p = SmokeParticle(self.position, velocity, self.shot_background_decay_rate, self.particle_start_size, self.particle_end_size, self.gravity, True, self.color)
+        self.particles.append(p)
+
+    def create_dive_background(self):
+        for i in range(10):
+            self.create_dive_background_particle()
+
+
+
+    def create_dive_background_particle(self):
+        angle_range = 0.015 * np.pi
+        center_direction = np.pi/2
+        direction = (center_direction - angle_range / 2) + angle_range * np.random.random()
+        direction_vector = np.array([[np.cos(direction)], [-np.sin(direction)]])
+        min_speed = 30.0
+        speed_range = 5.0
+        speed = min_speed + speed_range * np.random.random()
+        velocity = direction_vector * speed
+        p = SmokeParticle(self.position, velocity, self.dive_background_decay, self.particle_start_size, self.particle_end_size, self.gravity, True, self.color)
         self.particles.append(p)
 
 

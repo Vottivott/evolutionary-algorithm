@@ -12,15 +12,19 @@ class Graphics:
         self.screen = pygame.display.set_mode(self.size)
         self.clock = pygame.time.Clock()
         self.view_offset = w/7#17.0
+        self.enemy_view_offset = 6.0*w/7
         self.sputter_sound = pyglet.media.StaticSource(pyglet.media.load('sputter_sound.wav'))#pygame.mixer.Sound('beep.wav')
         self.sound_player = pyglet.media.Player()
         self.crash_sound = pyglet.media.StaticSource(pyglet.media.load('crash_sound.wav'))#pyglet.media.load('crash_sound.wav')
         self.shot_sound = pyglet.media.StaticSource(pyglet.media.load('shot_sound.wav'))
         self.enemy_hit_sound = pyglet.media.StaticSource(pyglet.media.load('enemy_hit_sound.wav'))
+        self.enemy_sputter_sound = pyglet.media.StaticSource(pyglet.media.load('enemy_sputter_sound.wav'))
+        self.enemy_dive_sound = pyglet.media.StaticSource(pyglet.media.load('enemy_dive_sound.wav'))
         self.main_copter_smoke_color = (200, 0, 0)
         self.main_copter_color = (175,20,0)
         self.enemy_smoke_color = (40, 40, 40)
         self.enemy_color = (30, 30, 30)
+        self.who_to_follow = True # True = main robot, number n = enemy with index n
         # TEST
         # self.main_copter_color = self.enemy_color
         # self.main_copter_smoke_color = self.enemy_smoke_color
@@ -47,7 +51,11 @@ class Graphics:
         #     color = min(np.random.normal(200, 30, 1), 255)
 
         self.draw_smoke(copter_simulation)
-        self.draw_copter(copter_simulation.copter)
+        for i in range(len(copter_simulation.enemies)):
+            self.draw_enemy_smoke(copter_simulation, i)
+        self.draw_copter(copter_simulation.copter, copter_simulation)
+        for enemy in copter_simulation.enemies:
+            self.draw_enemy(enemy, copter_simulation)
         self.draw_level(copter_simulation)
         if False:
             self.draw_radars(copter_simulation)
@@ -56,12 +64,15 @@ class Graphics:
         self.clock.tick(60)
 
         keys = pygame.key.get_pressed()  # checking pressed keys
-        return keys[pygame.K_SPACE], (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL])
+        return keys[pygame.K_SPACE], (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]), keys[pygame.K_LEFT]
 
     def draw_level(self, copter_simulation):
         level = copter_simulation.level
-        cx = copter_simulation.copter.get_x()
-        start = cx - self.view_offset
+        if self.who_to_follow == 'main':
+            cx = copter_simulation.copter.get_x()
+        else:
+            cx = copter_simulation.enemies[self.who_to_follow].get_x()
+        start = cx - self.get_view_offset()
         end = start + self.size[0]
         start = min(len(level), max(0, start))
         end = min(len(level), max(0, end))
@@ -87,7 +98,13 @@ class Graphics:
 
     def play_sputter_sound(self):
         self.sputter_sound.play()
-        # self.sputter_sound.play()
+
+    def play_enemy_sputter_sound(self):
+        self.enemy_sputter_sound.play()
+
+    def play_enemy_dive_sound(self):
+        self.enemy_dive_sound.play()
+
 
     def play_shot_sound(self):
         self.shot_sound.play()
@@ -96,26 +113,51 @@ class Graphics:
         self.enemy_hit_sound.play()
 
 
-    def draw_copter(self, copter):
+    def draw_copter(self, copter, copter_simulation):
         if not copter.exploded:
-            pygame.draw.rect(self.screen, self.main_copter_color, pygame.Rect(self.view_offset-copter.width/2.0, copter.get_top(),    copter.width, copter.height))
+            pos = self.np_to_screen_coord(copter.position, copter_simulation)
+            pygame.draw.rect(self.screen, self.main_copter_color, pygame.Rect(pos[0]-copter.width/2.0, pos[1]-copter.height/2.0,    copter.width, copter.height))
+
+    def draw_enemy(self, enemy, copter_simulation):
+        if not enemy.exploded:
+            pos = self.np_to_screen_coord(enemy.position, copter_simulation)
+            pygame.draw.rect(self.screen, self.enemy_color, pygame.Rect(pos[0]-enemy.width/2.0, pos[1]-enemy.height/2.0, enemy.width, enemy.height))
+
 
     def draw_smoke(self, copter_simulation):
         for particle in copter_simulation.smoke.particles:
             self.draw_smoke_particle(particle, copter_simulation)
 
+    def draw_enemy_smoke(self, copter_simulation, index):
+        smoke = copter_simulation.enemy_smokes[index]
+        for particle in smoke.particles:
+            self.draw_smoke_particle(particle, copter_simulation)
+
     def np_to_screen_coord(self, np_vector, copter_simulation):
-        x = np_vector[0] - copter_simulation.copter.get_x()
-        y = np_vector[1]
-        return (self.view_offset + x, y)
+        if self.who_to_follow == 'main': # follow main robot
+            x = np_vector[0] - copter_simulation.copter.get_x()
+            y = np_vector[1]
+            view_offset = self.view_offset
+        else:
+            x = np_vector[0] - copter_simulation.enemies[self.who_to_follow].get_x()
+            y = np_vector[1]
+            view_offset = self.enemy_view_offset
+        return (view_offset + x, y)
+
+    def get_view_offset(self):
+        return self.view_offset if self.who_to_follow == 'main' else self.enemy_view_offset
 
     def draw_smoke_particle(self, particle, copter_simulation):
-        x = particle.get_left() - copter_simulation.copter.get_x()
-        y = particle.get_top()
+
+        # x = particle.get_left() - copter_simulation.copter.get_x()
+        # y = particle.get_top()
         s = pygame.Surface((particle.width, particle.height))  # the size of your rect
         s.set_alpha(int(particle.alpha * 255))
         s.fill(particle.color)
-        self.screen.blit(s, (self.view_offset + x, y))
+        # self.screen.blit(s, (self.view_offset + x, y))
+        x,y = self.np_to_screen_coord(particle.position, copter_simulation)
+        pos  = (x - particle.width/2, y - particle.height/2)
+        self.screen.blit(s, pos)
         #pygame.draw.rect(self.screen, (255,180,0), pygame.Rect(self.view_offset + x, y, particle.width, particle.height))
 
     def draw_radars(self, copter_simulation):

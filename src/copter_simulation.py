@@ -1,6 +1,7 @@
 import numpy as np
 
 from copter import Copter
+from enemy import Enemy
 from genetic.algorithm import GeneticAlgorithm
 from genetic.crossover.single_point import SinglePointCrossover
 from genetic.decoding.binary import BinaryDecoding
@@ -16,7 +17,7 @@ from radar_system import RadarSystem
 from smoke import Smoke
 
 
-
+MAIN = 'main'
 
 
 
@@ -24,42 +25,93 @@ class CopterSimulation:
     def __init__(self, level, copter, radar_system):
         self.level = level
         self.copter = copter
+        self.enemies = [Enemy(np.array([[800], [level.y_center(800)]]), 20)]
         self.smoke = None
+        self.enemy_smokes = [None]
         self.radar_system = radar_system
         self.gravity = np.array([[0.0],[0.4*9.8]])
         self.delta_t = 1.0/4
         self.space_pressed = False
         self.ctrl_pressed = False
-        self.force_when_fire_is_on = np.array([[0.0],[0.4*-20]])
+        self.ctrl_on_press = False
+        self.force_when_fire_is_on = np.array([[0.0], [0.4 * -20]])
         self.force_when_fire_is_off = np.array([[0.0],[0.0]])
+        self.enemy_force_when_fire_is_on = np.array([[0.0], [0.4 * -20]])
         self.time_since_last_sputter_sound = 0
         self.sputter_sound_interval = 10
         self.timestep = 0
-        self.neural_net_integration = None
+        self.main_neural_net_integration = None
+        self.enemy_neural_net_integration = None
+        self.time_since_last_enemy_sputter_sound = [0]
 
-    def set_neural_net_integration(self, neural_net_integration):
-        self.neural_net_integration = neural_net_integration
 
+    def set_main_neural_net_integration(self, neural_net_integration):
+        self.main_neural_net_integration = neural_net_integration
+
+    def set_enemy_neural_net_integration(self, neural_net_integration):
+        self.enemy_neural_net_integration = neural_net_integration
+
+    def user_control_main(self, graphics):
+        self.copter.firing = self.space_pressed and not self.copter.exploded
+        if self.copter.exploded and abs(self.copter.velocity[0]) < 0.1:
+            return True
+        if self.ctrl_on_press:
+            self.copter.recoil()
+            self.smoke.create_shot_background()
+            graphics.play_shot_sound()
+            self.ctrl_on_press = False
+
+    def user_control_enemy(self, graphics, index):
+        enemy = self.enemies[index]
+        enemy.firing = self.space_pressed and not enemy.exploded
+        enemy.moving_left = self.left_pressed and not enemy.exploded
+        if enemy.exploded and abs(enemy.velocity[0]) < 0.1:
+            return True
+        if self.ctrl_on_press:
+            enemy.dive()
+            self.enemy_smokes[index].create_dive_background()
+            graphics.play_enemy_dive_sound()
+            self.ctrl_on_press = False
 
     def run(self, graphics=None, user_control=False):
         if graphics:
             self.smoke = Smoke(self.copter.position, 4, 0.05, self.gravity, graphics.main_copter_smoke_color)
+            for i,enemy in enumerate(self.enemies):
+                self.enemy_smokes[i] = Smoke(enemy.position, 4, 0.05, self.gravity, graphics.enemy_smoke_color)
         while 1:
-            if user_control and graphics:
-                self.copter.firing = self.space_pressed and not self.copter.exploded
-            elif self.neural_net_integration is not None and not self.copter.exploded:
-                self.neural_net_integration.run_network(self)
-            else:
-                self.copter.firing = False
-            if self.copter.exploded and abs(self.copter.velocity[0]) < 0.1:
-                return True
+            if graphics:
+                ctrl_not_previously_pressed = not self.ctrl_pressed
+                self.space_pressed, self.ctrl_pressed, self.left_pressed = graphics.update(self)
+                if self.ctrl_pressed and ctrl_not_previously_pressed:
+                    self.ctrl_on_press = True
+            if user_control != None and graphics:
+                if user_control == MAIN:
+                    if self.user_control_main(graphics):
+                        return True
+                else:
+                    if self.user_control_enemy(graphics, user_control):
+                        return True
+            if user_control != MAIN and self.main_neural_net_integration is not None and not self.copter.exploded:
+                self.main_neural_net_integration.run_network(self)
+            for enemy_index in range(len(self.enemies)):
+                if user_control != enemy_index and self.enemy_neural_net_integration is not None and not self.copter.exploded:
+                    self.enemy_neural_net_integration.run_network(self, enemy_index)
+
+
             if self.copter.firing:
                 fire_force = self.force_when_fire_is_on
             else:
                 fire_force = self.force_when_fire_is_off
             still_flying = self.copter.step(self.level, self.gravity, fire_force, self.delta_t)
+            for enemy in self.enemies:
+                if enemy.firing:
+                    enemy_fire_force = self.force_when_fire_is_on
+                else:
+                    enemy_fire_force = self.force_when_fire_is_off
+                enemy_still_flying = enemy.step(self.level, self.gravity, enemy_fire_force, self.delta_t)
             self.timestep += 1
             if graphics:
+
                 if not still_flying:
                     if not self.copter.exploded:
                         self.smoke.create_explosion()
@@ -72,14 +124,16 @@ class CopterSimulation:
                     if self.time_since_last_sputter_sound >= self.sputter_sound_interval:
                         graphics.play_sputter_sound()
                         self.time_since_last_sputter_sound = 0
-                        self.sputter_sound_interval = 4#3 + np.random.random()*2
+                        self.sputter_sound_interval = 4
                 self.time_since_last_sputter_sound += 1
-                ctrl_not_previously_pressed = not self.ctrl_pressed
-                self.space_pressed, self.ctrl_pressed = graphics.update(self)
-                if self.ctrl_pressed and ctrl_not_previously_pressed: #TEST
-                    self.copter.recoil()
-                    self.smoke.create_shot_background()
-                    graphics.play_shot_sound()
+                for i in range(len(self.enemy_smokes)):
+                    sputter = self.enemy_smokes[i].step(self.level, self.delta_t, self.enemies[i].firing)
+                    if sputter:
+                        if self.time_since_last_enemy_sputter_sound[i] >= self.sputter_sound_interval:
+                            graphics.play_enemy_sputter_sound()
+                            self.time_since_last_enemy_sputter_sound[i] = 0
+                            self.sputter_sound_interval = 4
+                    self.time_since_last_enemy_sputter_sound[i] += 1
 
             elif not still_flying:
                 return self.copter.get_x()  # Return the distance travelled = the fitness score
@@ -87,11 +141,12 @@ class CopterSimulation:
 if __name__ == "__main__":
     level_length = 300000
     graphics = Graphics()
-    view_offset = 1200/7.0
+    view_offset = 1200 / 7.0
+    enemy_view_offset = 6.0 * 1200 / 7.0
     level = generate_level(level_length)
     s = CopterSimulation(level, Copter(np.array([[view_offset], [level.y_center(view_offset)]]), 20), RadarSystem())
     neural_net_integration = evocopter_neural_net_integration(s)
-    s.set_neural_net_integration(neural_net_integration)
+    s.set_main_neural_net_integration(neural_net_integration)
 
     class CopterFitnessFunction:
         def __init__(self):
@@ -160,14 +215,23 @@ if __name__ == "__main__":
         # print p.best_variables
 
 
-    user_play = True
+    user_play = MAIN
     run_loaded_chromosome = True
 
-    if user_play:
+    graphics.who_to_follow = MAIN#user_play
+
+    base_start_x = 1200
+
+    if user_play != None:
         while 1:
             s.level = generate_level(level_length)
-            s.copter = Copter(np.array([[view_offset], [s.level.y_center(view_offset)]]), 20)
-            s.run(graphics, user_control=True)
+            s.copter = Copter(np.array([[base_start_x + view_offset], [s.level.y_center(base_start_x + view_offset)]]), 20)
+            s.enemies[0] = Enemy(np.array([[base_start_x + enemy_view_offset], [s.level.y_center(base_start_x + enemy_view_offset)]]), 20)
+
+            population_data = load_population_data(subfoldername, 150)
+            neural_net_integration.set_weights(population_data.best_variables)
+
+            s.run(graphics, user_control=user_play)
     else:
         if run_loaded_chromosome:
             while 1:

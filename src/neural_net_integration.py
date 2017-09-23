@@ -5,16 +5,16 @@ class NeuralNetIntegration:
     def __init__(self, layer_sizes, input_function, output_function):
         """
         :param layer_sizes: the sizes of the layers in a feed-forward neural network
-        :param input_function: function that takes a copter_simulation and returns the input to the network
-        :param output_function: function that takes the output of the network and the copter_simulation and modifies the copter_simulation accordingly
+        :param input_function: function that takes a copter_simulation and an enemy_index (or None for main copter) and returns the input to the network
+        :param output_function: function that takes the output of the network and the copter_simulation and an enemy_index (or None for main copter) and modifies the copter_simulation accordingly
         """
         self.neural_network = NeuralNetwork(layer_sizes)
         self.input_function = input_function
         self.output_function = output_function
 
-    def run_network(self, copter_simulation):
-        network_output = self.neural_network.run(self.input_function(copter_simulation))
-        self.output_function(network_output, copter_simulation)
+    def run_network(self, copter_simulation, enemy_index=None):
+        network_output = self.neural_network.run(self.input_function(copter_simulation, enemy_index))
+        self.output_function(network_output, copter_simulation, enemy_index)
 
     def set_weights(self, weights):
         self.neural_network.set_weights_from_single_vector(weights)
@@ -36,7 +36,7 @@ def evocopter_neural_net_integration(copter_simulation):
 
     layer_sizes = (input_layer_size, middle_layer_size, output_layer_size)
 
-    def evocopter_input_function(sim):
+    def evocopter_input_function(sim, enemy_index):
         yvel = np.asscalar(sim.copter.velocity[1])
         if yvel <= 0:
             velocity_up = -yvel / sim.copter.max_y_velocity
@@ -57,7 +57,7 @@ def evocopter_neural_net_integration(copter_simulation):
         assert len(input) == input_layer_size
         return input
 
-    def evocopter_output_function(network_output, copter_simulation):
+    def evocopter_output_function(network_output, copter_simulation, enemy_index):
         should_fire = network_output > 0.5
         copter_simulation.copter.firing = should_fire
         # print should_fire
