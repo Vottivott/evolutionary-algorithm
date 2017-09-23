@@ -18,3 +18,13 @@ class Radar:
                 return (p,n/float(self.max_steps))
         self.point, self.dist = p,self.max_steps/float(self.max_steps)
         return (self.point, self.dist)
+
+    def read_rect(self, position, rect_list):
+        p = np.copy(position)
+        for n in range(1,self.max_steps+1):
+            p += self.step
+            for rect in rect_list:
+                if rect.contains_point(p):
+                    return (p,n/float(self.max_steps))
+        self.point, self.dist = p,self.max_steps/float(self.max_steps)
+        return (self.point, self.dist)

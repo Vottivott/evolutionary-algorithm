@@ -54,10 +54,10 @@ class Level:
         # Simplified collision using only the top and bottom center points of the rectangle,
         # but using the left corner, center and right corner points to make it more robust
         if self.ceiling_collides_with_multipoint(rectangular):
-            print "ceiling"
+            # print "ceiling"
             return True
         if self.ground_collides_with_multipoint(rectangular):
-            print "ground"
+            # print "ground"
             return True
         return False
 

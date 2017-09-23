@@ -43,6 +43,7 @@ class RecurrentNeuralNetwork:
         self.number_of_weights = sum(size * (prev_size + 1) for size, prev_size in zip(layer_sizes[1:], layer_sizes))
         self.number_of_weights += sum(size * size for size in layer_sizes[1:-1]) # recurrent weights
 
+
     def set_weights_from_single_vector(self, vector):
         index = 0
         for layer in range(1, self.L):
@@ -63,6 +64,9 @@ class RecurrentNeuralNetwork:
 
     def get_total_number_of_weights(self):
         return self.number_of_weights
+
+    def set_custom_h_layer(self, h):
+        self.h = h
 
     def forward_pass(self, z, a, x):
         a[0] = x

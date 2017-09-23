@@ -13,7 +13,7 @@ from graphics import Graphics
 from level import generate_level
 from neural_net_integration import evocopter_neural_net_integration
 from population_data_io import save_population_data, load_population_data
-from radar_system import RadarSystem
+from radar_system import RadarSystem, EnemysRadarSystem
 from shot import Shot
 from smoke import Smoke
 
@@ -26,10 +26,9 @@ class CopterSimulation:
     def __init__(self, level, copter, radar_system):
         self.level = level
         self.copter = copter
-        self.enemies = [Enemy(np.array([[800], [level.y_center(800)]]), 20)]
         self.smoke = None
-        self.enemy_smokes = [None]
         self.radar_system = radar_system
+        self.enemys_radar_system = EnemysRadarSystem()
         self.shots = []
         self.gravity = np.array([[0.0],[0.4*9.8]])
         self.delta_t = 1.0/4
@@ -44,7 +43,13 @@ class CopterSimulation:
         self.timestep = 0
         self.main_neural_net_integration = None
         self.enemy_neural_net_integration = None
-        self.time_since_last_enemy_sputter_sound = [0]
+
+        self.enemy_h = []#[None] * 2
+        self.enemy_smokes = []#[None] * 2
+        self.enemies = []#[Enemy(np.array([[800], [level.y_center(800)]]), 20), Enemy(np.array([[890], [level.y_center(890)]]), 20)]
+        self.time_since_last_enemy_sputter_sound = []#[0] * 2
+
+        self.graphics = None
 
 
     def set_main_neural_net_integration(self, neural_net_integration):
@@ -59,13 +64,14 @@ class CopterSimulation:
             return True
         if self.ctrl_on_press:
             self.copter_shoot()
-            self.smoke.create_shot_background()
-            graphics.play_shot_sound()
             self.ctrl_on_press = False
 
     def copter_shoot(self):
         self.copter.recoil()
         self.shots.append(Shot(self.copter.position, self.gravity))
+        if self.graphics:
+            self.smoke.create_shot_background()
+            graphics.play_shot_sound()
 
     def user_control_enemy(self, graphics, index):
         enemy = self.enemies[index]
@@ -79,7 +85,8 @@ class CopterSimulation:
             graphics.play_enemy_dive_sound()
             self.ctrl_on_press = False
 
-    def run(self, graphics=None, user_control=False):
+    def run(self, graphics=None, user_control=None):
+        self.graphics = graphics
         if graphics:
             self.smoke = Smoke(self.copter.position, 4, 0.05, self.gravity, graphics.main_copter_smoke_color)
             for i,enemy in enumerate(self.enemies):
@@ -97,6 +104,8 @@ class CopterSimulation:
                 else:
                     if self.user_control_enemy(graphics, user_control):
                         return True
+            elif user_control is None and graphics and self.copter.exploded and abs(self.copter.velocity[0]) < 0.1:
+                return self.copter.get_x()
             if user_control != MAIN and self.main_neural_net_integration is not None and not self.copter.exploded:
                 self.main_neural_net_integration.run_network(self)
             for enemy_index in range(len(self.enemies)):
@@ -148,7 +157,7 @@ class CopterSimulation:
                         graphics.play_crash_sound()
                         self.copter.exploded = True
                         print "Fitness: " + str(self.copter.position[0])
-                sputter = self.smoke.step(self.level, self.delta_t, self.copter.firing)
+                sputter = self.smoke.step(self.level, self.delta_t, self.copter.firing and not self.copter.exploded)
                 if sputter:
                     if self.time_since_last_sputter_sound >= self.sputter_sound_interval:
                         graphics.play_sputter_sound()
@@ -206,7 +215,7 @@ if __name__ == "__main__":
                           CopterFitnessFunction(),
                           TournamentSelection(0.75, 3),
                           SinglePointCrossover(0.9),
-                          BinaryMutation(2.0 / m),
+                          BinaryMutation(7.0 / m),
                           Elitism(2),
                           BinaryDecoding(5, vars, var_size),
                           BinaryInitialization(m))
@@ -214,7 +223,8 @@ if __name__ == "__main__":
 
 
 
-    subfoldername = "7 counters (length 4), 15 radars (max_steps = 250, step_size = 4), velocity up+down"
+    # subfoldername = "7 counters (length 4), 15 radars (max_steps = 250, step_size = 4), velocity up+down"
+    subfoldername = "recurrent_no_enemies"
 
 
     # Init plot
@@ -254,12 +264,12 @@ if __name__ == "__main__":
         # print p.best_variables
 
 
-    player = 0#MAIN
+    player = MAIN
 
-    user_play = player
+    user_play = None#player
     run_loaded_chromosome = True
 
-    graphics.who_to_follow = player#user_play
+    graphics.who_to_follow = player
 
     base_start_x = 1200
 
@@ -267,22 +277,23 @@ if __name__ == "__main__":
         while 1:
             s.level = generate_level(level_length)
             s.copter = Copter(np.array([[base_start_x + view_offset], [s.level.y_center(base_start_x + view_offset)]]), 20)
-            s.enemies[0] = Enemy(np.array([[base_start_x + enemy_view_offset], [s.level.y_center(base_start_x + enemy_view_offset)]]), 20)
+            # s.enemies[0] = Enemy(np.array([[base_start_x + enemy_view_offset], [s.level.y_center(base_start_x + enemy_view_offset)]]), 20)
+            # s.enemies[1] = Enemy(np.array([[base_start_x+80 + enemy_view_offset], [s.level.y_center(base_start_x+80 + enemy_view_offset)]]), 20)
 
-            population_data = load_population_data(subfoldername, 150)
-            neural_net_integration.set_weights(population_data.best_variables)
+            # population_data = load_population_data(subfoldername, 150)
+            # neural_net_integration.set_weights(population_data.best_variables)
 
             s.run(graphics, user_control=user_play)
     else:
         if run_loaded_chromosome:
             while 1:
                 s.level = generate_level(level_length)
-                s.copter = Copter(np.array([[view_offset], [s.level.y_center(view_offset)]]), 20)
-                population_data = load_population_data(subfoldername, 150)
+                s.copter = Copter(np.array([[base_start_x + view_offset], [s.level.y_center(base_start_x + view_offset)]]), 20)
+                population_data = load_population_data(subfoldername, -1)
                 neural_net_integration.set_weights(population_data.best_variables)
                 s.run(graphics)
         else:
-            ga.run(None, callback, population_data=load_population_data(subfoldername, 120))
+            ga.run(None, callback, population_data=load_population_data(subfoldername, -1))
 
 
 

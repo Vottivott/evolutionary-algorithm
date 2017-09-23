@@ -20,7 +20,7 @@ class Enemy(Rectangular):
         self.velocity[0] += (self.base_velocity[0] - self.velocity[0]) * 0.4 * delta_time
         # self.velocity[0] = max(-self.max_x_velocity, min(self.max_x_velocity, self.velocity[0]))
         self.velocity[1] = max(-self.max_y_velocity, min(self.max_y_velocity, self.velocity[1]))
-        self.position += self.velocity * delta_time
+        # self.position += self.velocity * delta_time
         if self.exploded:
             self.velocity *= 0.97
         if level.collides_with(self):

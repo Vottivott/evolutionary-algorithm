@@ -57,7 +57,7 @@ class Graphics:
         for enemy in copter_simulation.enemies:
             self.draw_enemy(enemy, copter_simulation)
         self.draw_level(copter_simulation)
-        if False:
+        if True:
             self.draw_radars(copter_simulation)
 
         # self.draw_shots(copter_simulation)
@@ -164,14 +164,16 @@ class Graphics:
 
     def draw_radars(self, copter_simulation):
         if not copter_simulation.copter.exploded:
-            for radar in copter_simulation.radar_system.radars:
-                point, dist = radar.point, radar.dist
-                if (point,dist) == (None,None):
-                    point,dist = radar.read(copter_simulation.copter.position, copter_simulation.level)
-                if dist < 1:
-                    dist = 0.5 + dist/2 # for drawing only
-                    color = (255, int(150+(255-150)*dist), int(dist*255))
-                    pygame.draw.circle(self.screen, color, self.np_to_screen_coord(point, copter_simulation), 5)
+            radar_systems = [copter_simulation.radar_system]
+            for radar_system in radar_systems:
+                for radar in radar_system.radars:
+                    point, dist = radar.point, radar.dist
+                    if (point,dist) == (None,None):
+                        point,dist = radar.read(copter_simulation.copter.position, copter_simulation.level)
+                    if True:#dist < 1:
+                        dist = 0.5 + dist/2 # for drawing only
+                        color = (255, int(150+(255-150)*dist), int(dist*255))
+                        pygame.draw.circle(self.screen, color, self.np_to_screen_coord(point, copter_simulation), 5)
 
     def draw_shots(self, copter_simulation):
         for shot in copter_simulation.shots:
