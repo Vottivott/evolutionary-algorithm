@@ -168,7 +168,7 @@ class Graphics:
             for radar_system in radar_systems:
                 for radar in radar_system.radars:
                     point, dist = radar.point, radar.dist
-                    if (point,dist) == (None,None):
+                    if True:#(point,dist) == (None,None):
                         point,dist = radar.read(copter_simulation.copter.position, copter_simulation.level)
                     if True:#dist < 1:
                         dist = 0.5 + dist/2 # for drawing only
