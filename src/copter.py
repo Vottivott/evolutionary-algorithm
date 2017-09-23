@@ -15,7 +15,7 @@ class Copter(Rectangular):
         acceleration = gravity + fire_force
         self.velocity += acceleration * delta_time
         if not self.exploded:
-            self.velocity[0] += (self.base_velocity[0] - self.velocity[0]) * 0.1
+            self.velocity[0] += (self.base_velocity[0] - self.velocity[0]) * 0.4 * delta_time
         # self.velocity[0] = max(-self.max_x_velocity, min(self.max_x_velocity, self.velocity[0]))
         self.velocity[1] = max(-self.max_y_velocity, min(self.max_y_velocity, self.velocity[1]))
         self.position += self.velocity * delta_time

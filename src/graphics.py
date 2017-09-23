@@ -60,6 +60,8 @@ class Graphics:
         if False:
             self.draw_radars(copter_simulation)
 
+        # self.draw_shots(copter_simulation)
+
         pygame.display.flip()
         self.clock.tick(60)
 
@@ -170,4 +172,14 @@ class Graphics:
                     dist = 0.5 + dist/2 # for drawing only
                     color = (255, int(150+(255-150)*dist), int(dist*255))
                     pygame.draw.circle(self.screen, color, self.np_to_screen_coord(point, copter_simulation), 5)
+
+    def draw_shots(self, copter_simulation):
+        for shot in copter_simulation.shots:
+            x,y  = self.np_to_screen_coord(shot.position, copter_simulation)
+            x = x - shot.width / 2.0
+            y = y - shot.height/ 2.0
+            pygame.draw.rect(self.screen, (255, 180, 0),
+                             pygame.Rect(x, y, shot.width, shot.height))
+
+
 

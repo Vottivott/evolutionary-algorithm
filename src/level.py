@@ -48,6 +48,18 @@ class Level:
             return True
         if self.ground_collides_with(rectangular):
             return True
+        return False
+
+    def collides_with_multipoint(self, rectangular):
+        # Simplified collision using only the top and bottom center points of the rectangle,
+        # but using the left corner, center and right corner points to make it more robust
+        if self.ceiling_collides_with_multipoint(rectangular):
+            print "ceiling"
+            return True
+        if self.ground_collides_with_multipoint(rectangular):
+            print "ground"
+            return True
+        return False
 
     def collides_with_point(self, point):
         x = int(point[0])
@@ -84,6 +96,20 @@ class Level:
     def ground_collides_with(self, rectangular):
         x = int(rectangular.get_x())
         return x >= len(self.ground) or self.ground[x] < rectangular.get_bottom()
+
+    def ceiling_collides_with_multipoint(self, rectangular):
+        x_list = [int(rectangular.get_x()), int(rectangular.get_left()), int(rectangular.get_right())]
+        for x in x_list:
+            if x >= len(self.ceiling) or self.ceiling[x] > rectangular.get_top():
+                return True
+        return False
+
+    def ground_collides_with_multipoint(self, rectangular):
+        x_list = [int(rectangular.get_x()), int(rectangular.get_left()), int(rectangular.get_right())]
+        for x in x_list:
+            if x >= len(self.ground) or self.ground[x] < rectangular.get_bottom():
+                return True
+        return False
 
     def calculate_slope(self, rectangular, curve):
         x = rectangular.get_x()

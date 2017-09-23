@@ -24,3 +24,9 @@ class Rectangular:
     def get_y(self):
         return self.position[1]
 
+    def collides_with(self, rect):
+        return self.get_right() > rect.get_left() and self.get_left() < rect.get_right() \
+           and self.get_bottom() > rect.get_top() and self.get_top() < rect.get_bottom()
+
+
+
