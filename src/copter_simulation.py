@@ -224,8 +224,7 @@ if __name__ == "__main__":
 
 
     # subfoldername = "7 counters (length 4), 15 radars (max_steps = 250, step_size = 4), velocity up+down"
-    subfoldername = "feedforward_larger_no_enemies"
-    # subfoldername = "recurrent_no_enemies"
+    subfoldername = "recurrent_no_enemies"
 
 
     # Init plot
@@ -267,7 +266,7 @@ if __name__ == "__main__":
 
     player = MAIN
 
-    user_play = player
+    user_play = None#player
     run_loaded_chromosome = True
 
     graphics.who_to_follow = player
