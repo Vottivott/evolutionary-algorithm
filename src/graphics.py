@@ -31,7 +31,7 @@ class Graphics:
         self.main_copter_color = (175,20,0)
         self.enemy_smoke_color = (40, 40, 40)
         self.enemy_color = (30, 30, 30)
-        self.who_to_follow = True # True = main robot, number n = enemy with index n
+        self.who_to_follow = 'main' # True = main robot, number n = enemy with index n
         # TEST
         # self.main_copter_color = self.enemy_color
         # self.main_copter_smoke_color = self.enemy_smoke_color
@@ -65,8 +65,9 @@ class Graphics:
             self.draw_enemy(ei.enemy, copter_simulation)
         self.draw_level(copter_simulation)
         if True:
+            # self.draw_enemies_radars(copter_simulation)
             # self.draw_radars(copter_simulation)
-            self.draw_object_radars(copter_simulation)
+            # self.draw_object_radars(copter_simulation)
             pass
 
         # self.draw_shots(copter_simulation)
@@ -100,8 +101,8 @@ class Graphics:
         #     pygame.draw.lines(self.screen, (255, color, 0), False, point, 2)
         # for point in ground_pointlist:
         #     pygame.draw.lines(self.screen, (255, color, 0), False, point, 2)
-        pygame.draw.polygon(self.screen, c_cave, [[0,0]] + ceiling_coords + [[self.size[0],0]])
-        pygame.draw.polygon(self.screen, c_cave, [[0,self.size[1]]] + ground_coords + [[self.size[0],self.size[1]]])
+        pygame.draw.polygon(self.screen, c_cave, [[0,0]]+[[0,0]] + ceiling_coords + [[self.size[0],0]])
+        pygame.draw.polygon(self.screen, c_cave, [[0,self.size[1]]] + [[0,self.size[1]]] + ground_coords + [[self.size[0],self.size[1]]])
 
     def play_crash_sound(self):
         # self.sound_player.queue(self.crash_sound)
@@ -183,6 +184,18 @@ class Graphics:
                         dist = 0.5 + dist/2 # for drawing only
                         color = (255, int(150+(255-150)*dist), int(dist*255))
                         pygame.draw.circle(self.screen, color, self.np_to_screen_coord(point, copter_simulation), 5)
+
+    def draw_enemies_radars(self, copter_simulation):
+        for ei in copter_simulation.get_living_enemy_instances():
+            radar_system = copter_simulation.enemys_radar_system
+            for radar in radar_system.radars:
+                point, dist = radar.point, radar.dist
+                if True:#(point,dist) == (None,None):
+                    point,dist = radar.read(ei.enemy.position, copter_simulation.level)
+                if True:#dist < 1:
+                    dist = 0.5 + dist/2 # for drawing only
+                    color = (255, int(150+(255-150)*dist), int(dist*255))
+                    pygame.draw.circle(self.screen, color, self.np_to_screen_coord(point, copter_simulation), 5)
 
     def draw_object_radars(self, copter_simulation):
         if not copter_simulation.copter.exploded:

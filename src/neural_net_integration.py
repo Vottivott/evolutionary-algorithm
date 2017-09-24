@@ -1,3 +1,4 @@
+from enemy import Enemy
 from neural_network import NeuralNetwork
 import numpy as np
 
@@ -23,6 +24,12 @@ class NeuralNetIntegration:
         network_output = self.neural_network.run(self.input_function(copter_simulation, enemy_index))
         self.output_function(network_output, copter_simulation, enemy_index)
 
+    def clear_h(self):
+        self.neural_network.h = self.get_empty_h()
+
+    def set_custom_h_layer(self, h):
+        self.neural_network.set_custom_h_layer(h)
+
     def set_weights(self, weights):
         self.neural_network.set_weights_from_single_vector(weights)
         if self.recurrent:
@@ -31,7 +38,7 @@ class NeuralNetIntegration:
             print "NOT RECURRENT!"
 
     def get_empty_h(self):
-        return [None] + [np.zeros(h.shape) for h in self.neural_network.h[1:-1]]
+        return [None] + [np.zeros((size, 1)) for size in self.neural_network.layer_sizes[1:-1]]#[None] + [np.zeros(h.shape) for h in self.neural_network.h[1:-1]]
 
     def get_number_of_variables(self):
         return self.neural_network.get_total_number_of_weights()
@@ -72,7 +79,7 @@ def evocopter_neural_net_integration(copter_simulation):
             velocity_right = xvel / sim.copter.max_x_velocity
         x_velocity_inputs = np.array([[velocity_left], [velocity_right]])
 
-        # ADD WHEN STARTING DUAL TRAINING
+        # TODO:ADD WHEN STARTING DUAL TRAINING
         # enemy_radar = copter_simulation.radar_system.enemy_radar
         # position = copter_simulation.copter.position
         # enemies = copter_simulation.get_living_enemy_instances()
@@ -95,13 +102,13 @@ def evocopter_neural_net_integration(copter_simulation):
 
     return NeuralNetIntegration(layer_sizes, evocopter_input_function, evocopter_output_function, recurrent=True)
 
-def enemy_neural_net_integration(copter_simulation):
+def black_neural_net_integration(copter_simulation):
     input_layer_size = 0
-    input_layer_size += copter_simulation.enemy_radar_system.num_front_radars
-    input_layer_size += copter_simulation.enemy_radar_system.num_back_radars
-    input_layer_size += copter_simulation.enemy_radar_system.copter_radar.number_of_neurons
-    input_layer_size += copter_simulation.enemy_radar_system.shot_radar.number_of_neurons
-    input_layer_size += copter_simulation.enemy_radar_system.enemy_radar.number_of_neurons
+    input_layer_size += copter_simulation.enemys_radar_system.num_front_radars
+    input_layer_size += copter_simulation.enemys_radar_system.num_back_radars
+    input_layer_size += copter_simulation.enemys_radar_system.copter_radar.number_of_neurons
+    input_layer_size += copter_simulation.enemys_radar_system.shot_radar.number_of_neurons
+    input_layer_size += copter_simulation.enemys_radar_system.enemy_radar.number_of_neurons
     input_layer_size += 2 # velocity in up-direction + velocity in down-direction
     input_layer_size += 1 # velocity in left-direction
 
@@ -112,24 +119,25 @@ def enemy_neural_net_integration(copter_simulation):
     layer_sizes = (input_layer_size, middle_layer_size, output_layer_size)
 
     def enemy_input_function(sim, enemy_index):
-        yvel = np.asscalar(sim.copter.velocity[1])
+        enemy = sim.enemy_instances[enemy_index].enemy
+        yvel = np.asscalar(enemy.velocity[1])
         if yvel <= 0:
-            velocity_up = -yvel / sim.copter.max_y_velocity
+            velocity_up = -yvel / Enemy.max_y_velocity
             velocity_down = 0
         else:
             velocity_up = 0
-            velocity_down = yvel / sim.copter.max_y_velocity
-        xvel = np.asscalar(sim.copter.velocity[0])
-        velocity_left = -xvel / sim.copter.max_x_velocity
+            velocity_down = yvel / Enemy.max_y_velocity
+        xvel = np.asscalar(enemy.velocity[0])
+        velocity_left = -xvel / Enemy.max_x_velocity
         velocity_inputs = np.array([[velocity_up], [velocity_down], [velocity_left]])
 
         shot_radar = copter_simulation.enemys_radar_system.shot_radar
         copter_radar = copter_simulation.enemys_radar_system.copter_radar
-        position = copter_simulation.enemy_instances[enemy_index].enemy.position
+        position = enemy.position
         shots = copter_simulation.shots
         copters = copter_simulation.get_living_copter_list()
 
-        enemy_radar = copter_simulation.radar_system.enemy_radar
+        enemy_radar = copter_simulation.enemys_radar_system.enemy_radar
         other_enemies = copter_simulation.get_living_enemy_instances(enemy_index)
 
         shot_dist_vec = shot_radar.read_dist_vector(position, shots, copter_simulation.level)
@@ -138,7 +146,7 @@ def enemy_neural_net_integration(copter_simulation):
 
 
 
-        dist_inputs = np.array([[radar.read(copter_simulation.copter.position, copter_simulation.level)[1]] for radar in copter_simulation.radar_system.radars])
+        dist_inputs = np.array([[radar.read(position, copter_simulation.level)[1]] for radar in copter_simulation.enemys_radar_system.radars])
 
         input = np.vstack((velocity_inputs, dist_inputs, shot_dist_vec, enemy_dist_vec, copter_dist_vec))
         # print input
@@ -155,6 +163,7 @@ def enemy_neural_net_integration(copter_simulation):
         enemy.diving = diving
         if diving:
             enemy.dive()
+
         # print should_fire
 
     return NeuralNetIntegration(layer_sizes, enemy_input_function, enemy_output_function, recurrent=True)

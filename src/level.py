@@ -30,6 +30,7 @@ def generate_level(length):
     ground = basic_shape + _get_randcurve(length, 1.5*n, 18) + _get_randcurve(length, 1.7*n, 8)
     ground = 305 + _smoothify(ground) #prev 305
     ceiling[-1] = ground[-1]
+    ceiling[0] = ground[0]
 
     return Level(ceiling, ground)
 
@@ -63,7 +64,7 @@ class Level:
 
     def collides_with_point(self, point):
         x = int(point[0])
-        return x >= len(self.ceiling) or \
+        return x < 0 or x >= len(self.ceiling) or \
                (point[1] < self.ceiling[x] or point[1] > self.ground[x])
 
 
@@ -91,7 +92,7 @@ class Level:
 
     def ceiling_collides_with(self, rectangular):
         x = int(rectangular.get_x())
-        return x >= len(self.ceiling) or self.ceiling[x] > rectangular.get_top()
+        return x < 0 or x >= len(self.ceiling) or self.ceiling[x] > rectangular.get_top()
 
     def ground_collides_with(self, rectangular):
         x = int(rectangular.get_x())
@@ -100,14 +101,14 @@ class Level:
     def ceiling_collides_with_multipoint(self, rectangular):
         x_list = [int(rectangular.get_x()), int(rectangular.get_left()), int(rectangular.get_right())]
         for x in x_list:
-            if x >= len(self.ceiling) or self.ceiling[x] > rectangular.get_top():
+            if x < 0 or x >= len(self.ceiling) or self.ceiling[x] > rectangular.get_top():
                 return True
         return False
 
     def ground_collides_with_multipoint(self, rectangular):
         x_list = [int(rectangular.get_x()), int(rectangular.get_left()), int(rectangular.get_right())]
         for x in x_list:
-            if x >= len(self.ground) or self.ground[x] < rectangular.get_bottom():
+            if x < 0 or x >= len(self.ground) or self.ground[x] < rectangular.get_bottom():
                 return True
         return False
 
