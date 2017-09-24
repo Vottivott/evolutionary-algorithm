@@ -30,6 +30,9 @@ class NeuralNetIntegration:
         else:
             print "NOT RECURRENT!"
 
+    def get_empty_h(self):
+        return [None] + [np.zeros(h.shape) for h in self.neural_network.h[1:-1]]
+
     def get_number_of_variables(self):
         return self.neural_network.get_total_number_of_weights()
 

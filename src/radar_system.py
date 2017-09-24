@@ -1,6 +1,6 @@
 import numpy as np
 
-from radar import Radar
+from radar import Radar, ObjectRadar
 
 
 class RadarSystem:
@@ -16,6 +16,14 @@ class RadarSystem:
         directions = np.linspace(np.pi - 3.0 * np.pi / 7, np.pi + 3.0 * np.pi / 7, self.num_back_radars)
         self.radars.extend([Radar(dir, max_steps, step_size) for dir in directions])
 
+        number_of_neurons = 20
+        x_step_size = 4
+        max_num_steps = 100
+        max_dist = 1000
+        only_left_half = False
+        self.enemy_radar = ObjectRadar(number_of_neurons, x_step_size, max_num_steps, max_dist, only_left_half)
+
+
 
 class EnemysRadarSystem:
     def __init__(self):
@@ -30,3 +38,16 @@ class EnemysRadarSystem:
         directions = np.linspace(np.pi - 3.0 * np.pi / 7, np.pi + 3.0 * np.pi / 7, self.num_back_radars)
         self.radars.extend([Radar(dir, max_steps, step_size) for dir in directions])
 
+        number_of_neurons = 10
+        x_step_size = 4
+        max_num_steps = 100
+        max_dist = 1000
+        only_left_half = True
+        self.copter_radar = ObjectRadar(number_of_neurons, x_step_size, max_num_steps, max_dist, only_left_half)
+
+        number_of_neurons = 10
+        x_step_size = 4
+        max_num_steps = 100
+        max_dist = 800
+        only_left_half = True
+        self.shot_radar = ObjectRadar(number_of_neurons, x_step_size, max_num_steps, max_dist, only_left_half)

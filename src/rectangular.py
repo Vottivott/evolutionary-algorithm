@@ -6,6 +6,9 @@ class Rectangular:
         self.width = width
         self.height = height
 
+    def get_position(self):
+        return self.position
+
     def get_top(self):
         return self.position[1] - self.height/2.0
 

@@ -2,7 +2,8 @@ from rectangular import Rectangular
 import numpy as np
 
 class Enemy(Rectangular):
-    def __init__(self, position, size):
+    def __init__(self, position):
+        size = 20
         Rectangular.__init__(self, position, size, size)
         self.base_velocity = np.array([[0.0], [0.0]])
         self.velocity = np.array([[0.0], [0.0]])

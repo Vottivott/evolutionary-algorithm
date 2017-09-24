@@ -51,11 +51,11 @@ class Graphics:
         #     color = min(np.random.normal(200, 30, 1), 255)
 
         self.draw_smoke(copter_simulation)
-        for i in range(len(copter_simulation.enemies)):
+        for i in range(len(copter_simulation.enemy_instances)):
             self.draw_enemy_smoke(copter_simulation, i)
         self.draw_copter(copter_simulation.copter, copter_simulation)
-        for enemy in copter_simulation.enemies:
-            self.draw_enemy(enemy, copter_simulation)
+        for ei in copter_simulation.enemy_instances:
+            self.draw_enemy(ei.enemy, copter_simulation)
         self.draw_level(copter_simulation)
         if True:
             self.draw_radars(copter_simulation)
@@ -73,7 +73,7 @@ class Graphics:
         if self.who_to_follow == 'main':
             cx = copter_simulation.copter.get_x()
         else:
-            cx = copter_simulation.enemies[self.who_to_follow].get_x()
+            cx = copter_simulation.enemy_instances[self.who_to_follow].enemy.get_x()
         start = cx - self.get_view_offset()
         end = start + self.size[0]
         start = min(len(level), max(0, start))
@@ -131,7 +131,7 @@ class Graphics:
             self.draw_smoke_particle(particle, copter_simulation)
 
     def draw_enemy_smoke(self, copter_simulation, index):
-        smoke = copter_simulation.enemy_smokes[index]
+        smoke = copter_simulation.enemy_instances[index].smoke
         for particle in smoke.particles:
             self.draw_smoke_particle(particle, copter_simulation)
 
@@ -141,7 +141,7 @@ class Graphics:
             y = np_vector[1]
             view_offset = self.view_offset
         else:
-            x = np_vector[0] - copter_simulation.enemies[self.who_to_follow].get_x()
+            x = np_vector[0] - copter_simulation.enemy_instances[self.who_to_follow].enemy.get_x()
             y = np_vector[1]
             view_offset = self.enemy_view_offset
         return (view_offset + x, y)
@@ -169,7 +169,8 @@ class Graphics:
                 for radar in radar_system.radars:
                     point, dist = radar.point, radar.dist
                     if True:#(point,dist) == (None,None):
-                        point,dist = radar.read(copter_simulation.copter.position, copter_simulation.level)
+                        # point,dist = radar.read(copter_simulation.copter.position, copter_simulation.level)
+                        point,dist = radar.read_rect(copter_simulation.copter.position, [copter_simulation.enemy_instances[0].enemy])
                     if True:#dist < 1:
                         dist = 0.5 + dist/2 # for drawing only
                         color = (255, int(150+(255-150)*dist), int(dist*255))
