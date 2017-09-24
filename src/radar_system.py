@@ -51,3 +51,10 @@ class EnemysRadarSystem:
         max_dist = 800
         only_left_half = True
         self.shot_radar = ObjectRadar(number_of_neurons, x_step_size, max_num_steps, max_dist, only_left_half)
+
+        number_of_neurons = 20
+        x_step_size = 4
+        max_num_steps = 100
+        max_dist = 1000
+        only_left_half = False
+        self.enemy_radar = ObjectRadar(number_of_neurons, x_step_size, max_num_steps, max_dist, only_left_half) # for detecting other enemies

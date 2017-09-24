@@ -54,11 +54,42 @@ class CopterSimulation:
         self.timestep = 0
         self.main_neural_net_integration = None
         self.enemy_neural_net_integration = None
+        self.enemy_passed_dist = 300
+        self.enemy_intro_dist = 1030
+
+        self.enemy_instance_queue = [] # enemy instances not yet in view
 
         self.enemy_instances = []
 
         self.graphics = None
 
+    def get_living_copter_list(self):
+        if self.copter.exploded:
+            return []
+        else:
+            return [self.copter]
+
+    def get_living_enemy_instances(self, except_index=None):
+        if except_index is not None:
+            return [ei for i,ei in enumerate(self.enemy_instances) if not ei.enemy.exploded and not i==except_index]
+        else:
+            return [ei for ei in self.enemy_instances if not ei.enemy.exploded]
+
+    def remove_passed_enemy_instances(self):
+        for i,ei in enumerate(self.enemy_instances):
+            if self.copter.position[0] - ei.get_position()[0] > self.enemy_passed_dist:
+                del self.enemy_instances[i]
+
+    def add_newcoming_enemies(self):
+        i = 0
+        while i < len(self.enemy_instance_queue):
+            ei = self.enemy_instance_queue[i]
+            pos = ei.get_position()
+            if pos[0] - self.copter.position[0] < self.enemy_intro_dist:
+                self.enemy_instances.append(ei)
+                del self.enemy_instance_queue[i]
+            else:
+                i += 1
 
     def set_main_neural_net_integration(self, neural_net_integration):
         self.main_neural_net_integration = neural_net_integration
@@ -96,8 +127,8 @@ class CopterSimulation:
         self.graphics = graphics
         if graphics:
             self.smoke = Smoke(self.copter.position, 4, 0.05, self.gravity, graphics.main_copter_smoke_color)
-            for enemy_instance in self.enemy_instances:
-                enemy_instance.smoke = Smoke(enemy_instance.enemy.position, 4, 0.05, self.gravity, graphics.enemy_smoke_color)
+            # for enemy_instance in self.enemy_instances:
+            #     enemy_instance.smoke = Smoke(enemy_instance.enemy.position, 4, 0.05, self.gravity, graphics.enemy_smoke_color)
         while 1:
             if graphics:
                 ctrl_not_previously_pressed = not self.ctrl_pressed
@@ -127,6 +158,8 @@ class CopterSimulation:
                 fire_force = self.force_when_fire_is_off
             still_flying = self.copter.step(self.level, self.gravity, fire_force, self.delta_t)
 
+            self.add_newcoming_enemies()
+            self.remove_passed_enemy_instances()
 
             enemy_still_flying = [True] * len(self.enemy_instances)
 
@@ -153,7 +186,6 @@ class CopterSimulation:
                             hit = True
                     if hit:
                         self.shots.remove(shot)
-
 
             self.timestep += 1
             if graphics:
@@ -194,13 +226,40 @@ class CopterSimulation:
             elif not still_flying:
                 return self.copter.get_x()  # Return the distance travelled = the fitness score
 
+
+def too_close(x_positions, min_dist):
+    for i in range(len(x_positions)):
+        for j in range(i) + range(i+1,len(x_positions)):
+            if abs(x_positions[i] - x_positions[j]) < min_dist:
+                return True
+    return False
+
+
+def get_enemy_positions(short_level_length, num_enemies, level, enemy_width, min_x):
+    x_positions = []
+    while not x_positions or too_close(x_positions, enemy_width):
+        x_positions = [min_x + np.random.random() * (short_level_length-min_x) for _ in range(num_enemies)]
+    x_positions = sorted(x_positions)
+    positions = [np.array([[x],[level.y_center(int(x))]]) for x in x_positions]
+    return positions
+
+def get_enemy_instance(position, graphics):
+    ei = EnemyInstance(
+        Enemy(np.array([position[0], position[1]])), None)
+    if graphics:
+        ei.smoke = Smoke(ei.enemy.position, 4, 0.05, s.gravity, graphics.enemy_smoke_color)
+    return ei
+
+
+
+
 if __name__ == "__main__":
     level_length = 300000
     graphics = Graphics()
     view_offset = 1200 / 7.0
     enemy_view_offset = 6.0 * 1200 / 7.0
-    level = generate_level(level_length)
-    s = CopterSimulation(level, Copter(np.array([[view_offset], [level.y_center(view_offset)]]), 20), RadarSystem())
+    new_level = generate_level(level_length)
+    s = CopterSimulation(new_level, Copter(np.array([[view_offset], [new_level.y_center(view_offset)]]), 20), RadarSystem())
     neural_net_integration = evocopter_neural_net_integration(s)
     s.set_main_neural_net_integration(neural_net_integration)
 
@@ -213,7 +272,7 @@ if __name__ == "__main__":
                 s.level = generate_level(level_length) # generate a new level for every generation
             neural_net_integration.set_weights(variables)
             start_x = base_start_x + view_offset
-            s.copter = Copter(np.array([[start_x], [level.y_center(start_x)]]), 20) # new copter
+            s.copter = Copter(np.array([[start_x], [s.level.y_center(start_x)]]), 20) # new copter
             return s.run() - start_x # use moved distance from start point as fitness score
 
     vars = neural_net_integration.get_number_of_variables()
@@ -281,34 +340,76 @@ if __name__ == "__main__":
 
     graphics.who_to_follow = MAIN#player
 
+    enemy_mode = True
+
     base_start_x = 1200
+    short_level_length = base_start_x + 5000
+    num_enemies = 5
+    num_short_levels = 7
+    enemy_width = 20
 
-    if user_play != None:
-        while 1:
-            s.level = generate_level(level_length)
-            s.copter = Copter(np.array([[base_start_x + view_offset], [s.level.y_center(base_start_x + view_offset)]]), 20)
 
-            # s.enemy_instances = []
-            # s.enemy_instances.append(EnemyInstance(Enemy(np.array([[base_start_x + enemy_view_offset], [s.level.y_center(base_start_x + enemy_view_offset)]])),\
-            #                          None))
-
-            # s.enemies[0] = Enemy(np.array([[base_start_x + enemy_view_offset], [s.level.y_center(base_start_x + enemy_view_offset)]]), 20)
-            # s.enemies[1] = Enemy(np.array([[base_start_x+80 + enemy_view_offset], [s.level.y_center(base_start_x+80 + enemy_view_offset)]]), 20)
-
-            population_data = load_population_data(subfoldername, -1)
-            neural_net_integration.set_weights(population_data.best_variables)
-
-            s.run(graphics, user_control=user_play)
-    else:
-        if run_loaded_chromosome:
+    if enemy_mode:
+        if user_play != None:
             while 1:
                 s.level = generate_level(level_length)
-                s.copter = Copter(np.array([[base_start_x + view_offset], [s.level.y_center(base_start_x + view_offset)]]), 20)
+                s.copter = Copter(
+                    np.array([[base_start_x + view_offset], [s.level.y_center(base_start_x + view_offset)]]), 20)
+
+                # s.enemy_instances = []
+                # s.enemy_instances.append(EnemyInstance(Enemy(np.array([[base_start_x + enemy_view_offset], [s.level.y_center(base_start_x + enemy_view_offset)]])),\
+                #                          None))
+
+                # s.enemies[0] = Enemy(np.array([[base_start_x + enemy_view_offset], [s.level.y_center(base_start_x + enemy_view_offset)]]), 20)
+                # s.enemies[1] = Enemy(np.array([[base_start_x+80 + enemy_view_offset], [s.level.y_center(base_start_x+80 + enemy_view_offset)]]), 20)
+
                 population_data = load_population_data(subfoldername, -1)
                 neural_net_integration.set_weights(population_data.best_variables)
-                s.run(graphics)
+
+                s.run(graphics, user_control=user_play)
         else:
-            ga.run(None, callback, population_data=load_population_data(subfoldername, -1))
+            if run_loaded_chromosome:
+                while 1:
+                    s.level = generate_level(short_level_length)
+                    s.copter = Copter(
+                        np.array([[base_start_x + view_offset], [s.level.y_center(base_start_x + view_offset)]]), 20)
+                    s.enemy_instances = []
+                    ep = get_enemy_positions(short_level_length, num_enemies, s.level, enemy_width, base_start_x)
+                    s.enemy_instance_queue = [get_enemy_instance(pos, graphics) for pos in ep]
+                    population_data = load_population_data(subfoldername, -1)
+                    neural_net_integration.set_weights(population_data.best_variables)
+                    s.run(graphics)
+            else:
+                ga.run(None, callback, population_data=load_population_data(subfoldername, -1))
+    else:
+        if user_play != None:
+            while 1:
+                s.level = generate_level(level_length)
+                s.copter = Copter(
+                    np.array([[base_start_x + view_offset], [s.level.y_center(base_start_x + view_offset)]]), 20)
+
+                # s.enemy_instances = []
+                # s.enemy_instances.append(EnemyInstance(Enemy(np.array([[base_start_x + enemy_view_offset], [s.level.y_center(base_start_x + enemy_view_offset)]])),\
+                #                          None))
+
+                # s.enemies[0] = Enemy(np.array([[base_start_x + enemy_view_offset], [s.level.y_center(base_start_x + enemy_view_offset)]]), 20)
+                # s.enemies[1] = Enemy(np.array([[base_start_x+80 + enemy_view_offset], [s.level.y_center(base_start_x+80 + enemy_view_offset)]]), 20)
+
+                population_data = load_population_data(subfoldername, -1)
+                neural_net_integration.set_weights(population_data.best_variables)
+
+                s.run(graphics, user_control=user_play)
+        else:
+            if run_loaded_chromosome:
+                while 1:
+                    s.level = generate_level(level_length)
+                    s.copter = Copter(
+                        np.array([[base_start_x + view_offset], [s.level.y_center(base_start_x + view_offset)]]), 20)
+                    population_data = load_population_data(subfoldername, -1)
+                    neural_net_integration.set_weights(population_data.best_variables)
+                    s.run(graphics)
+            else:
+                ga.run(None, callback, population_data=load_population_data(subfoldername, -1))
 
 
 

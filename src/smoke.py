@@ -112,6 +112,9 @@ class SmokeParticle(Rectangular):
     def step(self, level, delta_time):
         if not (self.freeze_on_bounce and self.has_bounced):
             acceleration = self.gravity
+            # print self.velocity
+            # print self.position
+            # print
             self.velocity += acceleration * delta_time
             self.position += self.velocity * delta_time
         self.alpha -= self.decay_rate * delta_time

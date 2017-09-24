@@ -66,7 +66,7 @@ class Graphics:
         self.draw_level(copter_simulation)
         if True:
             # self.draw_radars(copter_simulation)
-            # self.draw_object_radars(copter_simulation)
+            self.draw_object_radars(copter_simulation)
             pass
 
         # self.draw_shots(copter_simulation)
@@ -186,14 +186,17 @@ class Graphics:
 
     def draw_object_radars(self, copter_simulation):
         if not copter_simulation.copter.exploded:
-            # self.draw_object_radar(copter_simulation.radar_system.enemy_radar, copter_simulation.copter.position, copter_simulation.enemy_instances, (255,80,255), (255,255,255), copter_simulation)
+            # self.draw_object_radar(copter_simulation.radar_system.enemy_radar, copter_simulation.copter.position, copter_simulation.get_living_enemy_instances(), (255,80,255), (255,255,255), copter_simulation)
             pass
-        for ei in copter_simulation.enemy_instances:
+        for i,ei in enumerate(copter_simulation.enemy_instances):
             enemy = ei.enemy
             if not enemy.exploded:
                 self.draw_object_radar(copter_simulation.enemys_radar_system.shot_radar, enemy.position, copter_simulation.shots, (150,80,255), (255,255,255), copter_simulation)
                 self.draw_object_radar(copter_simulation.enemys_radar_system.copter_radar, enemy.position,
-                                       [copter_simulation.copter], (255, 80, 255), (255, 255, 255), copter_simulation)
+                                       copter_simulation.get_living_copter_list(), (255, 80, 255), (255, 255, 255), copter_simulation)
+                other_enemies = copter_simulation.get_living_enemy_instances(i)
+                self.draw_object_radar(copter_simulation.enemys_radar_system.enemy_radar, enemy.position,
+                                       other_enemies, (0, 255, 0), (255, 255, 255), copter_simulation)
 
     def draw_object_radar(self, radar, position, object_list, close_color, far_color, copter_simulation):
         dist_vec = radar.read_dist_vector(position, object_list, copter_simulation.level)

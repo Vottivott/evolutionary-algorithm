@@ -75,7 +75,7 @@ def evocopter_neural_net_integration(copter_simulation):
         # ADD WHEN STARTING DUAL TRAINING
         # enemy_radar = copter_simulation.radar_system.enemy_radar
         # position = copter_simulation.copter.position
-        # enemies = copter_simulation.enemy_instances
+        # enemies = copter_simulation.get_living_enemy_instances()
         # enemy_dist_vec = enemy_radar.read_dist_vector(position, enemies, copter_simulation.level)
 
         dist_inputs = np.array([[radar.read(copter_simulation.copter.position, copter_simulation.level)[1]] for radar in copter_simulation.radar_system.radars])
@@ -101,6 +101,7 @@ def enemy_neural_net_integration(copter_simulation):
     input_layer_size += copter_simulation.enemy_radar_system.num_back_radars
     input_layer_size += copter_simulation.enemy_radar_system.copter_radar.number_of_neurons
     input_layer_size += copter_simulation.enemy_radar_system.shot_radar.number_of_neurons
+    input_layer_size += copter_simulation.enemy_radar_system.enemy_radar.number_of_neurons
     input_layer_size += 2 # velocity in up-direction + velocity in down-direction
     input_layer_size += 1 # velocity in left-direction
 
@@ -126,14 +127,20 @@ def enemy_neural_net_integration(copter_simulation):
         copter_radar = copter_simulation.enemys_radar_system.copter_radar
         position = copter_simulation.enemy_instances[enemy_index].enemy.position
         shots = copter_simulation.shots
-        copters = [copter_simulation.copter]
+        copters = copter_simulation.get_living_copter_list()
+
+        enemy_radar = copter_simulation.radar_system.enemy_radar
+        other_enemies = copter_simulation.get_living_enemy_instances(enemy_index)
 
         shot_dist_vec = shot_radar.read_dist_vector(position, shots, copter_simulation.level)
         copter_dist_vec = copter_radar.read_dist_vector(position, copters, copter_simulation.level)
+        enemy_dist_vec = enemy_radar.read_dist_vector(position, other_enemies, copter_simulation.level)
+
+
 
         dist_inputs = np.array([[radar.read(copter_simulation.copter.position, copter_simulation.level)[1]] for radar in copter_simulation.radar_system.radars])
 
-        input = np.vstack((velocity_inputs, dist_inputs, shot_dist_vec, copter_dist_vec))
+        input = np.vstack((velocity_inputs, dist_inputs, shot_dist_vec, enemy_dist_vec, copter_dist_vec))
         # print input
         assert len(input) == input_layer_size
         return input
