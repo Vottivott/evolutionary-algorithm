@@ -55,7 +55,7 @@ class CopterSimulation:
         self.main_neural_net_integration = None
         self.enemy_neural_net_integration = None
         self.enemy_passed_dist = 300
-        self.enemy_intro_dist = 1030
+        self.enemy_intro_dist = 1050
 
         self.enemy_instance_queue = [] # enemy instances not yet in view
 
@@ -136,7 +136,7 @@ class CopterSimulation:
                 if self.ctrl_pressed and ctrl_not_previously_pressed:
                     self.ctrl_on_press = True
             if user_control != None and graphics:
-                if user_control == MAIN:
+                if user_control == MAIN or user_control >= len(self.enemy_instances):
                     if self.user_control_main(graphics):
                         return True
                 else:
@@ -147,8 +147,13 @@ class CopterSimulation:
             if user_control != MAIN and self.main_neural_net_integration is not None and not self.copter.exploded:
                 self.main_neural_net_integration.run_network(self)
             for enemy_index in range(len(self.enemy_instances)):
-                if user_control != enemy_index and self.enemy_neural_net_integration is not None and not self.enemy_instances[enemy_index].enemy.exploded:
-                    self.enemy_neural_net_integration.run_network(self, enemy_index)
+                if user_control != enemy_index:
+                    if self.enemy_neural_net_integration is not None and not self.enemy_instances[enemy_index].enemy.exploded:
+                        self.enemy_neural_net_integration.run_network(self, enemy_index)
+                    else:
+                        enemy  =self.enemy_instances[enemy_index].enemy
+                        enemy.velocity = -0.25*self.gravity
+                        enemy.firing = False
 
 
 
@@ -163,12 +168,7 @@ class CopterSimulation:
 
             enemy_still_flying = [True] * len(self.enemy_instances)
 
-            if not self.copter.exploded:
-                for ei in self.enemy_instances:
-                    if not ei.enemy.exploded and self.copter.collides_with(ei.enemy):
-                        still_flying = False
-
-            for i,ei in enumerate(self.enemy_instances):
+            for i, ei in enumerate(self.enemy_instances):
                 if ei.enemy.firing:
                     enemy_fire_force = self.force_when_fire_is_on
                 else:
@@ -186,6 +186,19 @@ class CopterSimulation:
                             hit = True
                     if hit:
                         self.shots.remove(shot)
+
+            for i,ei in enumerate(self.enemy_instances):
+                if not ei.enemy.exploded:
+                    if self.copter.collides_with(ei.enemy) and not self.copter.exploded:
+                        still_flying = False
+                        ei.enemy.velocity *= ei.enemy.collision_friction
+                    for i_other in range(i+1, len(self.enemy_instances)):
+                        ei_other = self.enemy_instances[i_other]
+                        if not ei_other.enemy.exploded and ei.enemy.collides_with(ei_other.enemy):
+                                enemy_still_flying[i] = False
+                                enemy_still_flying[i_other] = False
+
+
 
             self.timestep += 1
             if graphics:
@@ -333,12 +346,12 @@ if __name__ == "__main__":
         # print p.best_variables
 
 
-    player = MAIN
+    player = 0#MAIN
 
-    user_play = None#player
+    user_play = player#player
     run_loaded_chromosome = True
 
-    graphics.who_to_follow = MAIN#player
+    graphics.who_to_follow = player
 
     enemy_mode = True
 
@@ -352,16 +365,12 @@ if __name__ == "__main__":
     if enemy_mode:
         if user_play != None:
             while 1:
-                s.level = generate_level(level_length)
+                s.level = generate_level(short_level_length)
                 s.copter = Copter(
                     np.array([[base_start_x + view_offset], [s.level.y_center(base_start_x + view_offset)]]), 20)
-
-                # s.enemy_instances = []
-                # s.enemy_instances.append(EnemyInstance(Enemy(np.array([[base_start_x + enemy_view_offset], [s.level.y_center(base_start_x + enemy_view_offset)]])),\
-                #                          None))
-
-                # s.enemies[0] = Enemy(np.array([[base_start_x + enemy_view_offset], [s.level.y_center(base_start_x + enemy_view_offset)]]), 20)
-                # s.enemies[1] = Enemy(np.array([[base_start_x+80 + enemy_view_offset], [s.level.y_center(base_start_x+80 + enemy_view_offset)]]), 20)
+                s.enemy_instances = []
+                ep = get_enemy_positions(short_level_length, num_enemies, s.level, enemy_width, base_start_x+view_offset+5*enemy_width)
+                s.enemy_instance_queue = [get_enemy_instance(pos, graphics) for pos in ep]
 
                 population_data = load_population_data(subfoldername, -1)
                 neural_net_integration.set_weights(population_data.best_variables)
@@ -374,7 +383,7 @@ if __name__ == "__main__":
                     s.copter = Copter(
                         np.array([[base_start_x + view_offset], [s.level.y_center(base_start_x + view_offset)]]), 20)
                     s.enemy_instances = []
-                    ep = get_enemy_positions(short_level_length, num_enemies, s.level, enemy_width, base_start_x)
+                    ep = get_enemy_positions(short_level_length, num_enemies, s.level, enemy_width, base_start_x+view_offset+5*enemy_width)
                     s.enemy_instance_queue = [get_enemy_instance(pos, graphics) for pos in ep]
                     population_data = load_population_data(subfoldername, -1)
                     neural_net_integration.set_weights(population_data.best_variables)

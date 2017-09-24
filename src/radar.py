@@ -19,7 +19,7 @@ class ObjectRadar:
             dist = np.linalg.norm(diff)
             if dist > self.max_dist:
                 continue
-            num_steps = min(int(diff[0] / self.x_step_size), self.max_num_steps)
+            num_steps = min(int(abs(diff[0]) / self.x_step_size), self.max_num_steps)
             step = 0 if num_steps == 0 else diff / num_steps
             mid_pos = np.copy(position)
             viewable = True

@@ -75,15 +75,15 @@ class Graphics:
         self.clock.tick(60)
 
         keys = pygame.key.get_pressed()  # checking pressed keys
-        return keys[pygame.K_SPACE], (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]), keys[pygame.K_LEFT]
+        return keys[pygame.K_SPACE], (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL] or keys[pygame.K_DOWN]), keys[pygame.K_LEFT]
 
     def draw_level(self, copter_simulation):
         level = copter_simulation.level
-        if self.who_to_follow == 'main':
+        if self.who_to_follow == 'main' or self.who_to_follow >= len(copter_simulation.enemy_instances):
             cx = copter_simulation.copter.get_x()
         else:
             cx = copter_simulation.enemy_instances[self.who_to_follow].enemy.get_x()
-        start = cx - self.get_view_offset()
+        start = cx - self.get_view_offset(copter_simulation)
         end = start + self.size[0]
         start = min(len(level), max(0, start))
         end = min(len(level), max(0, end))
@@ -145,7 +145,7 @@ class Graphics:
             self.draw_smoke_particle(particle, copter_simulation)
 
     def np_to_screen_coord(self, np_vector, copter_simulation):
-        if self.who_to_follow == 'main': # follow main robot
+        if self.who_to_follow == 'main' or self.who_to_follow >= len(copter_simulation.enemy_instances): # follow main robot
             x = np_vector[0] - copter_simulation.copter.get_x()
             y = np_vector[1]
             view_offset = self.view_offset
@@ -155,8 +155,8 @@ class Graphics:
             view_offset = self.enemy_view_offset
         return (view_offset + x, y)
 
-    def get_view_offset(self):
-        return self.view_offset if self.who_to_follow == 'main' else self.enemy_view_offset
+    def get_view_offset(self, copter_simulation):
+        return self.view_offset if self.who_to_follow == 'main' or self.who_to_follow >= len(copter_simulation.enemy_instances) else self.enemy_view_offset
 
     def draw_smoke_particle(self, particle, copter_simulation):
 
@@ -186,8 +186,7 @@ class Graphics:
 
     def draw_object_radars(self, copter_simulation):
         if not copter_simulation.copter.exploded:
-            # self.draw_object_radar(copter_simulation.radar_system.enemy_radar, copter_simulation.copter.position, copter_simulation.get_living_enemy_instances(), (255,80,255), (255,255,255), copter_simulation)
-            pass
+            self.draw_object_radar(copter_simulation.radar_system.enemy_radar, copter_simulation.copter.position, copter_simulation.get_living_enemy_instances(), (255,80,255), (255,255,255), copter_simulation)
         for i,ei in enumerate(copter_simulation.enemy_instances):
             enemy = ei.enemy
             if not enemy.exploded:
