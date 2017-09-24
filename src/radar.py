@@ -31,13 +31,13 @@ class ObjectRadar:
             if viewable:
                 dist_value = dist / self.max_dist
                 if self.only_left_half:
-                    angle = np.pi/2.0 + np.arctan2(diff[1], -diff[0])
+                    angle = np.pi/2.0 + np.arctan2(-diff[1], -diff[0])
                     dir_index = int(angle / self.angle_slice)
                 else:
-                    angle = np.pi + np.arctan2(diff[1],diff[0])
+                    angle = np.pi + np.arctan2(-diff[1],diff[0])
                     dir_index = int(angle / self.angle_slice)
                 dist_vector[dir_index] = min(dist_vector[dir_index], dist_value)
-            return dist_vector
+        return dist_vector
 
 
 

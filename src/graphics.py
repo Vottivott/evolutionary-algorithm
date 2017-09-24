@@ -4,6 +4,13 @@ import pygame, sys
 from pygame.locals import *
 import numpy as np
 import pyglet.media
+
+def tuple_add(a,b):
+    return [v_a+v_b for v_a,v_b in zip(a,b)]
+
+def tuple_scale(a,factor):
+    return [v_a*factor for v_a in a]
+
 # import pyglet
 class Graphics:
     def __init__(self):
@@ -58,7 +65,9 @@ class Graphics:
             self.draw_enemy(ei.enemy, copter_simulation)
         self.draw_level(copter_simulation)
         if True:
-            self.draw_radars(copter_simulation)
+            # self.draw_radars(copter_simulation)
+            # self.draw_object_radars(copter_simulation)
+            pass
 
         # self.draw_shots(copter_simulation)
 
@@ -169,12 +178,45 @@ class Graphics:
                 for radar in radar_system.radars:
                     point, dist = radar.point, radar.dist
                     if True:#(point,dist) == (None,None):
-                        # point,dist = radar.read(copter_simulation.copter.position, copter_simulation.level)
-                        point,dist = radar.read_rect(copter_simulation.copter.position, [copter_simulation.enemy_instances[0].enemy])
+                        point,dist = radar.read(copter_simulation.copter.position, copter_simulation.level)
                     if True:#dist < 1:
                         dist = 0.5 + dist/2 # for drawing only
                         color = (255, int(150+(255-150)*dist), int(dist*255))
                         pygame.draw.circle(self.screen, color, self.np_to_screen_coord(point, copter_simulation), 5)
+
+    def draw_object_radars(self, copter_simulation):
+        if not copter_simulation.copter.exploded:
+            # self.draw_object_radar(copter_simulation.radar_system.enemy_radar, copter_simulation.copter.position, copter_simulation.enemy_instances, (255,80,255), (255,255,255), copter_simulation)
+            pass
+        for ei in copter_simulation.enemy_instances:
+            enemy = ei.enemy
+            if not enemy.exploded:
+                self.draw_object_radar(copter_simulation.enemys_radar_system.shot_radar, enemy.position, copter_simulation.shots, (150,80,255), (255,255,255), copter_simulation)
+                self.draw_object_radar(copter_simulation.enemys_radar_system.copter_radar, enemy.position,
+                                       [copter_simulation.copter], (255, 80, 255), (255, 255, 255), copter_simulation)
+
+    def draw_object_radar(self, radar, position, object_list, close_color, far_color, copter_simulation):
+        dist_vec = radar.read_dist_vector(position, object_list, copter_simulation.level)
+        c_close = np.array(close_color)
+        c_far = np.array(far_color)
+        c_diff = c_far - c_close
+        for i in range(radar.number_of_neurons):
+            if dist_vec[i] < 1.0:
+                if radar.only_left_half:
+                    angle = -(i + 0.5) * radar.angle_slice - np.pi / 2.0
+                else:
+                    angle = (i + 0.5) * radar.angle_slice - np.pi
+                color = c_close + c_diff * dist_vec[i]
+                self.draw_circle_at_angle(color, position, dist_vec[i] * 150, angle,
+                                          copter_simulation)
+
+
+    def unit_dir_vector(self, angle):
+        return np.array([[np.cos(angle)],[-np.sin(angle)]])
+
+    def draw_circle_at_angle(self, color, position, dist, angle, copter_simulation):
+        p = position + dist * self.unit_dir_vector(angle)
+        pygame.draw.circle(self.screen, color, self.np_to_screen_coord(p, copter_simulation), 5)
 
     def draw_shots(self, copter_simulation):
         for shot in copter_simulation.shots:

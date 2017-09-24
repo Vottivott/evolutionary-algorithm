@@ -89,7 +89,6 @@ class CopterSimulation:
             return True
         if self.ctrl_on_press:
             enemy.dive()
-            #self.enemy_smokes[index].create_dive_background()
             graphics.play_enemy_dive_sound()
             self.ctrl_on_press = False
 
@@ -212,8 +211,9 @@ if __name__ == "__main__":
                 last_generation = generation
                 s.level = generate_level(level_length) # generate a new level for every generation
             neural_net_integration.set_weights(variables)
-            s.copter = Copter(np.array([[view_offset], [level.y_center(view_offset)]]), 20) # new copter
-            return s.run()
+            start_x = base_start_x + view_offset
+            s.copter = Copter(np.array([[start_x], [level.y_center(start_x)]]), 20) # new copter
+            return s.run() - start_x # use moved distance from start point as fitness score
 
     vars = neural_net_integration.get_number_of_variables()
     var_size = 30
@@ -232,8 +232,8 @@ if __name__ == "__main__":
 
 
     # subfoldername = "7 counters (length 4), 15 radars (max_steps = 250, step_size = 4), velocity up+down"
-    subfoldername = "feedforward_larger_no_enemies"
-    # subfoldername = "recurrent_no_enemies"
+    # subfoldername = "feedforward_larger_no_enemies"
+    subfoldername = "recurrent_no_enemies"
 
 
     # Init plot
@@ -268,17 +268,17 @@ if __name__ == "__main__":
 
         if graphics is not None and p.generation % 10 == 0:
             neural_net_integration.set_weights(p.best_variables)
-            s.copter = Copter(np.array([[view_offset], [s.level.y_center(view_offset)]]), 20)  # new copter
+            s.copter = Copter(np.array([[base_start_x + view_offset], [s.level.y_center(base_start_x + view_offset)]]), 20)  # new copter
             return s.run(graphics)
         # print p.best_variables
 
 
-    player = 0#MAIN
+    player = MAIN
 
-    user_play = player
-    run_loaded_chromosome = True
+    user_play = None#player
+    run_loaded_chromosome = False
 
-    graphics.who_to_follow = player
+    graphics.who_to_follow = MAIN#player
 
     base_start_x = 1200
 
@@ -287,9 +287,10 @@ if __name__ == "__main__":
             s.level = generate_level(level_length)
             s.copter = Copter(np.array([[base_start_x + view_offset], [s.level.y_center(base_start_x + view_offset)]]), 20)
 
-            s.enemy_instances = []
-            s.enemy_instances.append(EnemyInstance(Enemy(np.array([[base_start_x + enemy_view_offset], [s.level.y_center(base_start_x + enemy_view_offset)]])),\
-                                     None))
+            # s.enemy_instances = []
+            # s.enemy_instances.append(EnemyInstance(Enemy(np.array([[base_start_x + enemy_view_offset], [s.level.y_center(base_start_x + enemy_view_offset)]])),\
+            #                          None))
+
             # s.enemies[0] = Enemy(np.array([[base_start_x + enemy_view_offset], [s.level.y_center(base_start_x + enemy_view_offset)]]), 20)
             # s.enemies[1] = Enemy(np.array([[base_start_x+80 + enemy_view_offset], [s.level.y_center(base_start_x+80 + enemy_view_offset)]]), 20)
 
@@ -306,7 +307,7 @@ if __name__ == "__main__":
                 neural_net_integration.set_weights(population_data.best_variables)
                 s.run(graphics)
         else:
-            ga.run(None, callback, population_data=load_population_data(subfoldername, -1))
+            ga.run(None, callback)#, population_data=load_population_data(subfoldername, -1))
 
 
 
