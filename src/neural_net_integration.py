@@ -26,7 +26,7 @@ class NeuralNetIntegration:
     def set_weights(self, weights):
         self.neural_network.set_weights_from_single_vector(weights)
         if self.recurrent:
-            self.neural_network.h = [None] + [np.zeros(h.shape) for h in self.neural_network.h[1:-1]] # Reset state vectors
+            self.neural_network.h = [None] + [np.zeros((size, 1)) for size in self.neural_network.layer_sizes[1:-1]] # Reset state vectors
         else:
             print "NOT RECURRENT!"
 

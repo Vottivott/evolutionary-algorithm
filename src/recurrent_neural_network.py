@@ -38,6 +38,7 @@ class RecurrentNeuralNetwork:
         # weights from the same layer to itself
         self.W_recurrent = [None] + [initial_weights(size, size) for size in layer_sizes[1:-1]]
         self.h = [None] + [np.zeros((size, 1)) for size in layer_sizes[1:-1]] # state vectors
+        # print map(lambda x:x.shape if x!=None else 0,self.h)
 
         self.activation_function = activation_function
         self.number_of_weights = sum(size * (prev_size + 1) for size, prev_size in zip(layer_sizes[1:], layer_sizes))
@@ -57,9 +58,8 @@ class RecurrentNeuralNetwork:
             index = new_index
         for layer in range(1, self.L-1): # recurrent weights
             size = self.layer_sizes[layer]
-            prev_size = self.layer_sizes[layer - 1]
-            new_index = index + size * prev_size
-            self.W_recurrent[layer] = vector[index:new_index].reshape((size, prev_size))
+            new_index = index + size * size
+            self.W_recurrent[layer] = vector[index:new_index].reshape((size, size))
             index = new_index
 
     def get_total_number_of_weights(self):
@@ -71,7 +71,6 @@ class RecurrentNeuralNetwork:
     def forward_pass(self, z, a, x):
         a[0] = x
         for layer in range(1, self.L-1):
-
             # print np.dot(self.W[layer], a[layer-1]).shape
             z[layer] = np.dot(self.W[layer], a[layer - 1]) + self.b[layer]\
                      + np.dot(self.W_recurrent[layer], self.h[layer]) # recurrent connection

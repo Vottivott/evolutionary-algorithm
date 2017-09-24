@@ -163,7 +163,8 @@ class CopterSimulation:
                         self.smoke.create_explosion()
                         graphics.play_crash_sound()
                         self.copter.exploded = True
-                        print "Fitness: " + str(self.copter.position[0])
+                        start_x = base_start_x + view_offset
+                        print "Fitness: " + str(self.copter.position[0] - start_x)
                 sputter = self.smoke.step(self.level, self.delta_t, self.copter.firing and not self.copter.exploded)
                 if sputter:
                     if self.time_since_last_sputter_sound >= self.sputter_sound_interval:
@@ -276,7 +277,7 @@ if __name__ == "__main__":
     player = MAIN
 
     user_play = None#player
-    run_loaded_chromosome = False
+    run_loaded_chromosome = True
 
     graphics.who_to_follow = MAIN#player
 
@@ -307,7 +308,7 @@ if __name__ == "__main__":
                 neural_net_integration.set_weights(population_data.best_variables)
                 s.run(graphics)
         else:
-            ga.run(None, callback)#, population_data=load_population_data(subfoldername, -1))
+            ga.run(None, callback, population_data=load_population_data(subfoldername, -1))
 
 
 
