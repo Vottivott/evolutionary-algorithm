@@ -65,8 +65,8 @@ class RecurrentNeuralNetwork:
     def get_total_number_of_weights(self):
         return self.number_of_weights
 
-    def set_custom_h_layer(self, h):
-        self.h = h
+    # def set_custom_h_layer(self, h):
+    #     self.h = h
 
     def forward_pass(self, z, a, x):
         a[0] = x
@@ -79,10 +79,24 @@ class RecurrentNeuralNetwork:
         z[-1] = np.dot(self.W[-1], a[-2]) + self.b[-1]
         a[-1] = self.activation_function.f(z[-1])
 
-    def run(self, input):
+    def forward_pass_custom_h(self, z, a, x, custom_h):
+        a[0] = x
+        for layer in range(1, self.L-1):
+            # print np.dot(self.W[layer], a[layer-1]).shape
+            z[layer] = np.dot(self.W[layer], a[layer - 1]) + self.b[layer]\
+                     + np.dot(self.W_recurrent[layer], custom_h[layer]) # recurrent connection
+            custom_h[layer] = a[layer] = self.activation_function.f(z[layer])
+        # output layer (no recurrency)
+        z[-1] = np.dot(self.W[-1], a[-2]) + self.b[-1]
+        a[-1] = self.activation_function.f(z[-1])
+
+    def run(self, input, custom_h_layer=None):
         z = [None] + [np.zeros((size, 1)) for size in self.layer_sizes[1:]]
         a = [np.zeros((size, 1)) for size in self.layer_sizes]
-        self.forward_pass(z, a, input)
+        if custom_h_layer:
+            self.forward_pass_custom_h(z, a, input, custom_h_layer)
+        else:
+            self.forward_pass(z, a, input)
         return a[-1]
 
     def avg_cost(self, cost_function, training_set):

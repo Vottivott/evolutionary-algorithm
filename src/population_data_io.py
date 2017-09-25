@@ -18,12 +18,32 @@ def save_population_data(subfoldername, population_data, keep_last_n=None):
 def load_population_data(subfoldername, generation):
     directory_path = "../saved_populations/" + subfoldername + "/"
     if generation == -1:
+        file_loaded = False
+        if not os.path.exists(directory_path):
+            return None
         files = os.listdir(directory_path)
+        if not len(files):
+            return None
         nums = (int(file[:-4]) for file in files)
-        generation = max(nums)
+        nums = sorted(nums)
+        generation = nums[-1]
         print "Loading latest generation: " + str(generation)
-    with open(directory_path + str(generation) + ".pkl") as file:
-        return pickle.load(file)
+        while 1:
+            try:
+                with open(directory_path + str(generation) + ".pkl") as file:
+                    return pickle.load(file)
+            except ValueError:
+                old = nums[-1]
+                del nums[-1]
+                if len(nums) == 0:
+                    print "No file left to try! Returning None"
+                    return None
+                else:
+                    generation = nums[-1]
+                    print "ValueError on " + str(old) + ", trying with " + str(generation) + " instead!"
+    else:
+        with open(directory_path + str(generation) + ".pkl") as file:
+            return pickle.load(file)
 
 
 if __name__ == "__main__":

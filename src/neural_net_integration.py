@@ -20,15 +20,15 @@ class NeuralNetIntegration:
         self.input_function = input_function
         self.output_function = output_function
 
-    def run_network(self, copter_simulation, enemy_index=None):
-        network_output = self.neural_network.run(self.input_function(copter_simulation, enemy_index))
+    def run_network(self, copter_simulation, enemy_index=None, custom_h_layer=None):
+        network_output = self.neural_network.run(self.input_function(copter_simulation, enemy_index), custom_h_layer)
         self.output_function(network_output, copter_simulation, enemy_index)
 
     def clear_h(self):
         self.neural_network.h = self.get_empty_h()
 
-    def set_custom_h_layer(self, h):
-        self.neural_network.set_custom_h_layer(h)
+    # def set_custom_h_layer(self, h):
+    #     self.neural_network.set_custom_h_layer(h)
 
     def set_weights(self, weights):
         self.neural_network.set_weights_from_single_vector(weights)
@@ -156,6 +156,7 @@ def black_neural_net_integration(copter_simulation):
 
     def enemy_output_function(network_output, sim, enemy_index):
         enemy = sim.enemy_instances[enemy_index].enemy
+        # print network_output[:3]
         should_fire = network_output[0] > 0.5
         moving_left = network_output[1] > 0.5
         diving = network_output[2] > 0.5

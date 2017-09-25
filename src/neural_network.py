@@ -55,7 +55,7 @@ class NeuralNetwork:
             z[layer] = np.dot(self.W[layer], a[layer-1]) + self.b[layer]
             a[layer] = self.activation_function.f(z[layer])
 
-    def run(self, input):
+    def run(self, input, custom_h_layer=None):
         z = [None] + [np.zeros((size, 1)) for size in self.layer_sizes[1:]]
         a = [np.zeros((size, 1)) for size in self.layer_sizes]
         self.forward_pass(z, a, input)
