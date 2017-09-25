@@ -60,6 +60,7 @@ def evocopter_neural_net_integration(copter_simulation):
 
     layer_sizes = (input_layer_size, middle_layer_size, output_layer_size)
 
+
     def evocopter_input_function(sim, enemy_index):
         yvel = np.asscalar(sim.copter.velocity[1])
         if yvel <= 0:
@@ -80,24 +81,24 @@ def evocopter_neural_net_integration(copter_simulation):
         x_velocity_inputs = np.array([[velocity_left], [velocity_right]])
 
         # TODO:ADD WHEN STARTING DUAL TRAINING
-        # enemy_radar = copter_simulation.radar_system.enemy_radar
-        # position = copter_simulation.copter.position
-        # enemies = copter_simulation.get_living_enemy_instances()
-        # enemy_dist_vec = enemy_radar.read_dist_vector(position, enemies, copter_simulation.level)
+        # enemy_radar = sim.radar_system.enemy_radar
+        # position = sim.copter.position
+        # enemies = sim.get_living_enemy_instances()
+        # enemy_dist_vec = enemy_radar.read_dist_vector(position, enemies, sim.level)
 
-        dist_inputs = np.array([[radar.read(copter_simulation.copter.position, copter_simulation.level)[1]] for radar in copter_simulation.radar_system.radars])
-        dist_to_enemy_inputs = np.full((enemy_radar_size,1),1.0)#np.array([[radar.read_rect(copter_simulation.copter.position, copter_simulation.level, copter_simulation.enemies)[1]] for radar in copter_simulation.radar_system.radars])
+        dist_inputs = np.array([[radar.read(sim.copter.position, sim.level)[1]] for radar in sim.radar_system.radars])
+        dist_to_enemy_inputs = np.full((enemy_radar_size,1),1.0)#np.array([[radar.read_rect(sim.copter.position, sim.level, sim.enemies)[1]] for radar in sim.radar_system.radars])
 
         input = np.vstack((velocity_inputs, dist_inputs, dist_to_enemy_inputs, x_velocity_inputs))
         # print input
         assert len(input) == input_layer_size
         return input
 
-    def evocopter_output_function(network_output, copter_simulation, enemy_index):
+    def evocopter_output_function(network_output, sim, enemy_index):
         should_fire = network_output[0] > 0.5
-        copter_simulation.copter.firing = should_fire
+        sim.copter.firing = should_fire
         if network_output[1] > 0.5:
-            copter_simulation.copter_shoot()
+            sim.copter_shoot()
         # print should_fire
 
     return NeuralNetIntegration(layer_sizes, evocopter_input_function, evocopter_output_function, recurrent=True)
@@ -131,30 +132,30 @@ def black_neural_net_integration(copter_simulation):
         velocity_left = -xvel / Enemy.max_x_velocity
         velocity_inputs = np.array([[velocity_up], [velocity_down], [velocity_left]])
 
-        shot_radar = copter_simulation.enemys_radar_system.shot_radar
-        copter_radar = copter_simulation.enemys_radar_system.copter_radar
+        shot_radar = sim.enemys_radar_system.shot_radar
+        copter_radar = sim.enemys_radar_system.copter_radar
         position = enemy.position
-        shots = copter_simulation.shots
-        copters = copter_simulation.get_living_copter_list()
+        shots = sim.shots
+        copters = sim.get_living_copter_list()
 
-        enemy_radar = copter_simulation.enemys_radar_system.enemy_radar
-        other_enemies = copter_simulation.get_living_enemy_instances(enemy_index)
+        enemy_radar = sim.enemys_radar_system.enemy_radar
+        other_enemies = sim.get_living_enemy_instances(enemy_index)
 
-        shot_dist_vec = shot_radar.read_dist_vector(position, shots, copter_simulation.level)
-        copter_dist_vec = copter_radar.read_dist_vector(position, copters, copter_simulation.level)
-        enemy_dist_vec = enemy_radar.read_dist_vector(position, other_enemies, copter_simulation.level)
+        shot_dist_vec = shot_radar.read_dist_vector(position, shots, sim.level)
+        copter_dist_vec = copter_radar.read_dist_vector(position, copters, sim.level)
+        enemy_dist_vec = enemy_radar.read_dist_vector(position, other_enemies, sim.level)
 
 
 
-        dist_inputs = np.array([[radar.read(position, copter_simulation.level)[1]] for radar in copter_simulation.enemys_radar_system.radars])
+        dist_inputs = np.array([[radar.read(position, sim.level)[1]] for radar in sim.enemys_radar_system.radars])
 
         input = np.vstack((velocity_inputs, dist_inputs, shot_dist_vec, enemy_dist_vec, copter_dist_vec))
         # print input
         assert len(input) == input_layer_size
         return input
 
-    def enemy_output_function(network_output, copter_simulation, enemy_index):
-        enemy = copter_simulation.enemy_instances[enemy_index].enemy
+    def enemy_output_function(network_output, sim, enemy_index):
+        enemy = sim.enemy_instances[enemy_index].enemy
         should_fire = network_output[0] > 0.5
         moving_left = network_output[1] > 0.5
         diving = network_output[2] > 0.5

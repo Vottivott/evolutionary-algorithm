@@ -57,6 +57,12 @@ class CopterSimulation:
         self.enemy_passed_dist = 400
         self.enemy_intro_dist = 1050
 
+        self.end_when_copter_dies = True
+        self.end_when_enemy_dies = False
+        self.end_when_all_enemies_die = False
+        self.end_at_time = None
+
+
         self.total_enemy_living_time = 0.0
 
         self.enemy_instance_queue = [] # enemy instances not yet in view
@@ -127,6 +133,7 @@ class CopterSimulation:
 
     def run(self, graphics=None, user_control=None):
         self.graphics = graphics
+        self.timestep = 0
         if graphics:
             self.smoke = Smoke(self.copter.position, 4, 0.05, self.gravity, graphics.main_copter_smoke_color)
             # for enemy_instance in self.enemy_instances:
@@ -144,7 +151,7 @@ class CopterSimulation:
                 else:
                     if self.user_control_enemy(graphics, user_control):
                         return True
-            elif user_control is None and graphics and self.copter.exploded and abs(self.copter.velocity[0]) < 0.1:
+            elif user_control is None and graphics and self.copter.exploded and self.end_when_copter_dies:#abs(self.copter.velocity[0]) < 0.1:
                 return self.copter.get_x()
             if user_control != MAIN and self.main_neural_net_integration is not None and not self.copter.exploded:
                 self.main_neural_net_integration.run_network(self)
@@ -206,6 +213,8 @@ class CopterSimulation:
 
 
             self.timestep += 1
+            if self.end_at_time is not None and self.timestep >= self.end_at_time:
+                return self.copter.get_x()
             if graphics:
 
                 if not still_flying:
@@ -214,7 +223,7 @@ class CopterSimulation:
                         graphics.play_crash_sound()
                         self.copter.exploded = True
                         start_x = base_start_x + view_offset
-                        print "Fitness: " + str(self.copter.position[0] - start_x)
+                        # print "Fitness: " + str(self.copter.position[0] - start_x)
                 sputter = self.smoke.step(self.level, self.delta_t, self.copter.firing and not self.copter.exploded)
                 if sputter:
                     if self.time_since_last_sputter_sound >= self.sputter_sound_interval:
@@ -240,9 +249,21 @@ class CopterSimulation:
                             self.enemy_instances[i].time_since_last_sputter_sound = 0
                             self.sputter_sound_interval = 4
                     self.enemy_instances[i].time_since_last_sputter_sound += 1
-
-            elif not still_flying:
+            elif not still_flying and self.end_when_copter_dies:
                 return self.copter.get_x()  # Return the distance travelled = the fitness score
+            if self.end_when_enemy_dies:
+                for ei in self.enemy_instances:
+                    if ei.enemy.exploded:
+                        return ei.enemy.position[0]
+            if self.end_when_all_enemies_die:
+                all_dead = True
+                for ei in self.enemy_instances:
+                    if not ei.enemy.exploded:
+                        all_dead = False
+                if all_dead:
+                    return self.timestep
+
+
 
 
 def too_close(x_positions, min_dist):
@@ -287,28 +308,33 @@ if __name__ == "__main__":
 
     if enemy_mode:
 
-        short_level_length = base_start_x + 5000
+        short_level_length = base_start_x + 1000#5000
         num_enemies = 5
         num_short_levels = 7
 
         new_level = generate_level(short_level_length)
         s = CopterSimulation(new_level, Copter(np.array([[start_x], [new_level.y_center(start_x)]]), 20),
                              RadarSystem())
-        neural_net_integration = evocopter_neural_net_integration(s)
+        neural_net_integration = None#evocopter_neural_net_integration(s)
         s.set_main_neural_net_integration(neural_net_integration)
 
         enemy_neural_net_integration = black_neural_net_integration(s)
         s.set_enemy_neural_net_integration(enemy_neural_net_integration)
 
         # Use this for now
-        copter_population_data = load_population_data("recurrent_no_enemies", -1)
-        neural_net_integration.set_weights(copter_population_data.best_variables)
+        # copter_population_data = load_population_data("recurrent_no_enemies", -1)
+        # neural_net_integration.set_weights(copter_population_data.best_variables)
 
         best_main_neural_net_integration = neural_net_integration
         best_enemy_neural_net_integration = enemy_neural_net_integration
 
+        global short_levels_and_enemy_positions
         short_levels_and_enemy_positions = [] # pairs of (level, enemy_positions) for each mini-level
 
+        s.end_when_copter_dies = False
+        s.end_when_enemy_dies = False
+        s.end_when_all_enemies_die = True
+        s.end_at_time = 100000
 
         def generate_mini_levels_and_enemy_positions():
             result = []
@@ -335,21 +361,26 @@ if __name__ == "__main__":
             def __init__(self):
                 self.last_generation = -1
 
+                self.debug_ind_n = 1
+
             def evaluate(self, variables, generation):
                 if generation != self.last_generation:
                     self.last_generation = generation
                     global short_levels_and_enemy_positions
                     short_levels_and_enemy_positions = generate_mini_levels_and_enemy_positions()
-
+                    self.debug_ind_n = 1
+                if len(short_levels_and_enemy_positions) != num_short_levels:
+                    print short_levels_and_enemy_positions
                 fitness_total = 0.0
                 enemy_neural_net_integration.set_weights(variables)
                 for level, positions in short_levels_and_enemy_positions:
                     s.level = level
                     s.set_main_neural_net_integration(best_main_neural_net_integration)
                     s.set_enemy_neural_net_integration(enemy_neural_net_integration)
-                    s.main_neural_net_integration.clear_h()
+                    if s.main_neural_net_integration is not None:
+                        s.main_neural_net_integration.clear_h()
                     s.enemy_instances = []
-                    s.enemy_instance_queue = [get_enemy_instance(pos, graphics, s.enemy_neural_net_integration) for pos in positions]
+                    s.enemy_instance_queue = [get_enemy_instance(pos, None, s.enemy_neural_net_integration) for pos in positions]
                     s.copter = Copter(np.array([[start_x], [s.level.y_center(start_x)]]), 20)  # new copter
                     #fitness_total += s.run() - start_x  # use moved distance from start point as fitness score
 
@@ -357,7 +388,8 @@ if __name__ == "__main__":
                     s.total_enemy_living_time = 0.0
                     s.run()
                     fitness_total += s.total_enemy_living_time
-                print fitness_total / num_short_levels
+                print "("+str(self.debug_ind_n) + "): " + str(fitness_total / num_short_levels)
+                self.debug_ind_n += 1
                 return fitness_total / num_short_levels
 
 
@@ -381,29 +413,29 @@ if __name__ == "__main__":
                 average_fitness)
             if not watch_only:
                 save_population_data(enemy_subfoldername, p, keep_last_n=10)
-            if watch_only or (graphics is not None and p.generation % 10 == 0):
+            if watch_only or (graphics is not None):# and p.generation % 10 == 0):
                 fitness_total = 0.0
                 enemy_neural_net_integration.set_weights(p.best_variables)
                 for level, positions in short_levels_and_enemy_positions:
                     s.level = level
                     s.set_main_neural_net_integration(best_main_neural_net_integration)
                     s.set_enemy_neural_net_integration(enemy_neural_net_integration)
-                    s.main_neural_net_integration.clear_h()
+                    if s.main_neural_net_integration is not None:
+                        s.main_neural_net_integration.clear_h()
                     s.enemy_instances = []
                     s.enemy_instance_queue = [get_enemy_instance(pos, graphics, s.enemy_neural_net_integration) for pos
                                               in positions]
                     s.copter = Copter(np.array([[start_x], [s.level.y_center(start_x)]]), 20)  # new copter
-                    fitness = s.run(graphics) - start_x  # use moved distance from start point as fitness score
+                    fitness = s.run(graphics)# - start_x  # use moved distance from start point as fitness score
                     if watch_only:
                         print fitness
                     fitness_total += fitness
 
 
-        watch_only = True
+        watch_only = False
         enemy_population_data = load_population_data(enemy_subfoldername, -1)
         if True:
             if watch_only:
-                global short_levels_and_enemy_positions
                 short_levels_and_enemy_positions = generate_mini_levels_and_enemy_positions()
                 enemy_callback(enemy_population_data, True)
                 #watch_run(enemy_population_data)
