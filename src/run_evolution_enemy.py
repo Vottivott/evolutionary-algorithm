@@ -1,0 +1,3 @@
+from copter_simulation import run_evolution_on_enemy
+
+run_evolution_on_enemy()

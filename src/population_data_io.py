@@ -1,15 +1,16 @@
 import pickle
 import os
 
-def save_population_data(subfoldername, population_data, keep_last_n=None):
+def save_population_data(subfoldername, population_data, keep_last_n=None, keep_mod = 100):
     directory_path = "../saved_populations/" + subfoldername + "/"
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)
     if keep_last_n:
         files = os.listdir(directory_path)
         for filename in files:
-            diff = population_data.generation - int(filename[:-4])
-            if diff >= keep_last_n:
+            num = int(filename[:-4])
+            diff = population_data.generation - num
+            if diff >= keep_last_n and not (keep_mod is not None and num % keep_mod == 0):
                 os.remove(directory_path + filename)
     with open(directory_path + str(population_data.generation) + ".pkl", 'w') as out:
         pickle.dump(population_data, out)
@@ -27,7 +28,7 @@ def load_population_data(subfoldername, generation):
         nums = (int(file[:-4]) for file in files)
         nums = sorted(nums)
         generation = nums[-1]
-        print "Loading latest generation: " + str(generation)
+        print "Loading latest generation of " + str(subfoldername) + ": " + str(generation)
         while 1:
             try:
                 with open(directory_path + str(generation) + ".pkl") as file:

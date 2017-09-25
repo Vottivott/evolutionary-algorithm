@@ -80,16 +80,14 @@ def evocopter_neural_net_integration(copter_simulation):
             velocity_right = xvel / sim.copter.max_x_velocity
         x_velocity_inputs = np.array([[velocity_left], [velocity_right]])
 
-        # TODO:ADD WHEN STARTING DUAL TRAINING
-        # enemy_radar = sim.radar_system.enemy_radar
-        # position = sim.copter.position
-        # enemies = sim.get_living_enemy_instances()
-        # enemy_dist_vec = enemy_radar.read_dist_vector(position, enemies, sim.level)
+        enemy_radar = sim.radar_system.enemy_radar
+        position = sim.copter.position
+        enemies = sim.get_living_enemy_instances()
+        enemy_dist_vec = enemy_radar.read_dist_vector(position, enemies, sim.level)
 
         dist_inputs = np.array([[radar.read(sim.copter.position, sim.level)[1]] for radar in sim.radar_system.radars])
-        dist_to_enemy_inputs = np.full((enemy_radar_size,1),1.0)#np.array([[radar.read_rect(sim.copter.position, sim.level, sim.enemies)[1]] for radar in sim.radar_system.radars])
 
-        input = np.vstack((velocity_inputs, dist_inputs, dist_to_enemy_inputs, x_velocity_inputs))
+        input = np.vstack((velocity_inputs, dist_inputs, enemy_dist_vec, x_velocity_inputs))
         # print input
         assert len(input) == input_layer_size
         return input
