@@ -101,7 +101,7 @@ class Graphics:
         #     pygame.draw.lines(self.screen, (255, color, 0), False, point, 2)
         # for point in ground_pointlist:
         #     pygame.draw.lines(self.screen, (255, color, 0), False, point, 2)
-        pygame.draw.polygon(self.screen, c_cave, [[0,0]]+[[0,0]] + ceiling_coords + [[self.size[0],0]])
+        pygame.draw.polygon(self.screen, c_cave, [[0,0]]+[[0,self.size[1]]] + ceiling_coords + [[self.size[0],self.size[1]]]+[[self.size[0],0]])
         pygame.draw.polygon(self.screen, c_cave, [[0,self.size[1]]] + [[0,self.size[1]]] + ground_coords + [[self.size[0],self.size[1]]])
 
     def play_crash_sound(self):
