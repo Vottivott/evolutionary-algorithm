@@ -136,6 +136,14 @@ class CopterSimulation:
     def get_copter_distance_travelled(self):
         return self.copter.position[0] - base_start_x
 
+    def mediate_smoke_particle_rate(self):
+        particle_count = len(self.smoke.particles) + len(self.smoke.frozen_particles)*0.5 + sum(len(ei.smoke.particles) + len(ei.smoke.frozen_particles)*0.5 for ei in self.enemy_instances) or 1
+        calculated_rate = min(70.0/particle_count, 3)
+        for ei in self.enemy_instances:
+            ei.smoke.particle_rate = calculated_rate
+        self.smoke.particle_rate = min(2*calculated_rate, 4)
+
+
     def run(self, graphics=None, user_control=None):
         self.graphics = graphics
         self.timestep = 0
@@ -158,9 +166,9 @@ class CopterSimulation:
                 else:
                     if self.user_control_enemy(graphics, user_control):
                         return True
-            elif user_control is None and graphics and self.copter.exploded and self.end_when_copter_dies:#abs(self.copter.velocity[0]) < 0.1:
+            elif user_control is None and graphics and self.copter.exploded and self.end_when_copter_dies and abs(self.copter.velocity[0]) < 0.1:
                 # print "end at copter death!!"
-                return self.copter.get_x()
+                return self.get_copter_distance_travelled()
             if user_control != MAIN and self.main_neural_net_integration is not None and not self.copter.exploded:
                 self.main_neural_net_integration.run_network(self)
             for enemy_index in range(len(self.enemy_instances)):
@@ -223,9 +231,9 @@ class CopterSimulation:
             self.timestep += 1
             if self.end_at_time is not None and self.timestep >= self.end_at_time:
                 # print "End at time!"
-                return self.copter.get_x()
+                return self.get_copter_distance_travelled()
             if graphics:
-
+                self.mediate_smoke_particle_rate()
                 if not still_flying:
                     if not self.copter.exploded:
                         self.smoke.create_explosion()
@@ -273,7 +281,7 @@ class CopterSimulation:
 
             if not graphics and not still_flying and self.end_when_copter_dies:
                 # print "copter death end"
-                return self.copter.get_x()  # Return the distance travelled = the fitness score
+                return self.get_copter_distance_travelled()  # Return the distance travelled = the fitness score
             if self.end_when_enemy_dies:
                 for ei in self.enemy_instances:
                     if ei.enemy.exploded:
@@ -381,7 +389,21 @@ def run_evaluations(levels_and_enemy_positions, fitness_calculator, use_graphics
     return fitness_total / num_short_levels
 
 
+def watch_copter_vs_enemies():
+    global graphics
+    graphics = Graphics()
+    while 1:
+        global short_levels_and_enemy_positions
+        short_levels_and_enemy_positions = generate_mini_levels_and_enemy_positions()
 
+
+        copter_population_data = load_population_data(copter_subfoldername, -1)
+        copter_variables = copter_population_data.best_variables
+
+        load_latest_enemy_network()
+
+        fitness = run_copter_evaluation(copter_variables, True)
+        print "Average copter distance: " + str(fitness)
 
 def run_enemy_evaluation(variables, use_graphics=False):
     enemy_neural_net_integration.set_weights(variables)
@@ -396,6 +418,18 @@ def run_copter_evaluation(variables, use_graphics=False):
         return sim.get_copter_distance_travelled()
     return run_evaluations(short_levels_and_enemy_positions, fitness_calculator, use_graphics)
 
+
+def load_latest_enemy_network():
+    enemy_population_data = load_population_data(enemy_subfoldername, -1)
+    global enemy_neural_net_integration
+    enemy_neural_net_integration.set_weights(enemy_population_data.best_variables)
+
+def load_latest_copter_network():
+    copter_population_data = load_population_data(copter_subfoldername, -1)
+    global neural_net_integration
+    neural_net_integration.set_weights(copter_population_data.best_variables)
+
+
 class CopterFitnessFunction:
     def __init__(self):
         self.last_generation = -1
@@ -407,6 +441,7 @@ class CopterFitnessFunction:
             self.last_generation = generation
             global short_levels_and_enemy_positions
             short_levels_and_enemy_positions = generate_mini_levels_and_enemy_positions()
+            load_latest_enemy_network()
             self.debug_ind_n = 1
         fitness = run_copter_evaluation(variables, False)
         print str(int(fitness)),
@@ -425,6 +460,7 @@ class EnemyFitnessFunction:
             self.last_generation = generation
             global short_levels_and_enemy_positions
             short_levels_and_enemy_positions = generate_mini_levels_and_enemy_positions()
+            load_latest_copter_network()
             self.debug_ind_n = 1
         fitness = run_enemy_evaluation(variables, False)
         print str(int(fitness)),
@@ -433,8 +469,9 @@ class EnemyFitnessFunction:
         return fitness
 
 def run_evolution_on_enemy():
-    copter_population_data = load_population_data(copter_subfoldername, -1)
-    neural_net_integration.set_weights(copter_population_data.best_variables)
+    # copter_population_data = load_population_data(copter_subfoldername, -1)
+    # neural_net_integration.set_weights(copter_population_data.best_variables)
+    load_latest_copter_network()
     s.end_when_copter_dies = True
     s.end_when_enemy_dies = False
     s.end_when_all_enemies_die = False
@@ -482,11 +519,10 @@ def run_evolution_on_enemy():
             ga.run(None, enemy_callback, population_data=enemy_population_data)
 
 def run_evolution_on_copter():
-    global graphics
-    graphics = Graphics()
 
-    enemy_population_data = load_population_data(enemy_subfoldername, -1)
-    enemy_neural_net_integration.set_weights(enemy_population_data.best_variables)
+    # enemy_population_data = load_population_data(enemy_subfoldername, -1)
+    # enemy_neural_net_integration.set_weights(enemy_population_data.best_variables)
+    load_latest_enemy_network()
     s.end_when_copter_dies = True
     s.end_when_enemy_dies = False
     s.end_when_all_enemies_die = False
@@ -512,9 +548,9 @@ def run_evolution_on_copter():
         print "\n[ " + str(p.generation) + ": " + str(
             p.best_fitness) + " : " + str(
             average_fitness) + " ]"
-        if watch_only or (graphics is not None and p.generation % 10 == 0):
-            fitness = run_copter_evaluation(p.best_variables, True)
-            print "Fitness: " + str(fitness)
+        # if watch_only or (graphics is not None and p.generation % 10 == 0):
+        #     fitness = run_copter_evaluation(p.best_variables, True)
+        #     print "Fitness: " + str(fitness)
 
     watch_only = False
     copter_population_data = load_population_data(copter_subfoldername, -1)

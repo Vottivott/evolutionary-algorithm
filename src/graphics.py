@@ -37,14 +37,27 @@ class Graphics:
         # self.main_copter_smoke_color = self.enemy_smoke_color
         # self.crash_sound = pyglet.resource.media('crash_sound.wav')#pygame.mixer.Sound('crash_sound.wav')
         # effect.play()
+        self.show_enemy_radars = False
+        self.show_enemy_object_radars = False
+        self.show_copter_radars = False
+        self.show_copter_object_radars = False
+
+
 
     def update(self, copter_simulation):
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
                 sys.exit()
-            # if event.type == KEYDOWN and event.key == K_t:
-            #     trace = not trace
+            if event.type == KEYDOWN:
+                if event.key == K_e:
+                    self.show_enemy_radars = not self.show_enemy_radars
+                if event.key == K_c:
+                    self.show_copter_radars = not self.show_copter_radars
+                if event.key == K_r:
+                    self.show_enemy_object_radars = not self.show_enemy_object_radars
+                if event.key == K_v:
+                    self.show_copter_object_radars = not self.show_copter_object_radars
 
         self.screen.fill((240, 245, 250))
         # s = pygame.Surface(self.size)  # the size of your rect
@@ -64,11 +77,14 @@ class Graphics:
         for ei in copter_simulation.enemy_instances:
             self.draw_enemy(ei.enemy, copter_simulation)
         self.draw_level(copter_simulation)
-        if True:
-            # self.draw_enemies_radars(copter_simulation)
-            # self.draw_radars(copter_simulation)
-            # self.draw_object_radars(copter_simulation)
-            pass
+        if self.show_enemy_radars:
+            self.draw_enemies_radars(copter_simulation)
+        if self.show_copter_radars:
+            self.draw_radars(copter_simulation)
+        if self.show_copter_object_radars:
+            self.draw_object_radars(copter_simulation)
+        if self.show_enemy_object_radars:
+            self.draw_enemy_object_radars(copter_simulation)
 
         # self.draw_shots(copter_simulation)
 
@@ -139,10 +155,14 @@ class Graphics:
     def draw_smoke(self, copter_simulation):
         for particle in copter_simulation.smoke.particles:
             self.draw_smoke_particle(particle, copter_simulation)
+        for particle in copter_simulation.smoke.frozen_particles:
+            self.draw_smoke_particle(particle, copter_simulation)
 
     def draw_enemy_smoke(self, copter_simulation, index):
         smoke = copter_simulation.enemy_instances[index].smoke
         for particle in smoke.particles:
+            self.draw_smoke_particle(particle, copter_simulation)
+        for particle in smoke.frozen_particles:
             self.draw_smoke_particle(particle, copter_simulation)
 
     def np_to_screen_coord(self, np_vector, copter_simulation):
@@ -200,6 +220,8 @@ class Graphics:
     def draw_object_radars(self, copter_simulation):
         if not copter_simulation.copter.exploded:
             self.draw_object_radar(copter_simulation.radar_system.enemy_radar, copter_simulation.copter.position, copter_simulation.get_living_enemy_instances(), (255,80,255), (255,255,255), copter_simulation)
+
+    def draw_enemy_object_radars(self, copter_simulation):
         for i,ei in enumerate(copter_simulation.enemy_instances):
             enemy = ei.enemy
             if not enemy.exploded:
