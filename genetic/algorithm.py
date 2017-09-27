@@ -37,6 +37,17 @@ class PopulationData:
         self.best_variables = decoded_variable_vectors[self.best_individual_index]
         self.best_fitness = fitness_scores[best_individual_index]
 
+class PrunedPopulationData:
+    """
+    Data from a run of a genetic algorithm, containing information about the current population
+    """
+    def __init__(self, population_data):
+        self.generation = population_data.generation
+        self.fitness_scores = population_data.fitness_scores
+        self.best_individual_index = population_data.best_individual_index
+        self.best_variables = population_data.best_variables
+        self.best_fitness = population_data.best_fitness
+
 
 
 class GeneticAlgorithm:

@@ -1,0 +1,3 @@
+from src.copter_simulation import watch_copter_vs_enemies
+
+watch_copter_vs_enemies()

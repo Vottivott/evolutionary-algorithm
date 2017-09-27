@@ -14,6 +14,7 @@ from level import generate_level
 from neural_net_integration import evocopter_neural_net_integration, black_neural_net_integration
 from population_data_io import save_population_data, load_population_data
 from radar_system import RadarSystem, EnemysRadarSystem
+from score_colors import get_color_from_score
 from shot import Shot
 from smoke import Smoke
 
@@ -447,7 +448,7 @@ class CopterFitnessFunction:
             load_latest_enemy_network()
             self.debug_ind_n = 1
         fitness = run_copter_evaluation(variables, False)
-        print str(int(fitness)),
+        print get_color_from_score(fitness, False) + str(int(fitness)),
         #print "("+str(self.debug_ind_n) + "): " + str(fitness)
         self.debug_ind_n += 1
         return fitness
@@ -466,7 +467,7 @@ class EnemyFitnessFunction:
             load_latest_copter_network()
             self.debug_ind_n = 1
         fitness = run_enemy_evaluation(variables, False)
-        print str(int(fitness)),
+        print get_color_from_score(fitness, True) + str(int(fitness)),
         #print "("+str(self.debug_ind_n) + "): " + str(fitness)
         self.debug_ind_n += 1
         return fitness
@@ -497,7 +498,7 @@ def run_evolution_on_enemy():
         if not watch_only:
             save_population_data(enemy_subfoldername, p, keep_last_n=10)
         average_fitness = sum(p.fitness_scores) / len(p.fitness_scores)
-        print "\n[ " + str(p.generation) + ": " + str(
+        print get_color_from_score(p.best_fitness, True) + "\n[ " + str(p.generation) + ": " + str(
             p.best_fitness) + " : " + str(
             average_fitness) + " ]\n\n"
         # if watch_only or (graphics is not None and p.generation % 10 == 0):
@@ -548,7 +549,7 @@ def run_evolution_on_copter():
         if not watch_only:
             save_population_data(copter_subfoldername, p, keep_last_n=10)
         average_fitness = sum(p.fitness_scores) / len(p.fitness_scores)
-        print "\n[ " + str(p.generation) + ": " + str(
+        print get_color_from_score(p.best_fitness, False) + "\n[ " + str(p.generation) + ": " + str(
             p.best_fitness) + " : " + str(
             average_fitness) + " ]\n"
         # if watch_only or (graphics is not None and p.generation % 10 == 0):
