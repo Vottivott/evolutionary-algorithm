@@ -11,6 +11,7 @@ class Enemy(Rectangular):
         self.velocity = np.array([[0.0], [0.0]])
         self.exploded = False
         self.firing = False
+        self.diving = False
         self.moving_left = False
         self.moving_left_force = np.array([[0.3 * -20], [0.0]])
         self.collision_friction = 0.3

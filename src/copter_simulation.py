@@ -26,7 +26,7 @@ class EnemyInstance:
         if en_neural_net_integration is None:
             self.h = None
         else:
-            self.h = en_neural_net_integration.get_empty_h()
+            self.h = en_neural_net_integration.get_initial_h()
         self.smoke = None
         self.time_since_last_sputter_sound = 0
     def get_position(self):
@@ -267,6 +267,9 @@ class CopterSimulation:
                             self.enemy_instances[i].time_since_last_sputter_sound = 0
                             self.sputter_sound_interval = 4
                     self.enemy_instances[i].time_since_last_sputter_sound += 1
+                    if self.enemy_instances[i].enemy.diving:
+                        graphics.play_enemy_dive_sound()
+                        self.enemy_instances[i].enemy.diving = False
             else:
                 if not still_flying:
                     if not self.copter.exploded:
@@ -371,7 +374,7 @@ def run_evaluation(level, positions, fitness_calculator, use_graphics=False):
     s.set_main_neural_net_integration(neural_net_integration)
     s.set_enemy_neural_net_integration(enemy_neural_net_integration)
     if s.main_neural_net_integration is not None:
-        s.main_neural_net_integration.clear_h()
+        s.main_neural_net_integration.initialize_h()
     s.enemy_instances = []
     s.enemy_instance_queue = [
         get_enemy_instance(pos, graphics if use_graphics else None, s.enemy_neural_net_integration) for pos
@@ -406,14 +409,14 @@ def watch_copter_vs_enemies():
         print "Average copter distance: " + str(fitness)
 
 def run_enemy_evaluation(variables, use_graphics=False):
-    enemy_neural_net_integration.set_weights(variables)
+    enemy_neural_net_integration.set_weights_and_possibly_initial_h(variables)
     ENEMY_DEATH_PENALTY = 300.0
     def fitness_calculator(sim):
         return - sim.get_copter_distance_travelled() - ENEMY_DEATH_PENALTY * sim.number_of_enemy_deaths
     return run_evaluations(short_levels_and_enemy_positions, fitness_calculator, use_graphics)
 
 def run_copter_evaluation(variables, use_graphics=False):
-    neural_net_integration.set_weights(variables)
+    neural_net_integration.set_weights_and_possibly_initial_h(variables)
     def fitness_calculator(sim):
         return sim.get_copter_distance_travelled()
     return run_evaluations(short_levels_and_enemy_positions, fitness_calculator, use_graphics)
@@ -422,12 +425,12 @@ def run_copter_evaluation(variables, use_graphics=False):
 def load_latest_enemy_network():
     enemy_population_data = load_population_data(enemy_subfoldername, -1)
     global enemy_neural_net_integration
-    enemy_neural_net_integration.set_weights(enemy_population_data.best_variables)
+    enemy_neural_net_integration.set_weights_and_possibly_initial_h(enemy_population_data.best_variables)
 
 def load_latest_copter_network():
     copter_population_data = load_population_data(copter_subfoldername, -1)
     global neural_net_integration
-    neural_net_integration.set_weights(copter_population_data.best_variables)
+    neural_net_integration.set_weights_and_possibly_initial_h(copter_population_data.best_variables)
 
 
 class CopterFitnessFunction:
@@ -470,8 +473,8 @@ class EnemyFitnessFunction:
 
 def run_evolution_on_enemy():
     # copter_population_data = load_population_data(copter_subfoldername, -1)
-    # neural_net_integration.set_weights(copter_population_data.best_variables)
-    load_latest_copter_network()
+    # neural_net_integration.set_weights_and_possibly_initial_h(copter_population_data.best_variables)
+    # load_latest_copter_network()
     s.end_when_copter_dies = True
     s.end_when_enemy_dies = False
     s.end_when_all_enemies_die = False
@@ -496,7 +499,7 @@ def run_evolution_on_enemy():
         average_fitness = sum(p.fitness_scores) / len(p.fitness_scores)
         print "\n[ " + str(p.generation) + ": " + str(
             p.best_fitness) + " : " + str(
-            average_fitness) + " ]"
+            average_fitness) + " ]\n\n"
         # if watch_only or (graphics is not None and p.generation % 10 == 0):
         #     fitness = run_enemy_evaluation(p.best_variables, True)
         #     print "Fitness: " + str(fitness)
@@ -521,8 +524,8 @@ def run_evolution_on_enemy():
 def run_evolution_on_copter():
 
     # enemy_population_data = load_population_data(enemy_subfoldername, -1)
-    # enemy_neural_net_integration.set_weights(enemy_population_data.best_variables)
-    load_latest_enemy_network()
+    # enemy_neural_net_integration.set_weights_and_possibly_initial_h(enemy_population_data.best_variables)
+    # load_latest_enemy_network()
     s.end_when_copter_dies = True
     s.end_when_enemy_dies = False
     s.end_when_all_enemies_die = False
@@ -547,7 +550,7 @@ def run_evolution_on_copter():
         average_fitness = sum(p.fitness_scores) / len(p.fitness_scores)
         print "\n[ " + str(p.generation) + ": " + str(
             p.best_fitness) + " : " + str(
-            average_fitness) + " ]"
+            average_fitness) + " ]\n"
         # if watch_only or (graphics is not None and p.generation % 10 == 0):
         #     fitness = run_copter_evaluation(p.best_variables, True)
         #     print "Fitness: " + str(fitness)
@@ -607,7 +610,7 @@ subfoldername = "recurrent_no_enemies"
 #     # fig.canvas.draw()
 #
 #     if graphics is not None and p.generation % 10 == 0:
-#         neural_net_integration.set_weights(p.best_variables)
+#         neural_net_integration.set_weights_and_possibly_initial_h(p.best_variables)
 #         s.copter = Copter(np.array([[base_start_x + view_offset], [s.level.y_center(base_start_x + view_offset)]]), 20)  # new copter
 #         return s.run(graphics)
 #         # print p.best_variables
@@ -636,7 +639,7 @@ if graphics is not None:
 #
 #         if user_play != MAIN:
 #             # population_data = load_population_data(subfoldername, -1)
-#             # neural_net_integration.set_weights(population_data.best_variables)
+#             # neural_net_integration.set_weights_and_possibly_initial_h(population_data.best_variables)
 #             pass
 #         else:
 #             s.set_main_neural_net_integration(None)

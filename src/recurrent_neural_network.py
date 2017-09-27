@@ -40,6 +40,8 @@ class RecurrentNeuralNetwork:
         self.h = [None] + [np.zeros((size, 1)) for size in layer_sizes[1:-1]] # state vectors
         # print map(lambda x:x.shape if x!=None else 0,self.h)
 
+        self.initial_h = None # the initial state vector, ONLY THE VECTOR, NOT A LIST LIKE self.h ^
+
         self.activation_function = activation_function
         self.number_of_weights = sum(size * (prev_size + 1) for size, prev_size in zip(layer_sizes[1:], layer_sizes))
         self.number_of_weights += sum(size * size for size in layer_sizes[1:-1]) # recurrent weights
@@ -64,6 +66,9 @@ class RecurrentNeuralNetwork:
 
     def get_total_number_of_weights(self):
         return self.number_of_weights
+
+    def get_h_size(self):
+        return self.layer_sizes[1]
 
     # def set_custom_h_layer(self, h):
     #     self.h = h

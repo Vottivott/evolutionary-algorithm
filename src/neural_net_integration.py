@@ -24,11 +24,24 @@ class NeuralNetIntegration:
         network_output = self.neural_network.run(self.input_function(copter_simulation, enemy_index), custom_h_layer)
         self.output_function(network_output, copter_simulation, enemy_index)
 
-    def clear_h(self):
-        self.neural_network.h = self.get_empty_h()
+    # def clear_h(self):
+    #     self.neural_network.h = self.get_empty_h()
+
+    def initialize_h(self):
+        self.neural_network.h = self.get_initial_h()
 
     # def set_custom_h_layer(self, h):
     #     self.neural_network.set_custom_h_layer(h)
+
+    def set_weights_and_possibly_initial_h(self, variables):
+        num_weights = self.neural_network.number_of_weights
+        if len(variables) > num_weights:
+            self.set_weights_and_initial_h(variables[:num_weights], variables[num_weights:])
+        else:
+            print "No initial h encoded in the chromosome, initializing to all zeros."
+            self.neural_network.initial_h = self.get_all_zeros_h_vector()
+            self.set_weights(variables)
+
 
     def set_weights(self, weights):
         self.neural_network.set_weights_from_single_vector(weights)
@@ -37,11 +50,26 @@ class NeuralNetIntegration:
         else:
             print "NOT RECURRENT!"
 
-    def get_empty_h(self):
-        return [None] + [np.zeros((size, 1)) for size in self.neural_network.layer_sizes[1:-1]]#[None] + [np.zeros(h.shape) for h in self.neural_network.h[1:-1]]
+    def set_weights_and_initial_h(self, weights, initial_h):
+        self.neural_network.set_weights_from_single_vector(weights)
+        self.neural_network.initial_h = initial_h
+        # TODO: Add support for multiple layers
+        if self.recurrent:
+            if len(self.neural_network.layer_sizes) > 3:
+                print "MORE THAN ONE HIDDEN LAYER NOT SUPPORTED YET, BUT EASY TO FIX!"
+            self.neural_network.h = [None, np.copy(self.neural_network.initial_h)] # Reset state vectors
+        else:
+            print "NOT RECURRENT!"
+
+    def get_all_zeros_h_vector(self):
+        return np.zeros((self.neural_network.layer_sizes[1], 1))
+
+    def get_initial_h(self):
+        return [None, np.copy(self.neural_network.initial_h)]#[None] + [np.zeros(h.shape) for h in self.neural_network.h[1:-1]]
+
 
     def get_number_of_variables(self):
-        return self.neural_network.get_total_number_of_weights()
+        return self.neural_network.get_total_number_of_weights() + self.neural_network.get_h_size()
 
 def evocopter_neural_net_integration(copter_simulation):
 

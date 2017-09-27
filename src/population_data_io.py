@@ -48,7 +48,27 @@ def load_population_data(subfoldername, generation):
 
 
 if __name__ == "__main__":
+    import numpy as np
     #subfoldername = "7 counters (length 4), 15 radars (max_steps = 250, step_size = 4), velocity up+down"
-    subfoldername = "recurrent_no_enemies"
+    subfoldername = "enemy"
     p = load_population_data(subfoldername, -1)
-    print p
+    print sum(p.population[40][-1500:])
+    print sum(sum(ind[-1500:] for ind in p.population))
+    subfoldername = "copter"
+    p = load_population_data(subfoldername, -1)
+    print sum(p.population[40][-1500:])
+    print sum(sum(ind[-1500:] for ind in p.population))
+    # p = load_population_data(subfoldername, 105)
+    # print p
+    # p = load_population_data(subfoldername, 106)
+    # print p
+    # p.generation += 1
+    # save_population_data(subfoldername, p)
+    # print p
+    # num_extra_genes = 30 * 50
+    # for i,chromosome in enumerate(p.population):
+    #     initial_h = np.zeros((num_extra_genes,1))
+    #     p.population[i] = np.vstack((chromosome, initial_h))
+    # print p
+    # save_population_data(subfoldername, p)
+    # print "Finished!"
