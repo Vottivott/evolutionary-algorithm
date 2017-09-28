@@ -11,6 +11,13 @@ def tuple_add(a,b):
 def tuple_scale(a,factor):
     return [v_a*factor for v_a in a]
 
+
+def to_tuple(np_array):
+    try:
+        return [np.asscalar(n) for n in np_array]
+    except TypeError:
+        return np_array
+
 # import pyglet
 class Graphics:
     def __init__(self):
@@ -32,6 +39,7 @@ class Graphics:
         self.enemy_smoke_color = (40, 40, 40)
         self.enemy_color = (30, 30, 30)
         self.who_to_follow = 'main' # True = main robot, number n = enemy with index n
+        self.user_control = None
         # TEST
         # self.main_copter_color = self.enemy_color
         # self.main_copter_smoke_color = self.enemy_smoke_color
@@ -41,6 +49,8 @@ class Graphics:
         self.show_enemy_object_radars = False
         self.show_copter_radars = False
         self.show_copter_object_radars = False
+        self.player_box_timer = 0.0
+        self.PLAYER_BOX_TIME = 60
 
 
 
@@ -58,6 +68,39 @@ class Graphics:
                     self.show_enemy_object_radars = not self.show_enemy_object_radars
                 if event.key == K_v:
                     self.show_copter_object_radars = not self.show_copter_object_radars
+                if event.key == K_TAB:
+                    if pygame.key.get_mods() & KMOD_SHIFT:
+                        if self.user_control is None:
+                            self.user_control = 'main'
+                            self.player_box_timer = self.PLAYER_BOX_TIME
+                        elif self.user_control == 'main':
+                            if len(copter_simulation.enemy_instances):
+                                self.user_control = 0
+                                self.player_box_timer = self.PLAYER_BOX_TIME
+                            else:
+                                self.user_control = None
+                        else:
+                            self.user_control += 1
+                            if self.user_control >= len(copter_simulation.enemy_instances):
+                                self.user_control = None
+                            else:
+                                self.player_box_timer = self.PLAYER_BOX_TIME
+                    else:
+                        if self.user_control is None:
+                            if len(copter_simulation.enemy_instances):
+                                self.user_control = len(copter_simulation.enemy_instances) - 1
+                                self.player_box_timer = self.PLAYER_BOX_TIME
+                            else:
+                                self.user_control = 'main'
+                        elif self.user_control == 'main':
+                            self.user_control = None
+                        else:
+                            self.user_control -= 1
+                            if self.user_control < 0 or self.user_control >= len(copter_simulation.enemy_instances):
+                                self.user_control = 'main'
+                            else:
+                                self.player_box_timer = self.PLAYER_BOX_TIME
+
 
         self.screen.fill((240, 245, 250))
         # s = pygame.Surface(self.size)  # the size of your rect
@@ -85,6 +128,17 @@ class Graphics:
             self.draw_object_radars(copter_simulation)
         if self.show_enemy_object_radars:
             self.draw_enemy_object_radars(copter_simulation)
+
+        if self.user_control == 'main':
+            if not copter_simulation.copter.exploded and self.player_box_timer > 0:
+                self.draw_player_box(copter_simulation.copter, copter_simulation)
+                self.player_box_timer -= 1
+                print self.player_box_timer
+        elif self.user_control is not None:
+            if self.user_control < len(copter_simulation.enemy_instances):
+                if not copter_simulation.enemy_instances[self.user_control].enemy.exploded and self.player_box_timer > 0:
+                    self.draw_player_box(copter_simulation.enemy_instances[self.user_control].enemy, copter_simulation)
+                    self.player_box_timer -= 1
 
         # self.draw_shots(copter_simulation)
 
@@ -246,6 +300,36 @@ class Graphics:
                 color = c_close + c_diff * dist_vec[i]
                 self.draw_circle_at_angle(color, position, dist_vec[i] * 150, angle,
                                           copter_simulation)
+
+    def draw_player_box(self, rect, copter_simulation):
+        line_fraction = 0.4 # 1.0 = full bounding box ~0 = only a pixel at each corner
+        margin = 4
+        width = 3
+        copter = copter_simulation.copter
+        x = np.asscalar(rect.get_position()[0]) -1#-copter.width/4.0
+        y = np.asscalar(rect.get_position()[1]) #-copter.width/4.0
+        pos = np.array([[x], [y]])
+        color = (255, 200, 0)
+        radius = rect.width / 2.0 + margin
+        line_length = line_fraction * radius
+        cornerNW = np.array([[np.asscalar(pos[0]) - radius], [np.asscalar(pos[1]) - radius]])
+        cornerNE = np.array([[np.asscalar(pos[0]) + radius], [np.asscalar(pos[1]) - radius]])
+        cornerSE = np.array([[np.asscalar(pos[0]) + radius], [np.asscalar(pos[1]) + radius]])
+        cornerSW = np.array([[np.asscalar(pos[0]) - radius], [np.asscalar(pos[1]) + radius]])
+        lineRight =np.array([[line_length], [0.0]])
+        lineDown = np.array([[0.0], [line_length]])
+        lineLeft = np.array([[-line_length], [0.0]])
+        lineUp =   np.array([[0.0], [-line_length]])
+        print self.np_to_screen_coord(cornerNW + lineDown, copter_simulation)
+        pygame.draw.line(self.screen, color, self.np_to_screen_coord(cornerNW + lineDown, copter_simulation), self.np_to_screen_coord(cornerNW, copter_simulation), width)
+        pygame.draw.line(self.screen, color, self.np_to_screen_coord(cornerNW + lineRight, copter_simulation), self.np_to_screen_coord(cornerNW, copter_simulation), width)
+        pygame.draw.line(self.screen, color, self.np_to_screen_coord(cornerSW + lineUp, copter_simulation), self.np_to_screen_coord(cornerSW, copter_simulation), width)
+        pygame.draw.line(self.screen, color, self.np_to_screen_coord(cornerSW + lineRight, copter_simulation), self.np_to_screen_coord(cornerSW, copter_simulation), width)
+        pygame.draw.line(self.screen, color, self.np_to_screen_coord(cornerNE + lineDown, copter_simulation), self.np_to_screen_coord(cornerNE, copter_simulation), width)
+        pygame.draw.line(self.screen, color, self.np_to_screen_coord(cornerNE + lineLeft, copter_simulation), self.np_to_screen_coord(cornerNE, copter_simulation), width)
+        pygame.draw.line(self.screen, color, self.np_to_screen_coord(cornerSE + lineLeft, copter_simulation), self.np_to_screen_coord(cornerSE, copter_simulation), width)
+        pygame.draw.line(self.screen, color, self.np_to_screen_coord(cornerSE + lineUp, copter_simulation), self.np_to_screen_coord(cornerSE, copter_simulation), width)
+
 
 
     def unit_dir_vector(self, angle):

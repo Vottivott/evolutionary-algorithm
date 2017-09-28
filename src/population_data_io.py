@@ -45,7 +45,8 @@ def load_population_data(subfoldername, generation):
         files = os.listdir(directory_path)
         if not len(files):
             return None
-        nums = (int(file[:-4]) for file in files)
+
+        nums = (int(file[:-4]) for file in (f for f in files if f[-4:]==".pkl"))
         nums = sorted(nums)
         generation = nums[-1]
         print "Loading latest generation of " + str(subfoldername) + ": " + str(generation)

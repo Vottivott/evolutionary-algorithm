@@ -4,7 +4,7 @@ from rectangular import Rectangular
 
 
 class Smoke:
-    def __init__(self, position, particle_rate, decay_rate, gravity, color):
+    def __init__(self, position, particle_rate, decay_rate, gravity, color, is_enemy=False):
         self.position = position
         self.particles = []
         self.frozen_particles = []
@@ -17,6 +17,7 @@ class Smoke:
         self.dive_background_decay = 0.6
         self.gravity = gravity
         self.color = color
+        self.is_enemy = is_enemy
 
     def step(self, level, delta_time, firing):
         # return
@@ -48,7 +49,11 @@ class Smoke:
         self.particles.append(p)
 
     def create_explosion(self):
-        for i in range(40):
+        if self.is_enemy:
+            num_particles = 10
+        else:
+            num_particles = 40
+        for i in range(num_particles):
             self.create_explosion_particle()
 
     def create_explosion_particle(self):
@@ -77,7 +82,7 @@ class Smoke:
         speed_range = 35.0
         speed = min_speed + speed_range * np.random.random()
         velocity = direction_vector * speed
-        p = SmokeParticle(self.position, velocity, self.shot_background_decay_rate, self.particle_start_size, self.particle_end_size, self.gravity, True, self.color)
+        p = SmokeParticle(self.position, velocity, self.shot_background_decay_rate, self.particle_start_size, self.particle_end_size, self.gravity, False, self.color)
         self.particles.append(p)
 
     def create_dive_background(self):

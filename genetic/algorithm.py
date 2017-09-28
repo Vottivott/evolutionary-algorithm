@@ -98,22 +98,35 @@ class GeneticAlgorithm:
             generation = 1
         else:
             population = population_data.population
-            generation = population_data.generation + 1
+            generation = population_data.generation
 
         while True:
 
-            # Evaluate the current generation
 
-            decoded_variable_vectors = map(self.decode, population)
-            fitness_scores = [self.evaluate(vector, generation) for vector in decoded_variable_vectors]
-            best_individual_index = max(xrange(len(fitness_scores)), key=fitness_scores.__getitem__)
-            best_individual = np.copy(population[best_individual_index])
+            if population_data is not None:
 
-            # Call optional callback function and check if finished
+                # Use stored data first time if supplied
 
-            data = PopulationData(generation, population, decoded_variable_vectors, fitness_scores, best_individual_index)
-            if (generation_callback is not None and generation_callback(data) is False) or generation == num_generations:
-                return data
+                decoded_variable_vectors, fitness_scores, best_individual_index, best_individual = self.use_population_data(population_data)
+                population_data = None
+
+            else:
+
+                # Evaluate population
+
+                decoded_variable_vectors = map(self.decode, population)
+                fitness_scores = [self.evaluate(vector, generation) for vector in decoded_variable_vectors]
+                best_individual_index = max(xrange(len(fitness_scores)), key=fitness_scores.__getitem__)
+                best_individual = np.copy(population[best_individual_index])
+
+
+                # Call optional callback function and check if finished
+
+                data = PopulationData(generation, population, decoded_variable_vectors, fitness_scores, best_individual_index)
+                if (generation_callback is not None and generation_callback(data) is False) or generation == num_generations:
+                    return data
+
+
 
             # Form the next generation
 
@@ -125,6 +138,12 @@ class GeneticAlgorithm:
                 self.mutate(chromosome, generation)
             self.elitism(population, best_individual, generation)
             generation += 1
+
+    def use_population_data(self, population_data):
+        return population_data.decoded_variable_vectors,\
+        population_data.fitness_scores,\
+        population_data.best_individual_index,\
+        np.copy(population_data.best_individual_genes)
 
 
 

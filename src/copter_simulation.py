@@ -90,6 +90,8 @@ class CopterSimulation:
         for i,ei in enumerate(self.enemy_instances):
             if self.copter.position[0] - ei.get_position()[0] > self.enemy_passed_dist:
                 del self.enemy_instances[i]
+                if graphics is not None and graphics.user_control != 'main' and graphics.user_control is not None and graphics.user_control > 0:
+                    graphics.user_control -= 1 # keep the played character the same
 
     def add_newcoming_enemies(self):
         i = 0
@@ -139,14 +141,15 @@ class CopterSimulation:
 
     def mediate_smoke_particle_rate(self):
         particle_count = len(self.smoke.particles) + len(self.smoke.frozen_particles)*0.5 + sum(len(ei.smoke.particles) + len(ei.smoke.frozen_particles)*0.5 for ei in self.enemy_instances) or 1
-        calculated_rate = min(70.0/particle_count, 3)
+        calculated_rate = min(20.0/particle_count, 3)
         for ei in self.enemy_instances:
             ei.smoke.particle_rate = calculated_rate
-        self.smoke.particle_rate = min(2*calculated_rate, 4)
+        self.smoke.particle_rate = min(10*calculated_rate, 4)
 
 
-    def run(self, graphics=None, user_control=None):
+    def run(self, graphics=None):
         self.graphics = graphics
+        #user_control = graphics.user_control
         self.timestep = 0
         self.number_of_enemy_deaths = 0
         self.total_enemy_living_time = 0.0
@@ -160,20 +163,20 @@ class CopterSimulation:
                 self.space_pressed, self.ctrl_pressed, self.left_pressed = graphics.update(self)
                 if self.ctrl_pressed and ctrl_not_previously_pressed:
                     self.ctrl_on_press = True
-            if user_control != None and graphics:
-                if user_control == MAIN or user_control >= len(self.enemy_instances):
+            if graphics.user_control != None and graphics:
+                if graphics.user_control == MAIN or graphics.user_control >= len(self.enemy_instances):
                     if self.user_control_main(graphics):
                         return True
                 else:
-                    if self.user_control_enemy(graphics, user_control):
+                    if self.user_control_enemy(graphics, graphics.user_control):
                         return True
-            elif user_control is None and graphics and self.copter.exploded and self.end_when_copter_dies and abs(self.copter.velocity[0]) < 0.1:
+            elif graphics.user_control is None and graphics and self.copter.exploded and self.end_when_copter_dies and abs(self.copter.velocity[0]) < 0.1:
                 # print "end at copter death!!"
                 return self.get_copter_distance_travelled()
-            if user_control != MAIN and self.main_neural_net_integration is not None and not self.copter.exploded:
+            if graphics.user_control != MAIN and self.main_neural_net_integration is not None and not self.copter.exploded:
                 self.main_neural_net_integration.run_network(self)
             for enemy_index in range(len(self.enemy_instances)):
-                if user_control != enemy_index:
+                if graphics.user_control != enemy_index:
                     if self.enemy_neural_net_integration is not None and not self.enemy_instances[enemy_index].enemy.exploded:
                         self.enemy_neural_net_integration.run_network(self, enemy_index, self.enemy_instances[enemy_index].h)
                     else:
@@ -212,6 +215,7 @@ class CopterSimulation:
                     for i, ei in enumerate(self.enemy_instances):
                         if ei.enemy.collides_with(shot):
                             enemy_still_flying[i] = 'shot'
+                            print "Enemy shot!!!"
                             hit = True
                     if hit:
                         self.shots.remove(shot)
@@ -321,7 +325,7 @@ def get_enemy_instance(position, graphics, neural_net_integration):
     ei = EnemyInstance(
         Enemy(np.array([position[0], position[1]])), neural_net_integration)
     if graphics:
-        ei.smoke = Smoke(ei.enemy.position, 4, 0.05, s.gravity, graphics.enemy_smoke_color)
+        ei.smoke = Smoke(ei.enemy.position, 4, 0.05, s.gravity, graphics.enemy_smoke_color, True)
     return ei
 
 
@@ -357,6 +361,22 @@ s.set_enemy_neural_net_integration(enemy_neural_net_integration)
 
 global short_levels_and_enemy_positions
 short_levels_and_enemy_positions = [] # pairs of (level, enemy_positions) for each mini-level
+
+
+
+def get_custom_mutation(m):
+    probability_of_initial_h_grand_mutation = 0.025
+    initial_h_grand_mutation_gene_mutation_rate = 0.1
+    initial_h_len = 50*30
+    normalMutation = BinaryMutation(7.0 / m)
+    grandMutation = BinaryMutation(initial_h_grand_mutation_gene_mutation_rate)
+    def customMutation(chromosome, generation):
+        normalMutation.mutate(chromosome, generation)
+        if np.random.rand() < probability_of_initial_h_grand_mutation:
+            grandMutation.mutate(chromosome[-initial_h_len:], generation)
+    return customMutation
+
+
 
 
 
@@ -484,11 +504,14 @@ def run_evolution_on_enemy():
     var_size = 30
     m = vars * var_size
 
+
+
+
     ga = GeneticAlgorithm(80,
                           EnemyFitnessFunction(),
                           TournamentSelection(0.75, 3),
                           SinglePointCrossover(0.9),
-                          BinaryMutation(7.0 / m),
+                          get_custom_mutation(m),
                           Elitism(1),
                           BinaryDecoding(5, vars, var_size),
                           BinaryInitialization(m))
@@ -498,7 +521,7 @@ def run_evolution_on_enemy():
         if not watch_only:
             save_population_data(enemy_subfoldername, p, keep_last_n=10)
         average_fitness = sum(p.fitness_scores) / len(p.fitness_scores)
-        print get_color_from_score(p.best_fitness, True) + "\n[ " + str(p.generation) + ": " + str(
+        print "\n[ " + str(p.generation) + ": " + str(
             p.best_fitness) + " : " + str(
             average_fitness) + " ]\n\n"
         # if watch_only or (graphics is not None and p.generation % 10 == 0):
@@ -539,7 +562,7 @@ def run_evolution_on_copter():
                           CopterFitnessFunction(),
                           TournamentSelection(0.75, 3),
                           SinglePointCrossover(0.9),
-                          BinaryMutation(7.0 / m),
+                          get_custom_mutation(m),
                           Elitism(1),
                           BinaryDecoding(5, vars, var_size),
                           BinaryInitialization(m))
@@ -549,7 +572,7 @@ def run_evolution_on_copter():
         if not watch_only:
             save_population_data(copter_subfoldername, p, keep_last_n=10)
         average_fitness = sum(p.fitness_scores) / len(p.fitness_scores)
-        print get_color_from_score(p.best_fitness, False) + "\n[ " + str(p.generation) + ": " + str(
+        print "\n[ " + str(p.generation) + ": " + str(
             p.best_fitness) + " : " + str(
             average_fitness) + " ]\n"
         # if watch_only or (graphics is not None and p.generation % 10 == 0):
