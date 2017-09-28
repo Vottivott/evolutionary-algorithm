@@ -21,8 +21,13 @@ class NeuralNetIntegration:
         self.output_function = output_function
 
     def run_network(self, copter_simulation, enemy_index=None, custom_h_layer=None):
-        network_output = self.neural_network.run(self.input_function(copter_simulation, enemy_index), custom_h_layer)
-        self.output_function(network_output, copter_simulation, enemy_index)
+        if enemy_index is None and custom_h_layer is not None: # enemy matrix
+            network_output = self.neural_network.run_multiple([self.input_function(copter_simulation, i) for i in range(len(custom_h_layer))],
+                                                     custom_h_layer)
+            self.output_function(network_output, copter_simulation, enemy_index)
+        else:
+            network_output = self.neural_network.run(self.input_function(copter_simulation, enemy_index), custom_h_layer)
+            self.output_function(network_output, copter_simulation, enemy_index)
 
     # def clear_h(self):
     #     self.neural_network.h = self.get_empty_h()
@@ -146,6 +151,9 @@ def black_neural_net_integration(copter_simulation):
     layer_sizes = (input_layer_size, middle_layer_size, output_layer_size)
 
     def enemy_input_function(sim, enemy_index):
+        return np.hstack(enemy_input_function_single(sim, i) for i in range(len(sim.get_neural_enemy_indices())))
+
+    def enemy_input_function_single(sim, enemy_index):
         enemy = sim.enemy_instances[enemy_index].enemy
         yvel = np.asscalar(enemy.velocity[1])
         if yvel <= 0:
@@ -180,17 +188,32 @@ def black_neural_net_integration(copter_simulation):
         assert len(input) == input_layer_size
         return input
 
+    # def enemy_output_function_old(network_output, sim, enemy_index):
+    #     enemy = sim.enemy_instances[enemy_index].enemy
+    #     # print network_output[:3]
+    #     should_fire = network_output[0] > 0.5
+    #     moving_left = network_output[1] > 0.5
+    #     diving = network_output[2] > 0.5
+    #     enemy.firing = should_fire
+    #     enemy.moving_left = moving_left
+    #     enemy.diving = diving
+    #     if diving:
+    #         enemy.dive()
+
+            # print should_fire
+
     def enemy_output_function(network_output, sim, enemy_index):
-        enemy = sim.enemy_instances[enemy_index].enemy
+        enemies = [ei.enemy for ei in sim.get_living_enemies(sim.user_control)]
         # print network_output[:3]
-        should_fire = network_output[0] > 0.5
-        moving_left = network_output[1] > 0.5
-        diving = network_output[2] > 0.5
-        enemy.firing = should_fire
-        enemy.moving_left = moving_left
-        enemy.diving = diving
-        if diving:
-            enemy.dive()
+        should_fire = network_output[0,:] > 0.5
+        moving_left = network_output[1,:] > 0.5
+        diving = network_output[2,:] > 0.5
+        for i,enemy in enumerate(enemies):
+            enemy.firing = should_fire[i]
+            enemy.moving_left = moving_left[i]
+            enemy.diving = diving[i]
+            if diving[i]:
+                enemy.dive()
 
         # print should_fire
 

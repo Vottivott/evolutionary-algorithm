@@ -104,16 +104,37 @@ class RecurrentNeuralNetwork:
             self.forward_pass(z, a, input)
         return a[-1]
 
-    def avg_cost(self, cost_function, training_set):
-        C_total = 0.0
-        for x, y in training_set:
-            C_total += cost_function.f(self.run(x), y)
-        return float(C_total) / len(training_set)
+    def forward_pass_custom_h_multiple(self, z, a, x, custom_h_matrix, h_layers):
+        a[0] = x
+        layer = 1
+        z[layer] = np.dot(self.W[layer], a[layer - 1]) + self.b[layer]\
+                 + np.dot(self.W_recurrent[layer], custom_h_matrix[layer]) # recurrent connection
+        custom_h_matrix[layer] = a[layer] = self.activation_function.f(z[layer])
+        # output layer (no recurrency)
+        z[-1] = np.dot(self.W[-1], a[-2]) + self.b[-1]
+        a[-1] = self.activation_function.f(z[-1])
+        for i,h_layer in enumerate(h_layers):
+            h_layer[:,0:1] = custom_h_matrix[:,i:i+1]
+
+
+    def run_multiple(self, inputs, h_layers):
+        h_matrix = [None] + [np.hstack(layers[1] for layers in h_layers)]
+        z = [None] + [np.zeros((size, len(h_layers))) for size in self.layer_sizes[1:]]
+        a = [np.zeros((size, len(h_layers))) for size in self.layer_sizes]
+        self.forward_pass_custom_h_multiple(z, a, np.hstack(inputs), h_matrix, h_layers)
+        return a[-1]
+
+    # def avg_cost(self, cost_function, training_set):
+    #     C_total = 0.0
+    #     for x, y in training_set:
+    #         C_total += cost_function.f(self.run(x), y)
+    #     return float(C_total) / len(training_set)
 
 
 if __name__ == "__main__":
-    nn = RecurrentNeuralNetwork((784, 100, 10))
-    for i in range(10):
-        print i
-        print nn.run(np.random.rand(784, 1))
+    pass
+    # nn = RecurrentNeuralNetwork((784, 100, 10))
+    # for i in range(10):
+    #     print i
+    #     print nn.run(np.random.rand(784, 1))
 

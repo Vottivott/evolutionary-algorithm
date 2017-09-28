@@ -146,6 +146,14 @@ class CopterSimulation:
             ei.smoke.particle_rate = calculated_rate
         self.smoke.particle_rate = min(10*calculated_rate, 4)
 
+    def get_neural_enemy_indices(self):
+        num_living = len(self.get_living_enemy_instances())
+        if self.graphics.user_control is not None and self.graphics.user_control != 'main':
+            return range(self.graphics.user_control) + range(self.graphics.user_control+1, num_living)
+        else:
+            return None
+
+
 
     def run(self, graphics=None):
         self.graphics = graphics
@@ -175,16 +183,20 @@ class CopterSimulation:
                 return self.get_copter_distance_travelled()
             if graphics.user_control != MAIN and self.main_neural_net_integration is not None and not self.copter.exploded:
                 self.main_neural_net_integration.run_network(self)
-            for enemy_index in range(len(self.enemy_instances)):
-                if graphics.user_control != enemy_index:
-                    if self.enemy_neural_net_integration is not None and not self.enemy_instances[enemy_index].enemy.exploded:
-                        self.enemy_neural_net_integration.run_network(self, enemy_index, self.enemy_instances[enemy_index].h)
-                    else:
-                        if self.enemy_neural_net_integration is None:
-                            print "no enemy_neural_net integration"
-                        enemy  =self.enemy_instances[enemy_index].enemy
-                        enemy.velocity = -0.25*self.gravity
-                        enemy.firing = False
+            # for enemy_index in range(len(self.enemy_instances)):
+            #     if graphics.user_control != enemy_index:
+            #         if self.enemy_neural_net_integration is not None and not self.enemy_instances[enemy_index].enemy.exploded:
+            #             self.enemy_neural_net_integration.run_network(self, None, self.enemy_instances[enemy_index].h)
+            #         else:
+            #             if self.enemy_neural_net_integration is None:
+            #                 print "no enemy_neural_net integration"
+            #             enemy  =self.enemy_instances[enemy_index].enemy
+            #             enemy.velocity = -0.25*self.gravity
+            #             enemy.firing = False
+            neural_enemies = self.get_living_enemy_instances(self.graphics.user_control)
+            enemy_h = [enemy.h for enemy in neural_enemies]
+            if neural_enemies is not None and len(neural_enemies):
+                self.enemy_neural_net_integration.run_network(self, None, enemy_h)
 
             self.total_enemy_living_time += len(self.get_living_enemy_instances())
 
