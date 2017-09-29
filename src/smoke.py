@@ -9,8 +9,10 @@ class Smoke:
         self.particles = []
         self.frozen_particles = []
         self.particle_rate = particle_rate
+        self.particle_sound_rate = 2 if is_enemy else 4
         self.decay_rate = decay_rate
         self.time = 0.0
+        self.sound_time = 0.0
         self.particle_start_size = 5
         self.particle_end_size = 30
         self.shot_background_decay_rate = 0.3
@@ -22,10 +24,14 @@ class Smoke:
     def step(self, level, delta_time, firing):
         # return
         self.time += delta_time * self.particle_rate
+        self.sound_time += delta_time * self.particle_sound_rate
         sputter = False
         while self.time > 1.0 and firing:
             self.create_particle()
             self.time -= 1
+
+        while self.sound_time > 1.0 and firing:
+            self.sound_time -= 1
             sputter = True
 
         for particle in list(self.particles):
@@ -82,7 +88,7 @@ class Smoke:
         speed_range = 35.0
         speed = min_speed + speed_range * np.random.random()
         velocity = direction_vector * speed
-        p = SmokeParticle(self.position, velocity, self.shot_background_decay_rate, self.particle_start_size, self.particle_end_size, self.gravity, False, self.color)
+        p = SmokeParticle(self.position, velocity, self.shot_background_decay_rate, self.particle_start_size, self.particle_end_size, self.gravity, False, self.color, True)
         self.particles.append(p)
 
     def create_dive_background(self):
@@ -107,7 +113,7 @@ class Smoke:
 
 
 class SmokeParticle(Rectangular):
-    def __init__(self, position, velocity, decay_rate, start_size, end_size, gravity, freeze_on_bounce, color):
+    def __init__(self, position, velocity, decay_rate, start_size, end_size, gravity, freeze_on_bounce, color, remove_on_bounce=False):
         Rectangular.__init__(self, np.copy(position), start_size, start_size)
         self.velocity = np.array(velocity)
         self.alpha = 1.0
@@ -117,6 +123,7 @@ class SmokeParticle(Rectangular):
         self.has_bounced = False # Allow only one bounce to prevent getting stuck in ground
         self.gravity = gravity
         self.freeze_on_bounce = freeze_on_bounce
+        self.remove_on_bounce = remove_on_bounce
         self.color = color
 
     def step(self, level, delta_time):
@@ -135,6 +142,8 @@ class SmokeParticle(Rectangular):
                 self.velocity = (bounce_direction * self.velocity.T.dot(self.velocity)**0.5)
                 self.has_bounced = True
                 if self.freeze_on_bounce:
+                    return False
+                if self.remove_on_bounce:
                     return False
         if self.alpha < 0:
             return False

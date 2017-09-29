@@ -10,6 +10,7 @@ class Copter(Rectangular):
         self.firing = False
         self.max_y_velocity = 20.0
         self.max_x_velocity = 180.0
+        self.HSPEED_REQUIRED_TO_SHOOT = -20
 
     def step(self, level, gravity, fire_force, delta_time):
         acceleration = gravity + fire_force

@@ -46,7 +46,7 @@ class CopterSimulation:
         self.delta_t = 1.0/4
         self.space_pressed = False
         self.ctrl_pressed = False
-        self.ctrl_on_press = False
+        self.ctrl_pressed = False
         self.force_when_fire_is_on = np.array([[0.0], [0.4 * -20]])
         self.force_when_fire_is_off = np.array([[0.0],[0.0]])
         self.enemy_force_when_fire_is_on = np.array([[0.0], [0.4 * -20]])
@@ -90,8 +90,9 @@ class CopterSimulation:
         for i,ei in enumerate(self.enemy_instances):
             if self.copter.position[0] - ei.get_position()[0] > self.enemy_passed_dist:
                 del self.enemy_instances[i]
-                if graphics is not None and graphics.user_control != 'main' and graphics.user_control is not None and graphics.user_control > 0:
-                    graphics.user_control -= 1 # keep the played character the same
+                if self.graphics is not None and self.graphics.user_control != 'main' and self.graphics.user_control is not None and self.graphics.user_control > 0:
+                    self.graphics.user_control -= 1 # keep the played character the same
+                    self.graphics.player_box_timer = self.graphics.PLAYER_BOX_TIME
 
     def add_newcoming_enemies(self):
         i = 0
@@ -114,16 +115,17 @@ class CopterSimulation:
         self.copter.firing = self.space_pressed and not self.copter.exploded
         if self.copter.exploded and abs(self.copter.velocity[0]) < 0.1:
             return True
-        if self.ctrl_on_press:
+        if self.ctrl_pressed:
             self.copter_shoot()
-            self.ctrl_on_press = False
+            self.ctrl_pressed = False
 
     def copter_shoot(self):
-        self.copter.recoil()
-        self.shots.append(Shot(self.copter.position, self.gravity))
-        if self.graphics:
-            self.smoke.create_shot_background()
-            graphics.play_shot_sound()
+        if self.copter.velocity[0] > self.copter.HSPEED_REQUIRED_TO_SHOOT:
+            self.copter.recoil()
+            self.shots.append(Shot(self.copter.position, self.gravity))
+            if self.graphics:
+                self.smoke.create_shot_background()
+                graphics.play_shot_sound()
 
     def user_control_enemy(self, graphics, index):
         enemy = self.enemy_instances[index].enemy
@@ -131,10 +133,9 @@ class CopterSimulation:
         enemy.moving_left = self.left_pressed and not enemy.exploded
         if enemy.exploded and abs(enemy.velocity[0]) < 0.1:
             return True
-        if self.ctrl_on_press:
-            enemy.dive()
-            graphics.play_enemy_dive_sound()
-            self.ctrl_on_press = False
+        if self.ctrl_pressed:
+            if enemy.dive():
+                graphics.play_enemy_dive_sound()
 
     def get_copter_distance_travelled(self):
         return self.copter.position[0] - base_start_x
@@ -146,6 +147,8 @@ class CopterSimulation:
             ei.smoke.particle_rate = calculated_rate
         self.smoke.particle_rate = min(10*calculated_rate, 4)
 
+    def user_controls_enemy(self):
+        return self.graphics is not None and graphics.user_control != MAIN and graphics.user_control is not None
 
     def run(self, graphics=None):
         self.graphics = graphics
@@ -153,30 +156,32 @@ class CopterSimulation:
         self.timestep = 0
         self.number_of_enemy_deaths = 0
         self.total_enemy_living_time = 0.0
+        self.copter.firing = False
         if graphics:
             self.smoke = Smoke(self.copter.position, 4, 0.05, self.gravity, graphics.main_copter_smoke_color)
             # for enemy_instance in self.enemy_instances:
             #     enemy_instance.smoke = Smoke(enemy_instance.enemy.position, 4, 0.05, self.gravity, graphics.enemy_smoke_color)
+            self.graphics.player_box_timer = self.graphics.PLAYER_BOX_TIME
         while 1:
             if graphics:
                 ctrl_not_previously_pressed = not self.ctrl_pressed
                 self.space_pressed, self.ctrl_pressed, self.left_pressed = graphics.update(self)
-                if self.ctrl_pressed and ctrl_not_previously_pressed:
-                    self.ctrl_on_press = True
-            if graphics.user_control != None and graphics:
+                if self.ctrl_pressed:# and ctrl_not_previously_pressed:
+                    self.ctrl_pressed = True
+            if graphics != None and graphics.user_control is not None:
                 if graphics.user_control == MAIN or graphics.user_control >= len(self.enemy_instances):
                     if self.user_control_main(graphics):
                         return True
                 else:
-                    if self.user_control_enemy(graphics, graphics.user_control):
+                    if self.user_control_enemy(graphics, graphics.user_control) and self.end_when_enemy_dies:
                         return True
-            elif graphics.user_control is None and graphics and self.copter.exploded and self.end_when_copter_dies and abs(self.copter.velocity[0]) < 0.1:
+            if self.copter.exploded and (self.end_when_copter_dies or self.user_controls_enemy()) and ((not self.graphics) or abs(self.copter.velocity[0]) < 0.1):
                 # print "end at copter death!!"
                 return self.get_copter_distance_travelled()
-            if graphics.user_control != MAIN and self.main_neural_net_integration is not None and not self.copter.exploded:
+            if not (graphics and graphics.user_control == MAIN) and self.main_neural_net_integration is not None and not self.copter.exploded:
                 self.main_neural_net_integration.run_network(self)
             for enemy_index in range(len(self.enemy_instances)):
-                if graphics.user_control != enemy_index:
+                if not (graphics and graphics.user_control == enemy_index):
                     if self.enemy_neural_net_integration is not None and not self.enemy_instances[enemy_index].enemy.exploded:
                         self.enemy_neural_net_integration.run_network(self, enemy_index, self.enemy_instances[enemy_index].h)
                     else:
@@ -366,7 +371,7 @@ short_levels_and_enemy_positions = [] # pairs of (level, enemy_positions) for ea
 
 def get_custom_mutation(m):
     probability_of_initial_h_grand_mutation = 0.025
-    initial_h_grand_mutation_gene_mutation_rate = 0.1
+    initial_h_grand_mutation_gene_mutation_rate = 0.05
     initial_h_len = 50*30
     normalMutation = BinaryMutation(7.0 / m)
     grandMutation = BinaryMutation(initial_h_grand_mutation_gene_mutation_rate)
@@ -416,15 +421,16 @@ def run_evaluations(levels_and_enemy_positions, fitness_calculator, use_graphics
 def watch_copter_vs_enemies():
     global graphics
     graphics = Graphics()
+
+    copter_population_data = load_population_data(copter_subfoldername, -1)
+    copter_variables = copter_population_data.best_variables
+
+    load_latest_enemy_network()
+
     while 1:
         global short_levels_and_enemy_positions
         short_levels_and_enemy_positions = generate_mini_levels_and_enemy_positions()
 
-
-        copter_population_data = load_population_data(copter_subfoldername, -1)
-        copter_variables = copter_population_data.best_variables
-
-        load_latest_enemy_network()
 
         fitness = run_copter_evaluation(copter_variables, True)
         print "Average copter distance: " + str(fitness)

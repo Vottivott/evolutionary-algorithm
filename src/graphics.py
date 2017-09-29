@@ -69,16 +69,16 @@ class Graphics:
                 if event.key == K_v:
                     self.show_copter_object_radars = not self.show_copter_object_radars
                 if event.key == K_TAB:
-                    if pygame.key.get_mods() & KMOD_SHIFT:
+                    if not (pygame.key.get_mods() & KMOD_SHIFT):
                         if self.user_control is None:
-                            self.user_control = 'main'
-                            self.player_box_timer = self.PLAYER_BOX_TIME
-                        elif self.user_control == 'main':
                             if len(copter_simulation.enemy_instances):
                                 self.user_control = 0
                                 self.player_box_timer = self.PLAYER_BOX_TIME
                             else:
-                                self.user_control = None
+                                self.user_control = 'main'
+                        elif self.user_control == 'main':
+                            self.user_control = None
+                            self.player_box_timer = self.PLAYER_BOX_TIME
                         else:
                             self.user_control += 1
                             if self.user_control >= len(copter_simulation.enemy_instances):
@@ -87,13 +87,13 @@ class Graphics:
                                 self.player_box_timer = self.PLAYER_BOX_TIME
                     else:
                         if self.user_control is None:
+                            self.user_control = 'main'
+                        elif self.user_control == 'main':
                             if len(copter_simulation.enemy_instances):
                                 self.user_control = len(copter_simulation.enemy_instances) - 1
                                 self.player_box_timer = self.PLAYER_BOX_TIME
                             else:
-                                self.user_control = 'main'
-                        elif self.user_control == 'main':
-                            self.user_control = None
+                                self.user_control = None
                         else:
                             self.user_control -= 1
                             if self.user_control < 0 or self.user_control >= len(copter_simulation.enemy_instances):
@@ -163,9 +163,9 @@ class Graphics:
         ceiling_region = copter_simulation.level.ceiling[start:end]
         ground_region = copter_simulation.level.ground[start:end]
         ceiling_coords = [(x, y) for x, y in enumerate(list(ceiling_region))]
-        ceiling_pointlist = [(this, next) for this, next in izip(ceiling_coords, ceiling_coords[1:])]
+        # ceiling_pointlist = [(this, next) for this, next in izip(ceiling_coords, ceiling_coords[1:])]
         ground_coords = [(x, y) for x, y in enumerate(list(ground_region))]
-        ground_pointlist = [(this, next) for this, next in izip(ground_coords, ground_coords[1:])]
+        # ground_pointlist = [(this, next) for this, next in izip(ground_coords, ground_coords[1:])]
         c_cave = (150,160,170)
         # for point in ceiling_pointlist:
         #     pygame.draw.lines(self.screen, (255, color, 0), False, point, 2)
