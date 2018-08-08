@@ -18,10 +18,24 @@ def to_tuple(np_array):
     except TypeError:
         return np_array
 
+class ScoreText:
+    def __init__(self, hitPosition):
+        self.position = np.copy(hitPosition)
+        self.time_left = 90
+        self.rise_rate = 1
+
+    def update(self):
+        self.position[1] -= self.rise_rate
+        self.time_left -= 1
+        if self.time_left <= 0:
+            return False
+        return True
+
 # import pyglet
 class Graphics:
     def __init__(self):
         pygame.init()
+        pygame.font.init()
         self.size = w, h = 1200, 500
         self.screen = pygame.display.set_mode(self.size)
         self.clock = pygame.time.Clock()
@@ -51,6 +65,15 @@ class Graphics:
         self.show_copter_object_radars = False
         self.player_box_timer = 0.0
         self.PLAYER_BOX_TIME = 60
+
+        self.score = 0
+        self.score_font = pygame.font.Font('Steppes.ttf', 30)
+        self.shot_score_font = pygame.font.Font('Steppes.ttf', 50)
+        self.shot_score_color = (255,255,255)#self.main_copter_color
+        self.shot_score_surface = self.score_font.render('+1000', False, self.shot_score_color)
+        self.shot_score_texts = []
+
+        self.frame = 0
 
 
 
@@ -133,7 +156,7 @@ class Graphics:
             if not copter_simulation.copter.exploded and self.player_box_timer > 0:
                 self.draw_player_box(copter_simulation.copter, copter_simulation)
                 self.player_box_timer -= 1
-                print self.player_box_timer
+                #print self.player_box_timer
         elif self.user_control is not None:
             if self.user_control < len(copter_simulation.enemy_instances):
                 if not copter_simulation.enemy_instances[self.user_control].enemy.exploded and self.player_box_timer > 0:
@@ -142,7 +165,19 @@ class Graphics:
 
         # self.draw_shots(copter_simulation)
 
+        self.draw_score(copter_simulation)
+
+        self.update_shot_score_texts()
+        self.draw_shot_score_texts(copter_simulation)
+
+
         pygame.display.flip()
+
+        #TEST
+        #self.frame += 1
+        #pygame.image.save(self.screen, "screenshots/screenshot" + str(self.frame) + ".jpeg")
+        #/TEST
+
         self.clock.tick(60)
 
         keys = pygame.key.get_pressed()  # checking pressed keys
@@ -320,7 +355,7 @@ class Graphics:
         lineDown = np.array([[0.0], [line_length]])
         lineLeft = np.array([[-line_length], [0.0]])
         lineUp =   np.array([[0.0], [-line_length]])
-        print self.np_to_screen_coord(cornerNW + lineDown, copter_simulation)
+        #print self.np_to_screen_coord(cornerNW + lineDown, copter_simulation)
         pygame.draw.line(self.screen, color, self.np_to_screen_coord(cornerNW + lineDown, copter_simulation), self.np_to_screen_coord(cornerNW, copter_simulation), width)
         pygame.draw.line(self.screen, color, self.np_to_screen_coord(cornerNW + lineRight, copter_simulation), self.np_to_screen_coord(cornerNW, copter_simulation), width)
         pygame.draw.line(self.screen, color, self.np_to_screen_coord(cornerSW + lineUp, copter_simulation), self.np_to_screen_coord(cornerSW, copter_simulation), width)
@@ -346,6 +381,25 @@ class Graphics:
             y = y - shot.height/ 2.0
             pygame.draw.rect(self.screen, (255, 180, 0),
                              pygame.Rect(x, y, shot.width, shot.height))
+
+    def draw_score(self, copter_simulation):
+        score_color = (255, 255, 255)
+        text_surface = self.score_font.render('Score: %d' % int(self.score), False, score_color)
+        self.screen.blit(text_surface, (20, 20))
+
+    def add_shot_score_text(self, hitPosition, copter_simulation):
+        self.shot_score_texts.append(ScoreText(hitPosition))
+
+    def update_shot_score_texts(self):
+        for i,shot_score_text in enumerate(list(self.shot_score_texts)):
+            if not shot_score_text.update():
+                del self.shot_score_texts[i]
+
+
+    def draw_shot_score_texts(self, copter_simulation):
+        for shot_score_text in self.shot_score_texts:
+            self.screen.blit(self.shot_score_surface, self.np_to_screen_coord(shot_score_text.position, copter_simulation))
+
 
 
 

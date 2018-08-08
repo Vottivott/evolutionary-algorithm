@@ -68,7 +68,7 @@ def load_population_data(subfoldername, generation):
             return pickle.load(file)
 
 
-if __name__ == "__main__":
+def count_genes():
     import numpy as np
     #subfoldername = "7 counters (length 4), 15 radars (max_steps = 250, step_size = 4), velocity up+down"
     # subfoldername = "feedforward_larger_no_enemies"
@@ -81,6 +81,9 @@ if __name__ == "__main__":
     p = load_population_data(subfoldername, -1)
     print sum(p.population[40][-1500:])
     print sum(sum(ind[-1500:] for ind in p.population))
+
+if __name__ == "__main__":
+    count_genes()
     # p = load_population_data(subfoldername, 105)
     # print p
     # p = load_population_data(subfoldername, 106)

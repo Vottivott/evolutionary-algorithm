@@ -12,10 +12,12 @@ class Shot(Rectangular):
         self.decay_rate = 0.35
 
     def step(self, level, delta_time):
-        self.velocity += self.gravity * delta_time
-        self.position += self.velocity * delta_time
-        self.alpha -= self.decay_rate * delta_time
+        if self.alpha >= 0:
+            self.velocity += self.gravity * delta_time
+            self.position += self.velocity * delta_time
+            self.alpha -= self.decay_rate * delta_time
         if level.collides_with_multipoint(self):
+            self.alpha = -1
             return False
         if self.alpha < 0:
             return False

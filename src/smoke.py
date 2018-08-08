@@ -75,11 +75,11 @@ class Smoke:
         p = SmokeParticle(self.position, velocity, 0.0, size, size, self.gravity, True, self.color)
         self.particles.append(p)
 
-    def create_shot_background(self):
+    def create_shot_background(self, shot):
         for i in range(18):
-            self.create_shot_background_particle()
+            self.create_shot_background_particle(shot)
 
-    def create_shot_background_particle(self):
+    def create_shot_background_particle(self, shot):
         angle_range = 0.015 * np.pi
         center_direction = 0
         direction = (center_direction - angle_range / 2) + angle_range * np.random.random()
@@ -88,7 +88,7 @@ class Smoke:
         speed_range = 35.0
         speed = min_speed + speed_range * np.random.random()
         velocity = direction_vector * speed
-        p = SmokeParticle(self.position, velocity, self.shot_background_decay_rate, self.particle_start_size, self.particle_end_size, self.gravity, False, self.color, True)
+        p = SmokeParticle(self.position, velocity, self.shot_background_decay_rate, self.particle_start_size, self.particle_end_size, self.gravity, False, self.color, True, shot)
         self.particles.append(p)
 
     def create_dive_background(self):
@@ -113,7 +113,7 @@ class Smoke:
 
 
 class SmokeParticle(Rectangular):
-    def __init__(self, position, velocity, decay_rate, start_size, end_size, gravity, freeze_on_bounce, color, remove_on_bounce=False):
+    def __init__(self, position, velocity, decay_rate, start_size, end_size, gravity, freeze_on_bounce, color, remove_on_bounce=False, shot=None):
         Rectangular.__init__(self, np.copy(position), start_size, start_size)
         self.velocity = np.array(velocity)
         self.alpha = 1.0
@@ -125,6 +125,7 @@ class SmokeParticle(Rectangular):
         self.freeze_on_bounce = freeze_on_bounce
         self.remove_on_bounce = remove_on_bounce
         self.color = color
+        self.shot = shot
 
     def step(self, level, delta_time):
         self.alpha -= self.decay_rate * delta_time
@@ -145,6 +146,8 @@ class SmokeParticle(Rectangular):
                     return False
                 if self.remove_on_bounce:
                     return False
+        if self.shot is not None and self.shot.alpha < 0 and self.position[0] > self.shot.position[0]: # remove particles beyond the point wher the shot hit a wall
+            return False
         if self.alpha < 0:
             return False
         return True

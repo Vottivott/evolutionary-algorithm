@@ -22,15 +22,16 @@ def _smoothify(curve):
         smooth_curve.append(running_sum * 1.0 / smooth_factor)
     return np.array(smooth_curve)
 
-def generate_level(length):
+def generate_level(length, close_end=True):
     n = length / 70.0
     basic_shape = _get_randcurve(length, n, 40)
     ceiling = basic_shape + _get_randcurve(length, 1.5*n, 10) + _get_randcurve(length, 1.7*n, 4)
     ceiling = 125 + _smoothify(ceiling)
     ground = basic_shape + _get_randcurve(length, 1.5*n, 18) + _get_randcurve(length, 1.7*n, 8)
     ground = 305 + _smoothify(ground) #prev 305
-    ceiling[-1] = ground[-1]
-    ceiling[0] = ground[0]
+    if close_end:
+        ceiling[-1] = ground[-1]
+        ceiling[0] = ground[0]
 
     return Level(ceiling, ground)
 

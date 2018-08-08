@@ -18,8 +18,12 @@ from score_colors import get_color_from_score
 from shot import Shot
 from smoke import Smoke
 
+import sys
 
 MAIN = 'main'
+
+global debug_session_num_enemies_shot
+debug_session_num_enemies_shot = 0
 
 class EnemyInstance:
     def __init__(self, enemy, en_neural_net_integration):
@@ -64,6 +68,7 @@ class CopterSimulation:
         self.end_at_time = None
 
         self.number_of_enemy_deaths = 0
+        self.num_meaningless_shots = 0
 
 
         self.total_enemy_living_time = 0.0
@@ -73,6 +78,8 @@ class CopterSimulation:
         self.enemy_instances = []
 
         self.graphics = None
+
+
 
     def get_living_copter_list(self):
         if self.copter.exploded:
@@ -122,9 +129,12 @@ class CopterSimulation:
     def copter_shoot(self):
         if self.copter.velocity[0] > self.copter.HSPEED_REQUIRED_TO_SHOOT:
             self.copter.recoil()
-            self.shots.append(Shot(self.copter.position, self.gravity))
+            shot = Shot(self.copter.position, self.gravity)
+            self.shots.append(shot)
+            if len(self.get_living_enemy_instances()) == 0:
+                self.num_meaningless_shots += 1
             if self.graphics:
-                self.smoke.create_shot_background()
+                self.smoke.create_shot_background(shot)
                 graphics.play_shot_sound()
 
     def user_control_enemy(self, graphics, index):
@@ -139,6 +149,9 @@ class CopterSimulation:
 
     def get_copter_distance_travelled(self):
         return self.copter.position[0] - base_start_x
+
+    def calculate_score(self):
+        return self.get_copter_distance_travelled() + 1000 * self.num_shot_enemies
 
     def mediate_smoke_particle_rate(self):
         particle_count = len(self.smoke.particles) + len(self.smoke.frozen_particles)*0.5 + sum(len(ei.smoke.particles) + len(ei.smoke.frozen_particles)*0.5 for ei in self.enemy_instances) or 1
@@ -157,6 +170,9 @@ class CopterSimulation:
         self.number_of_enemy_deaths = 0
         self.total_enemy_living_time = 0.0
         self.copter.firing = False
+        self.num_shot_enemies = 0
+        self.num_meaningless_shots = 0
+        self.shots = []
         if graphics:
             self.smoke = Smoke(self.copter.position, 4, 0.05, self.gravity, graphics.main_copter_smoke_color)
             # for enemy_instance in self.enemy_instances:
@@ -218,9 +234,21 @@ class CopterSimulation:
                 else:
                     hit = False
                     for i, ei in enumerate(self.enemy_instances):
-                        if ei.enemy.collides_with(shot):
+                        if not ei.enemy.exploded and ei.enemy.collides_with(shot):
                             enemy_still_flying[i] = 'shot'
-                            print "Enemy shot!!!"
+                            global debug_session_num_enemies_shot
+                            debug_session_num_enemies_shot += 1
+                            if debug_session_num_enemies_shot % 5 == 1:
+                                print "*",
+                            else:
+                                sys.stdout.write('*')
+                                sys.stdout.flush()
+                            if graphics:
+                                graphics.add_shot_score_text(ei.enemy.position, self)
+                                graphics.score = self.calculate_score()
+                            #print get_color_from_score(ei.enemy.position[0]-base_start_x, False) + "*",
+                            #print "Enemy shot at t=" + str(self.timestep) + ", x=" +str(ei.enemy.position[0])+ "!!!",
+                            self.num_shot_enemies += 1
                             hit = True
                     if hit:
                         self.shots.remove(shot)
@@ -240,7 +268,7 @@ class CopterSimulation:
 
             self.timestep += 1
             if self.end_at_time is not None and self.timestep >= self.end_at_time:
-                # print "End at time!"
+                print "Time out!"
                 return self.get_copter_distance_travelled()
             if graphics:
                 self.mediate_smoke_particle_rate()
@@ -252,6 +280,8 @@ class CopterSimulation:
                         self.copter.exploded = True
                         start_x = base_start_x + view_offset
                         # print "Fitness: " + str(self.copter.position[0] - start_x)
+                if not self.copter.exploded:
+                    graphics.score = self.calculate_score()
                 sputter = self.smoke.step(self.level, self.delta_t, self.copter.firing and not self.copter.exploded)
                 if sputter:
                     if self.time_since_last_sputter_sound >= self.sputter_sound_interval:
@@ -352,7 +382,7 @@ enemy_subfoldername = "enemy"
 
 short_level_length = base_start_x + 5000
 num_enemies = 5
-num_short_levels = 7
+num_short_levels = 30#20#1#14
 
 new_level = generate_level(short_level_length)
 s = CopterSimulation(new_level, Copter(np.array([[start_x], [new_level.y_center(start_x)]]), 20),
@@ -370,16 +400,18 @@ short_levels_and_enemy_positions = [] # pairs of (level, enemy_positions) for ea
 
 
 def get_custom_mutation(m):
-    probability_of_initial_h_grand_mutation = 0.025
-    initial_h_grand_mutation_gene_mutation_rate = 0.05
-    initial_h_len = 50*30
-    normalMutation = BinaryMutation(7.0 / m)
-    grandMutation = BinaryMutation(initial_h_grand_mutation_gene_mutation_rate)
-    def customMutation(chromosome, generation):
-        normalMutation.mutate(chromosome, generation)
-        if np.random.rand() < probability_of_initial_h_grand_mutation:
-            grandMutation.mutate(chromosome[-initial_h_len:], generation)
-    return customMutation
+    normalMutation = BinaryMutation(2.0 / m)#7.0 / m)#50.0 / m)#7.0 / m)#BinaryMutation(12.0 / m)
+    return normalMutation
+
+    # probability_of_initial_h_grand_mutation = 0.025
+    # initial_h_grand_mutation_gene_mutation_rate = 0.05
+    # initial_h_len = 50*30
+    # grandMutation = BinaryMutation(initial_h_grand_mutation_gene_mutation_rate)
+    # def customMutation(chromosome, generation):
+    #     normalMutation.mutate(chromosome, generation)
+    #     if np.random.rand() < probability_of_initial_h_grand_mutation:
+    #         grandMutation.mutate(chromosome[-initial_h_len:], generation)
+    # return customMutation
 
 
 
@@ -387,13 +419,23 @@ def get_custom_mutation(m):
 
 s.end_at_time = 10000
 
-def generate_mini_levels_and_enemy_positions():
+def generate_mini_levels_and_enemy_positions(close_end=True):
     result = []
     for i in range(num_short_levels):
-        level = generate_level(short_level_length)
+        level = generate_level(short_level_length, close_end)
         ep = get_enemy_positions(short_level_length, num_enemies, level, enemy_width, min_x)
         result.append((level, ep))
     return result
+
+def combine_mini_levels_and_enemy_positions_into_long_level(data):
+    long_level = data[0][0]
+    long_ep = data[0][1]
+    for i,(level,ep) in enumerate(data[1:]):
+        long_level.ceiling = np.hstack((long_level.ceiling, level.ceiling))
+        long_level.ground = np.hstack((long_level.ground, level.ground))
+        long_ep.extend([p + np.array([[short_level_length*i],[0]]) for p in ep])
+    return [(long_level, long_ep)]
+
 
 def run_evaluation(level, positions, fitness_calculator, use_graphics=False):
     s.level = level
@@ -427,11 +469,13 @@ def watch_copter_vs_enemies():
 
     load_latest_enemy_network()
 
+    global num_short_levels
+    num_short_levels = 20
+
     while 1:
         global short_levels_and_enemy_positions
-        short_levels_and_enemy_positions = generate_mini_levels_and_enemy_positions()
-
-
+        short_levels_and_enemy_positions = generate_mini_levels_and_enemy_positions(False)
+        short_levels_and_enemy_positions = combine_mini_levels_and_enemy_positions_into_long_level(short_levels_and_enemy_positions)
         fitness = run_copter_evaluation(copter_variables, True)
         print "Average copter distance: " + str(fitness)
 
@@ -444,8 +488,10 @@ def run_enemy_evaluation(variables, use_graphics=False):
 
 def run_copter_evaluation(variables, use_graphics=False):
     neural_net_integration.set_weights_and_possibly_initial_h(variables)
+    COPTER_ENEMY_SHOT_BONUS = 1000#3000#1000#10000
+    COPTER_MEANINGLESS_SHOT_PENALTY = 50#25
     def fitness_calculator(sim):
-        return sim.get_copter_distance_travelled()
+        return sim.get_copter_distance_travelled() + COPTER_ENEMY_SHOT_BONUS * sim.num_shot_enemies - COPTER_MEANINGLESS_SHOT_PENALTY * sim.num_meaningless_shots
     return run_evaluations(short_levels_and_enemy_positions, fitness_calculator, use_graphics)
 
 
@@ -467,11 +513,15 @@ class CopterFitnessFunction:
         self.debug_ind_n = 1
 
     def evaluate(self, variables, generation):
+        global debug_session_num_enemies_shot
+        debug_session_num_enemies_shot = 0
+
         if generation != self.last_generation:
+            if self.last_generation == -1: # TEST: ONLY ON PROGRAM START
+                load_latest_enemy_network()
             self.last_generation = generation
             global short_levels_and_enemy_positions
             short_levels_and_enemy_positions = generate_mini_levels_and_enemy_positions()
-            load_latest_enemy_network()
             self.debug_ind_n = 1
         fitness = run_copter_evaluation(variables, False)
         print get_color_from_score(fitness, False) + str(int(fitness)),
@@ -486,6 +536,9 @@ class EnemyFitnessFunction:
         self.debug_ind_n = 1
 
     def evaluate(self, variables, generation):
+        global debug_session_num_enemies_shot
+        debug_session_num_enemies_shot = 0
+
         if generation != self.last_generation:
             self.last_generation = generation
             global short_levels_and_enemy_positions
@@ -516,7 +569,7 @@ def run_evolution_on_enemy():
     ga = GeneticAlgorithm(80,
                           EnemyFitnessFunction(),
                           TournamentSelection(0.75, 3),
-                          SinglePointCrossover(0.9),
+                          SinglePointCrossover(0.75),#0.9),
                           get_custom_mutation(m),
                           Elitism(1),
                           BinaryDecoding(5, vars, var_size),
@@ -567,7 +620,7 @@ def run_evolution_on_copter():
     ga = GeneticAlgorithm(80,
                           CopterFitnessFunction(),
                           TournamentSelection(0.75, 3),
-                          SinglePointCrossover(0.9),
+                          SinglePointCrossover(0.75),#0.9),
                           get_custom_mutation(m),
                           Elitism(1),
                           BinaryDecoding(5, vars, var_size),
@@ -576,6 +629,7 @@ def run_evolution_on_copter():
     def copter_callback(p, watch_only=False):
         # if p.generation == 100:
         if not watch_only:
+            #if p.generation % 50 == 0: # Save only every 50th generation
             save_population_data(copter_subfoldername, p, keep_last_n=10)
         average_fitness = sum(p.fitness_scores) / len(p.fitness_scores)
         print "\n[ " + str(p.generation) + ": " + str(
