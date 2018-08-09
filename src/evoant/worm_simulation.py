@@ -36,7 +36,8 @@ class WormSimulation:
         while 1:
             self.timestep += 1
             self.worm.step(self.level, self.gravity, self.delta_t)
-            graphics.update(self)
+            space = graphics.update(self)
+            self.worm.muscles[0].target_length = space and 50.0 or 27.0
 
 
 
@@ -50,13 +51,14 @@ enemy_width = 20
 start_x = base_start_x + view_offset
 min_x = base_start_x+view_offset+5*enemy_width
 
-ball_radius = 15.0
-segment_size = 40.0
-num_segments = 4
-ball_friction = 0.8
+ball_radius = 10.0
+segment_size = 24.0
+num_segments = 6
+ball_friction = 0.4
 ball_mass = 10.0
+spring_constant = 25.0
 
 new_level = generate_level(5000)
-s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_friction, ball_mass))
+s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_friction, ball_mass, spring_constant))
 
 s.run(graphics)

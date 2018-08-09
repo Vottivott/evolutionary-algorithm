@@ -112,7 +112,7 @@ class WormGraphics:
         self.clock.tick(60)
 
         keys = pygame.key.get_pressed()  # checking pressed keys
-        return keys[pygame.K_SPACE], (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL] or keys[pygame.K_DOWN]), keys[pygame.K_LEFT]
+        return keys[pygame.K_SPACE]#, (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL] or keys[pygame.K_DOWN]), keys[pygame.K_LEFT]
 
     def draw_level(self, worm_simulation):
         level = worm_simulation.level

@@ -3,7 +3,7 @@ import numpy as np
 
 class Ball(Circular):
     def __init__(self, position, radius, friction, mass):
-        Circular.__init__(self, position, radius, 10)
+        Circular.__init__(self, position, radius, 12)
         self.velocity = np.array([[0.0], [0.0]])
         self.friction = friction
         self.bounced = False
@@ -25,10 +25,10 @@ class Ball(Circular):
 
 
 
-            self.position += 0.008*-vel_component_in_bounce_direction * bounce_direction
+            self.position += 0.014*-vel_component_in_bounce_direction * bounce_direction
             i = 0
-            while level.collides_with_circular(self) and i < 50:
-                self.position += 0.008*-vel_component_in_bounce_direction * bounce_direction
+            while level.collides_with_circular(self) and i < 60:
+                self.position += 0.014*-vel_component_in_bounce_direction * bounce_direction
                 i+=1
 
 

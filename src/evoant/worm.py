@@ -1,12 +1,15 @@
 from circular import Circular
 from ball import Ball
+from muscle import Muscle
 import numpy as np
 from evomath import *
+from itertools import izip
 
 class Worm:
-    def __init__(self, position, ball_radius, segment_size, num_segments, ball_friction, ball_mass):
+    def __init__(self, position, ball_radius, segment_size, num_segments, ball_friction, ball_mass, spring_constant):
         self.num_balls = num_segments + 1
         self.balls = [Ball(position + np.array([[i*segment_size],[0]]), ball_radius, ball_friction, ball_mass) for i in range(self.num_balls)]
+        self.muscles = [Muscle(b1, b2, segment_size, spring_constant) for b1,b2 in izip(self.balls[:-1],self.balls[1:])]
 
     def get_x(self):
         return self.balls[0].get_x()
@@ -15,6 +18,10 @@ class Worm:
         return self.balls[0].get_y()
 
     def step(self, level, gravity, delta_time):
+
+        #TEST
+        # if self.balls[0].bounced:
+        #     self.muscles[0].target_length=50.0
 
         for i in range(self.num_balls):
             b = self.balls[i]
@@ -57,9 +64,19 @@ class Worm:
             import numpy.random
             # acceleration = numpy.random.permutation(np.array([[-1.0], [0.0]]))
             # acceleration = numpy.random.rand(1.0)*np.array([[1.0],[0.0]])
-            acceleration = gravity
-            b.velocity += acceleration * delta_time
-            b.position += b.velocity * delta_time
+
+
+        for muscle in self.muscles:
+            muscle.step(delta_time)
+
+        for i,b in enumerate(self.balls):
+            # if i>0:
+                acceleration = gravity
+                b.velocity += acceleration * delta_time
+                b.velocity *= 0.985 # viscosity to prevent erratic movement from spring simulation
+                b.position += b.velocity * delta_time
+
+
 
         return True
 
