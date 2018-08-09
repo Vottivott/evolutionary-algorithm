@@ -44,11 +44,11 @@ class Level:
         self.ceiling = ceiling
         self.ground = ground
 
-    def collides_with(self, rectangular):
+    def collides_with_rectangular(self, rectangular):
         # Simplified collision using only the top and bottom center points of the rectangle
-        if self.ceiling_collides_with(rectangular):
+        if self.ceiling_collides_with_rectangular(rectangular):
             return True
-        if self.ground_collides_with(rectangular):
+        if self.ground_collides_with_rectangular(rectangular):
             return True
         return False
 
@@ -73,11 +73,11 @@ class Level:
         return (self.ceiling[x] + self.ground[x]) / 2.0
 
     def bounce_direction(self, direction, rectangular):
-        if self.ceiling_collides_with(rectangular):
-            slope = self.calculate_slope(rectangular, self.ceiling)
+        if self.ceiling_collides_with_rectangular(rectangular):
+            slope = self.calculate_slope_rectangular(rectangular, self.ceiling)
             return self.bounce(direction, slope)
-        if self.ground_collides_with(rectangular):
-            slope = self.calculate_slope(rectangular, self.ground)
+        if self.ground_collides_with_rectangular(rectangular):
+            slope = self.calculate_slope_rectangular(rectangular, self.ground)
             return self.bounce(direction, slope)
         return None
 
@@ -88,14 +88,15 @@ class Level:
         bounce_dir *= 1.0 / (bounce_dir.T.dot(bounce_dir)) ** 0.5
         return bounce_dir
 
+
     def __len__(self):
         return len(self.ceiling)
 
-    def ceiling_collides_with(self, rectangular):
+    def ceiling_collides_with_rectangular(self, rectangular):
         x = int(rectangular.get_x())
         return x < 0 or x >= len(self.ceiling) or self.ceiling[x] > rectangular.get_top()
 
-    def ground_collides_with(self, rectangular):
+    def ground_collides_with_rectangular(self, rectangular):
         x = int(rectangular.get_x())
         return x >= len(self.ground) or self.ground[x] < rectangular.get_bottom()
 
@@ -113,12 +114,97 @@ class Level:
                 return True
         return False
 
-    def calculate_slope(self, rectangular, curve):
+    def calculate_slope_rectangular(self, rectangular, curve):
         x = rectangular.get_x()
         lx = int(x)
         rx = lx + 1
         if rx >= len(curve):
             return 100000.0
         return curve[rx] - curve[lx]
+
+    # CIRCULAR
+
+    def collides_with_circular(self, circular):
+        for cp in circular.ceiling_coll_points:
+            p = circular.get_position() + cp
+            if self.collides_with_point(p):
+                return True
+        for cp in circular.floor_coll_points:
+            p = circular.get_position() + cp
+            if self.collides_with_point(p):
+                return True
+        return False
+
+
+    def get_ceiling_collision_circular(self, circular):
+    # Return the median of the hit points
+        coll = []
+        for cp in circular.ceiling_coll_points:
+            p = circular.get_position() + cp
+            if self.collides_with_point(p):
+                coll.append(p)
+        if len(coll) == 0:
+            return None
+        return coll[len(coll)/2]
+
+    def get_ground_collision_circular(self, circular):
+    # Return the median of the hit points
+        coll = []
+        for cp in circular.floor_coll_points:
+            p = circular.get_position() + cp
+            if self.collides_with_point(p):
+                coll.append(p)
+        if len(coll) == 0:
+            return None
+        return coll[len(coll)/2]
+
+    def calculate_slope_x(self, x, curve):
+        lx = int(x)
+        rx = lx + 1
+        if rx >= len(curve):
+            return 100000.0
+        return curve[rx] - curve[lx]
+
+
+    def get_normal(self, slope):
+        n = np.array([[1.0], [-1.0 / slope]])
+        return n / (np.dot(n.T, n) ** 0.5)
+
+    # def collides_with_circular(self, circular):
+    #     if self.ceiling_collides_with_circular(circular):
+    #         return True
+    #     if self.ground_collides_with_circular(circular):
+    #         return True
+    #     return False
+
+    def normal_direction_circular(self, circular):
+        ground_coll = self.get_ground_collision_circular(circular)
+        if ground_coll is not None and ground_coll[0] >= 0 and ground_coll[0] < len(self.ground):
+            slope = self.calculate_slope_x(ground_coll[0], self.ground)
+            return self.get_normal(slope)
+            #return self.bounce(direction, slope)
+        ceil_coll = self.get_ceiling_collision_circular(circular)
+        if ceil_coll is not None and ceil_coll[0] >= 0 and ceil_coll[0] < len(self.ceiling):
+            slope = self.calculate_slope_x(ceil_coll[0], self.ceiling)
+            return self.get_normal(slope)
+            #return self.bounce(direction, slope)
+        return None
+
+
+    # def overlap_and_normal_direction_circular(self, circular):
+    #     ground_coll = self.get_ground_collision_circular(circular)
+    #     if ground_coll is not None and ground_coll[0] >= 0 and ground_coll[0] < len(self.ground):
+    #         slope = self.calculate_slope_x(ground_coll[0], self.ground)
+    #         normal = self.get_normal(slope)
+    #         overlap = ground_coll *
+    #         return overlap, normal
+    #         #return self.bounce(direction, slope)
+    #     ceil_coll = self.get_ceiling_collision_circular(circular)
+    #     if ceil_coll is not None and ceil_coll[0] >= 0 and ceil_coll[0] < len(self.ceiling):
+    #         slope = self.calculate_slope_x(ceil_coll[0], self.ceiling)
+    #         normal = self.get_normal(slope)
+    #         return overlap, normal
+    #         #return self.bounce(direction, slope)
+    #     return None, None
 
 

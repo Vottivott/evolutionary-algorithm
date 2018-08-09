@@ -22,7 +22,7 @@ class Copter(Rectangular):
         self.position += self.velocity * delta_time
         if self.exploded:
             self.velocity *= 0.97
-        if level.collides_with(self):
+        if level.collides_with_rectangular(self):
             return False
         return True
 

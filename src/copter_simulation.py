@@ -234,7 +234,7 @@ class CopterSimulation:
                 else:
                     hit = False
                     for i, ei in enumerate(self.enemy_instances):
-                        if not ei.enemy.exploded and ei.enemy.collides_with(shot):
+                        if not ei.enemy.exploded and ei.enemy.collides_with_rectangular(shot):
                             enemy_still_flying[i] = 'shot'
                             global debug_session_num_enemies_shot
                             debug_session_num_enemies_shot += 1
@@ -255,12 +255,12 @@ class CopterSimulation:
 
             for i,ei in enumerate(self.enemy_instances):
                 if not ei.enemy.exploded:
-                    if self.copter.collides_with(ei.enemy) and not self.copter.exploded:
+                    if self.copter.collides_with_rectangular(ei.enemy) and not self.copter.exploded:
                         still_flying = False
                         ei.enemy.velocity *= ei.enemy.collision_friction
                     for i_other in range(i+1, len(self.enemy_instances)):
                         ei_other = self.enemy_instances[i_other]
-                        if not ei_other.enemy.exploded and ei.enemy.collides_with(ei_other.enemy):
+                        if not ei_other.enemy.exploded and ei.enemy.collides_with_rectangular(ei_other.enemy):
                                 enemy_still_flying[i] = False
                                 enemy_still_flying[i_other] = False
 

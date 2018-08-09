@@ -29,7 +29,7 @@ class Enemy(Rectangular):
         self.time_since_last_dive += 1
         if self.exploded:
             self.velocity *= 0.97
-        if level.collides_with(self):
+        if level.collides_with_rectangular(self):
             return False
         return True
 
