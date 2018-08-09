@@ -53,9 +53,10 @@ min_x = base_start_x+view_offset+5*enemy_width
 ball_radius = 15.0
 segment_size = 40.0
 num_segments = 4
-ball_friction = 0.6#0.8
+ball_friction = 0.8
+ball_mass = 10.0
 
 new_level = generate_level(5000)
-s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_friction))
+s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_friction, ball_mass))
 
 s.run(graphics)

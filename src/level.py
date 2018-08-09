@@ -165,6 +165,15 @@ class Level:
             return 100000.0
         return curve[rx] - curve[lx]
 
+    def calculate_slope_x_smoother(self, x, curve):
+        lx = int(x)
+        rx = lx + 1
+        llx = lx-1
+        rrx = rx#+1
+        if rrx >= len(curve) or llx < 0:
+            return 100000.0
+        return (curve[rrx] - curve[llx]) / 2.0
+
 
     def get_normal(self, slope):
         n = np.array([[1.0], [-1.0 / slope]])
