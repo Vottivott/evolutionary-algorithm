@@ -82,6 +82,8 @@ class WormGraphics:
             if event.type == pygame.QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
                 sys.exit()
+            #if event.type == KEYDOWN and event.key == K_KP_ENTER:
+
 
         self.screen.fill((240, 245, 250))
         # s = pygame.Surface(self.size)  # the size of your rect
@@ -95,7 +97,7 @@ class WormGraphics:
         #     color = min(np.random.normal(200, 30, 1), 255)
 
         self.draw_worm(worm_simulation.worm, worm_simulation)
-        self.draw_level(worm_simulation)
+        self.draw_bar_level(worm_simulation)
 
 
         # self.draw_shots(worm_simulation)
@@ -114,23 +116,30 @@ class WormGraphics:
         keys = pygame.key.get_pressed()  # checking pressed keys
         return keys[pygame.K_SPACE]#, (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL] or keys[pygame.K_DOWN]), keys[pygame.K_LEFT]
 
-    def draw_level(self, worm_simulation):
+    def draw_bar_level(self, worm_simulation):
         level = worm_simulation.level
+        bar_width = worm_simulation.level.bar_width
         if self.who_to_follow == 'main' or self.who_to_follow >= len(worm_simulation.enemy_instances):
             cx = worm_simulation.worm.get_x()
         else:
             cx = worm_simulation.enemy_instances[self.who_to_follow].enemy.get_x()
         start = cx - self.get_view_offset(worm_simulation)
         end = start + self.size[0]
+        start /= bar_width
+        end /= bar_width
+        xoff = -bar_width * (start - int(start))
         start = min(len(level), max(0, start))
         end = min(len(level), max(0, end))
         start = int(start)
-        end = int(end)
+        end = int(end+2)
         ceiling_region = worm_simulation.level.ceiling[start:end]
         ground_region = worm_simulation.level.ground[start:end]
-        ceiling_coords = [(x, y) for x, y in enumerate(list(ceiling_region))]
+
+
+
+        ceiling_coords = [(bar_width * x + xoff, y) for x, y in enumerate(list(ceiling_region))]
         # ceiling_pointlist = [(this, next) for this, next in izip(ceiling_coords, ceiling_coords[1:])]
-        ground_coords = [(x, y) for x, y in enumerate(list(ground_region))]
+        ground_coords = [(bar_width * x + xoff, y) for x, y in enumerate(list(ground_region))]
         # ground_pointlist = [(this, next) for this, next in izip(ground_coords, ground_coords[1:])]
         c_cave = (150,160,170)
         # for point in ceiling_pointlist:

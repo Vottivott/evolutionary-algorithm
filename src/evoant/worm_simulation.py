@@ -10,7 +10,7 @@ from genetic.initialization.binary import BinaryInitialization
 from genetic.mutation.binary import BinaryMutation
 from genetic.selection.tournament import TournamentSelection
 from worm_graphics import WormGraphics
-from level import generate_level
+from bar_level import generate_bar_level
 from neural_net_integration import evocopter_neural_net_integration, black_neural_net_integration
 from population_data_io import save_population_data, load_population_data
 from radar_system import RadarSystem, EnemysRadarSystem
@@ -37,7 +37,7 @@ class WormSimulation:
             self.timestep += 1
             self.worm.step(self.level, self.gravity, self.delta_t)
             space = graphics.update(self)
-            self.worm.muscles[0].target_length = space and 50.0 or 27.0
+            self.worm.muscles[0].target_length = space and 37.0 or 24.0
 
 
 
@@ -54,11 +54,11 @@ min_x = base_start_x+view_offset+5*enemy_width
 ball_radius = 10.0
 segment_size = 24.0
 num_segments = 6
-ball_friction = 0.4
+ball_friction = 0.1#0.4
 ball_mass = 10.0
-spring_constant = 25.0
+spring_constant = 30.0
 
-new_level = generate_level(5000)
+new_level = generate_bar_level(5000)
 s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_friction, ball_mass, spring_constant))
 
 s.run(graphics)

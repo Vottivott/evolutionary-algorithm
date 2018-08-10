@@ -23,9 +23,17 @@ class Worm:
         # if self.balls[0].bounced:
         #     self.muscles[0].target_length=50.0
 
+        for b in self.balls:
+            b.planned_offset = np.array([[0.0], [0.0]])
+
+
+
+
+
         for i in range(self.num_balls):
             b = self.balls[i]
             b.bounce_on_level(level)
+
 
         for i in range(self.num_balls):
             b = self.balls[i]
@@ -73,8 +81,9 @@ class Worm:
             # if i>0:
                 acceleration = gravity
                 b.velocity += acceleration * delta_time
-                b.velocity *= 0.985 # viscosity to prevent erratic movement from spring simulation
+                b.velocity *= 0.975 # viscosity to prevent erratic movement from spring simulation
                 b.position += b.velocity * delta_time
+                b.position += b.planned_offset
 
 
 
