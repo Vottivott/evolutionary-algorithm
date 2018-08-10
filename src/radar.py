@@ -93,3 +93,26 @@ class Radar:
     #     self.point, self.dist = p,self.max_steps/float(self.max_steps)
     #     print (self.point, self.dist)
     #     return (self.point, self.dist)
+
+
+
+
+class BinaryRadar:
+    def __init__(self, number_of_neurons, only_bottom_half):
+        self.number_of_neurons = number_of_neurons
+        self.only_bottom_half = only_bottom_half
+        self.angle_slice = 2.0*np.pi / number_of_neurons if not only_bottom_half else np.pi / number_of_neurons # slice watched by a single neuron
+
+    def read_contact_vector_from_points(self, position, point):
+        contact_vector = np.zeros((self.number_of_neurons,1))
+        diff = point - position
+        if self.only_bottom_half:
+            angle = -np.arctan2(-diff[1], diff[0])
+            if angle >= 0: # Ignore points on the upper half
+                dir_index = int(angle / self.angle_slice)
+                contact_vector[dir_index] = 1.0
+        else:
+            angle = np.pi + np.arctan2(-diff[1],diff[0])
+            dir_index = int(angle / self.angle_slice)
+            contact_vector[dir_index] = 1.0
+        return contact_vector

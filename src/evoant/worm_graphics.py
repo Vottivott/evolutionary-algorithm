@@ -178,13 +178,17 @@ class WormGraphics:
     def draw_debug_bounces(self, worm, worm_simulation):
         for b in worm.balls:
             for debug_bounce in b.debug_bounces:
-                self.draw_debug_bounce(debug_bounce, worm_simulation)
+                self.draw_debug_bounce(debug_bounce, worm_simulation, b.gripping)
             if not b.gripping:
                 b.debug_bounces = []
 
-    def draw_debug_bounce(self, debug_bounce, worm_simulation):
+    def draw_debug_bounce(self, debug_bounce, worm_simulation, gripping):
+        if gripping:
+            color = self.enemy_color
+        else:
+            color = self.shot_score_color
         pos = self.np_to_screen_coord(debug_bounce.position, worm_simulation)
-        pygame.draw.circle(self.screen, self.shot_score_color,
+        pygame.draw.circle(self.screen, color,
                            pos, 2)
 
 

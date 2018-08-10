@@ -1,5 +1,6 @@
 import numpy as np
 
+from worm_radar_system import WormRadarSystem
 from worm import Worm
 from enemy import Enemy
 from genetic.algorithm import GeneticAlgorithm
@@ -25,6 +26,7 @@ class WormSimulation:
     def __init__(self, level, worm):
         self.level = level
         self.worm = worm
+        self.worm_radar_system = WormRadarSystem(worm.num_balls-1)
         self.gravity = np.array([[0.0],[0.4*9.8]])
         self.delta_t = 1.0/4
         self.graphics = None

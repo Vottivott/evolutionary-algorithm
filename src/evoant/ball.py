@@ -128,7 +128,7 @@ class Ball(Circular):
         self.velocity += -self.ball_ground_friction * vel_component_in_normal_direction * final_bounce.normal
         self.position += final_bounce.overlap * final_bounce.normal
 
-        self.debug_bounces.append(DebugBounce(final_bounce.hit_point))
+        self.debug_bounces.append(DebugBounce(final_bounce.hit_point, self.position))
 
         # TEST
         if self.grippingness == 1.0:
