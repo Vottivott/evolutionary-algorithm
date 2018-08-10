@@ -105,14 +105,15 @@ class BinaryRadar:
 
     def read_contact_vector_from_points(self, position, point):
         contact_vector = np.zeros((self.number_of_neurons,1))
-        diff = point - position
-        if self.only_bottom_half:
-            angle = -np.arctan2(-diff[1], diff[0])
-            if angle >= 0: # Ignore points on the upper half
+        if point is not None:
+            diff = point - position
+            if self.only_bottom_half:
+                angle = -np.arctan2(-diff[1], diff[0])
+                if angle >= 0: # Ignore points on the upper half
+                    dir_index = int(angle / self.angle_slice)
+                    contact_vector[dir_index] = 1.0
+            else:
+                angle = np.pi + np.arctan2(-diff[1],diff[0])
                 dir_index = int(angle / self.angle_slice)
                 contact_vector[dir_index] = 1.0
-        else:
-            angle = np.pi + np.arctan2(-diff[1],diff[0])
-            dir_index = int(angle / self.angle_slice)
-            contact_vector[dir_index] = 1.0
         return contact_vector

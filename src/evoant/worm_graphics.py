@@ -346,7 +346,7 @@ class WormGraphics:
 
     def draw_score(self, worm_simulation):
         score_color = (255, 255, 255)
-        text_surface = self.score_font.render('Score: %d' % int(self.score), False, score_color)
+        text_surface = self.score_font.render('Score: %d' % int(worm_simulation.score), False, score_color)
         self.screen.blit(text_surface, (20, 20))
 
     def add_shot_score_text(self, hitPosition, worm_simulation):

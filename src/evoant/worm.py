@@ -12,9 +12,13 @@ class Worm:
         self.muscles = [Muscle(b1, b2, segment_size, spring_constant) for b1,b2 in izip(self.balls[:-1],self.balls[1:])]
         self.max_y_velocity = 50.0
         self.max_x_velocity = 50.0
-        self.max_real_muscle_length = 50.0
+        self.max_real_muscle_length = 40.0
         self.muscle_flex_length = 13.0
         self.muscle_extend_length = 28.0
+        self.initial_rightmost_x = max(b.position[0] for b in self.balls)
+
+    def get_distance_travelled(self):
+        return max(b.position[0] for b in self.balls) - self.initial_rightmost_x
 
     def get_x(self):
         return self.balls[0].get_x()
@@ -47,6 +51,8 @@ class Worm:
             b = self.balls[i]
             if not b.gripping:
                 b.bounce_on_level(level)
+            if b.grippingness == 0.0:
+                b.gripping = False
 
 
         for i in range(self.num_balls):

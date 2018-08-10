@@ -20,9 +20,9 @@ class WormNeuralNetIntegration:
         self.input_function = input_function
         self.output_function = output_function
 
-    def run_network(self, copter_simulation, enemy_index=None, custom_h_layer=None):
-        network_output = self.neural_network.run(self.input_function(copter_simulation, enemy_index), custom_h_layer)
-        self.output_function(network_output, copter_simulation, enemy_index)
+    def run_network(self, copter_simulation, custom_h_layer=None):
+        network_output = self.neural_network.run(self.input_function(copter_simulation), custom_h_layer)
+        self.output_function(network_output, copter_simulation)
 
     # def clear_h(self):
     #     self.neural_network.h = self.get_empty_h()
@@ -71,7 +71,7 @@ class WormNeuralNetIntegration:
     def get_number_of_variables(self):
         return self.neural_network.get_total_number_of_weights() + self.neural_network.get_h_size()
 
-def worm_neural_net_integration(worm_simulation):
+def get_worm_neural_net_integration(worm_simulation):
 
     ground_contact_radar_size = worm_simulation.worm_radar_system.ground_contact_radars[0].number_of_neurons
     num_ground_contact_radars = len(worm_simulation.worm_radar_system.ground_contact_radars)
@@ -119,22 +119,26 @@ def worm_neural_net_integration(worm_simulation):
                 velocity_right = xvel / sim.worm.max_x_velocity
             x_velocity_inputs = np.array([[velocity_left], [velocity_right]])
 
-            input_vectors.append((y_velocity_inputs, x_velocity_inputs))
+            input_vectors.extend((y_velocity_inputs, x_velocity_inputs))
 
         for i, m in enumerate(sim.worm.muscles):
-            real_length = np.linalg.norm(m.b2 - m.b1)
-            input_vectors.append((np.array([[real_length / sim.worm.max_muscle_length]])))
+            real_length = np.linalg.norm(m.b2.position - m.b1.position)
+            input_vectors.append(np.array([[real_length / sim.worm.max_real_muscle_length]]))
 
         for i, b in enumerate(sim.worm.balls):
             radar = worm_simulation.worm_radar_system.ground_contact_radars[i]
-            bounce = b.debug_bounces[0]
-            ground_contact_vec = radar.read_contact_vector_from_points(bounce.ball_center, bounce.position)
+            if len(b.debug_bounces):
+                bounce = b.debug_bounces[0]
+                ground_contact_vec = radar.read_contact_vector_from_points(bounce.ball_center, bounce.position)
+            else:
+                ground_contact_vec = radar.read_contact_vector_from_points(None, None)
             input_vectors.append(ground_contact_vec)
 
         for i, m in enumerate(sim.worm.muscles):
             radar = worm_simulation.worm_radar_system.muscle_direction_radars[i]
-            muscle_direction_vec = radar.read_contact_vector_from_points(m.b1, m.b2)
+            muscle_direction_vec = radar.read_contact_vector_from_points(m.b1.position, m.b2.position)
             input_vectors.append(muscle_direction_vec)
+
 
         input = np.vstack(input_vectors)
         # print input
@@ -153,10 +157,10 @@ def worm_neural_net_integration(worm_simulation):
         for ball_index in range(num_balls):
             grip_decision = network_output[i_offset + ball_index]
             if grip_decision >= 0.5:
-                grippedness = 1.0
+                grippingness = 1.0
             else:
-                grippedness = 0.0
-            sim.worm.balls[ball_index].grippedness = grippedness
+                grippingness = 0.0
+            sim.worm.balls[ball_index].grippingness = grippingness
 
         i_offset += num_balls
 
