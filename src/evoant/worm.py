@@ -6,9 +6,9 @@ from evomath import *
 from itertools import izip
 
 class Worm:
-    def __init__(self, position, ball_radius, segment_size, num_segments, ball_friction, ball_mass, spring_constant):
+    def __init__(self, position, ball_radius, segment_size, num_segments, ball_ball_friction, ball_ground_friction, ball_mass, spring_constant):
         self.num_balls = num_segments + 1
-        self.balls = [Ball(position + np.array([[i*segment_size],[0]]), ball_radius, ball_friction, ball_mass) for i in range(self.num_balls)]
+        self.balls = [Ball(position + np.array([[i*segment_size],[0]]), ball_radius, ball_ball_friction, ball_ground_friction, ball_mass) for i in range(self.num_balls)]
         self.muscles = [Muscle(b1, b2, segment_size, spring_constant) for b1,b2 in izip(self.balls[:-1],self.balls[1:])]
 
     def get_x(self):
@@ -32,7 +32,8 @@ class Worm:
 
         for i in range(self.num_balls):
             b = self.balls[i]
-            b.bounce_on_level(level)
+            if not b.gripping:
+                b.bounce_on_level(level)
 
 
         for i in range(self.num_balls):
@@ -48,8 +49,10 @@ class Worm:
                         margin = b.radius + other.radius - dist
 
                         # Move to contact point (moving both balls the same distance)
-                        b.position += collisionLine * -margin / 2.0
-                        other.position += collisionLine * margin / 2.0
+                        if not b.gripping:
+                            b.position += collisionLine * -margin / 2.0
+                        if not other.gripping:
+                            other.position += collisionLine * margin / 2.0
 
                         u1Vector = b.velocity.T.dot(collisionLine) * collisionLine
                         u2Vector = other.velocity.T.dot(collisionLine) * collisionLine
@@ -62,8 +65,8 @@ class Worm:
                         v1 = (I - m2*R) / (m1 + m2)
                         v2 = R + v1
 
-                        v1 *= b.friction
-                        v2 *= other.friction
+                        v1 *= b.ball_ball_friction
+                        v2 *= other.ball_ball_friction
 
                         b.velocity += -u1Vector + collisionLine * v1
                         other.velocity += -u2Vector + collisionLine * v2
@@ -77,8 +80,14 @@ class Worm:
         for muscle in self.muscles:
             muscle.step(delta_time)
 
+        for muscle in self.muscles:
+            for b in self.balls:
+                if b is not muscle.b1 and b is not muscle.b2:
+                    muscle.collide_with_ball(b)
+
         for i,b in enumerate(self.balls):
             # if i>0:
+            if not b.gripping:
                 acceleration = gravity
                 b.velocity += acceleration * delta_time
                 b.velocity *= 0.975 # viscosity to prevent erratic movement from spring simulation

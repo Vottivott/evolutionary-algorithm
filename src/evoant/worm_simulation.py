@@ -36,29 +36,36 @@ class WormSimulation:
         while 1:
             self.timestep += 1
             self.worm.step(self.level, self.gravity, self.delta_t)
-            space = graphics.update(self)
+            space, enter, ctrl = graphics.update(self)
             self.worm.muscles[0].target_length = space and 37.0 or 24.0
+            self.worm.balls[-1].grippingness = ctrl
+            if not ctrl:
+                self.worm.balls[-1].gripping = False
+            if enter:
+                return
 
 
 
 graphics = WormGraphics()
 
-enemy_mode = True
-view_offset = 1200 / 7.0
-enemy_view_offset = 6.0 * 1200 / 7.0
-base_start_x = 1200
-enemy_width = 20
-start_x = base_start_x + view_offset
-min_x = base_start_x+view_offset+5*enemy_width
+while 1:
+    enemy_mode = True
+    view_offset = 1200 / 7.0
+    enemy_view_offset = 6.0 * 1200 / 7.0
+    base_start_x = 1200
+    enemy_width = 20
+    start_x = base_start_x + view_offset
+    min_x = base_start_x+view_offset+5*enemy_width
 
-ball_radius = 10.0
-segment_size = 24.0
-num_segments = 6
-ball_friction = 0.1#0.4
-ball_mass = 10.0
-spring_constant = 30.0
+    ball_radius = 10.0
+    segment_size = 17.0
+    num_segments = 6
+    ball_ball_friction = 0.0#0.4
+    ball_ground_friction = 0.4
+    ball_mass = 10.0
+    spring_constant = 30.0
 
-new_level = generate_bar_level(5000)
-s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_friction, ball_mass, spring_constant))
+    new_level = generate_bar_level(5000)
+    s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_friction, ball_ground_friction, ball_mass, spring_constant))
 
-s.run(graphics)
+    s.run(graphics)

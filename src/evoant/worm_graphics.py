@@ -98,6 +98,7 @@ class WormGraphics:
 
         self.draw_worm(worm_simulation.worm, worm_simulation)
         self.draw_bar_level(worm_simulation)
+        self.draw_debug_bounces(worm_simulation.worm, worm_simulation)
 
 
         # self.draw_shots(worm_simulation)
@@ -114,7 +115,7 @@ class WormGraphics:
         self.clock.tick(60)
 
         keys = pygame.key.get_pressed()  # checking pressed keys
-        return keys[pygame.K_SPACE]#, (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL] or keys[pygame.K_DOWN]), keys[pygame.K_LEFT]
+        return keys[pygame.K_SPACE], keys[pygame.K_KP_ENTER], (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL] or keys[pygame.K_DOWN])#, (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL] or keys[pygame.K_DOWN]), keys[pygame.K_LEFT]
 
     def draw_bar_level(self, worm_simulation):
         level = worm_simulation.level
@@ -173,6 +174,19 @@ class WormGraphics:
     def draw_worm(self, worm, worm_simulation):
         for b in worm.balls:
             self.draw_ball(b, worm_simulation)
+
+    def draw_debug_bounces(self, worm, worm_simulation):
+        for b in worm.balls:
+            for debug_bounce in b.debug_bounces:
+                self.draw_debug_bounce(debug_bounce, worm_simulation)
+            if not b.gripping:
+                b.debug_bounces = []
+
+    def draw_debug_bounce(self, debug_bounce, worm_simulation):
+        pos = self.np_to_screen_coord(debug_bounce.position, worm_simulation)
+        pygame.draw.circle(self.screen, self.shot_score_color,
+                           pos, 2)
+
 
     def draw_ball(self, ball, worm_simulation):
         pos = self.np_to_screen_coord(ball.position, worm_simulation)

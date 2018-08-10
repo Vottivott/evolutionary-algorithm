@@ -3,24 +3,30 @@ from line_segment import LineSegment
 import numpy as np
 from math import ceil
 from evomath import *
+from debug_bounce import DebugBounce
 
 class Bounce():
-    def __init__(self, normal, overlap, closest_edge):
+    def __init__(self, normal, overlap, closest_edge, hit_point):
         self.normal = normal
         self.overlap = overlap
         self.closest_edge = closest_edge
-        self.planned_offset = np.array([[0.0],[0.0]])
+        self.hit_point = hit_point
 
     def __div__(self, other):
         return Bounce(self.normal / other, self.overlap / other, self.closest_edge / other)
 
 class Ball(Circular):
-    def __init__(self, position, radius, friction, mass):
+    def __init__(self, position, radius, ball_ball_friction, ball_ground_friction, mass):
         Circular.__init__(self, position, radius, 12)
         self.velocity = np.array([[0.0], [0.0]])
-        self.friction = friction
+        self.ball_ball_friction = ball_ball_friction
+        self.ball_ground_friction = ball_ground_friction
+        # self.planned_offset = np.array([[0.0], [0.0]])
         # self.bounced = False
         self.mass = mass
+        self.debug_bounces = []
+        self.grippingness = 0.0 # Between 0 and 1, is the ball holding a grip to the ground?
+        self.gripping = False
 
     # def bounce_on_line_segment(self, seg):
     #     dist = np.dot(seg.normal.T, self.position-seg.left)
@@ -55,7 +61,7 @@ class Ball(Circular):
                     return None
 
 
-            return Bounce(seg.normal, overlap, closest_edge)
+            return Bounce(seg.normal, overlap, closest_edge, self.position - dist * seg.normal)
         else:
             return None
 
@@ -94,19 +100,40 @@ class Ball(Circular):
             dist = np.linalg.norm(delta)
             overlap = max(0.0, self.radius - dist)
             # overlap = max(0.5, self.radius - dist) # TODO: Riktig losning
-            final_bounce = Bounce(normal, overlap, point)
+            # if False:#overlap > 0:
+            #     final_bounce = Bounce(normal, overlap, point)
+            # else:  # If the common point is not collided with, use average of line segments instead
+
+            avg_normal = mean([b.normal for b in bounces])
+            # avg_normal = normalized(avg_normal)
+            avg_overlap = mean([b.overlap for b in bounces])
+            # max_overlap = max([b.overlap for b in bounces])
+            avg_hit_point = mean([b.hit_point for b in bounces])
+            final_bounce = Bounce(normalized(avg_normal), avg_overlap, point, avg_hit_point)
+
+            # else:  # If the common point is not collided with, use the most overlapping line segment instead
+            #     most_overlapping = max(bounces, key=lambda b: b.overlap)
+            #     final_bounce = most_overlapping
 
 
-            #avg_normal = mean([b.normal for b in bounces])
+                #avg_normal = mean([b.normal for b in bounces])
             #avg_overlap = mean([b.overlap for b in bounces])
             #final_bounce = Bounce(normalized(avg_normal), avg_overlap)
+
 
         vel_component_in_normal_direction = np.dot(self.velocity.T, final_bounce.normal)
         # (1) Remove all motion in bounce direction
         self.velocity += -vel_component_in_normal_direction * final_bounce.normal
         # (2) Add motion opposite to bounce direction, modulated by friction
-        self.velocity += -self.friction * vel_component_in_normal_direction * final_bounce.normal
+        self.velocity += -self.ball_ground_friction * vel_component_in_normal_direction * final_bounce.normal
         self.position += final_bounce.overlap * final_bounce.normal
+
+        self.debug_bounces.append(DebugBounce(final_bounce.hit_point))
+
+        # TEST
+        if self.grippingness == 1.0:
+            self.velocity *= 0.0
+            self.gripping = True
 
 
     # def bounce_on_level(self, level):
