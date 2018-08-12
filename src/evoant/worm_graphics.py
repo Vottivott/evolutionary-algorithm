@@ -3,7 +3,7 @@ from itertools import izip
 import pygame, sys
 from pygame.locals import *
 import numpy as np
-import pyglet.media
+# import pyglet.media
 
 def tuple_add(a,b):
     return [v_a+v_b for v_a,v_b in zip(a,b)]
@@ -41,19 +41,20 @@ class WormGraphics:
         self.clock = pygame.time.Clock()
         self.view_offset = w/7#17.0
         self.enemy_view_offset = 6.0*w/7
-        self.sputter_sound = pyglet.media.StaticSource(pyglet.media.load('../sputter_sound.wav'))#pygame.mixer.Sound('beep.wav')
-        self.sound_player = pyglet.media.Player()
-        self.crash_sound = pyglet.media.StaticSource(pyglet.media.load('../crash_sound.wav'))#pyglet.media.load('crash_sound.wav')
-        self.shot_sound = pyglet.media.StaticSource(pyglet.media.load('../shot_sound.wav'))
-        self.enemy_hit_sound = pyglet.media.StaticSource(pyglet.media.load('../enemy_hit_sound.wav'))
-        self.enemy_sputter_sound = pyglet.media.StaticSource(pyglet.media.load('../enemy_sputter_sound.wav'))
-        self.enemy_dive_sound = pyglet.media.StaticSource(pyglet.media.load('../enemy_dive_sound.wav'))
+        # self.sputter_sound = pyglet.media.StaticSource(pyglet.media.load('../sputter_sound.wav'))#pygame.mixer.Sound('beep.wav')
+        # self.sound_player = pyglet.media.Player()
+        # self.crash_sound = pyglet.media.StaticSource(pyglet.media.load('../crash_sound.wav'))#pyglet.media.load('crash_sound.wav')
+        # self.shot_sound = pyglet.media.StaticSource(pyglet.media.load('../shot_sound.wav'))
+        # self.enemy_hit_sound = pyglet.media.StaticSource(pyglet.media.load('../enemy_hit_sound.wav'))
+        # self.enemy_sputter_sound = pyglet.media.StaticSource(pyglet.media.load('../enemy_sputter_sound.wav'))
+        # self.enemy_dive_sound = pyglet.media.StaticSource(pyglet.media.load('../enemy_dive_sound.wav'))
         self.main_worm_smoke_color = (200, 0, 0)
         self.main_worm_color = (175,20,0)
         self.enemy_smoke_color = (40, 40, 40)
         self.enemy_color = (30, 30, 30)
         self.who_to_follow = 'main' # True = main robot, number n = enemy with index n
         self.user_control = None
+        self.keys = None
         # TEST
         # self.main_worm_color = self.enemy_color
         # self.main_worm_smoke_color = self.enemy_smoke_color
@@ -114,8 +115,8 @@ class WormGraphics:
 
         self.clock.tick(60)
 
-        keys = pygame.key.get_pressed()  # checking pressed keys
-        return keys[pygame.K_SPACE], keys[pygame.K_KP_ENTER], (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL] or keys[pygame.K_DOWN])#, (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL] or keys[pygame.K_DOWN]), keys[pygame.K_LEFT]
+        self.keys = pygame.key.get_pressed()  # checking pressed keys
+        return self.keys[pygame.K_SPACE], self.keys[pygame.K_KP_ENTER], (self.keys[pygame.K_LCTRL] or self.keys[pygame.K_RCTRL] or self.keys[pygame.K_DOWN])#, (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL] or keys[pygame.K_DOWN]), keys[pygame.K_LEFT]
 
     def draw_bar_level(self, worm_simulation):
         level = worm_simulation.level
@@ -172,8 +173,9 @@ class WormGraphics:
 
 
     def draw_worm(self, worm, worm_simulation):
-        for b in worm.balls:
-            self.draw_ball(b, worm_simulation)
+        self.draw_muscles(worm_simulation)
+        # for b in worm.balls:
+        #     self.draw_ball(b, worm_simulation)
 
     def draw_debug_bounces(self, worm, worm_simulation):
         for b in worm.balls:
@@ -184,18 +186,50 @@ class WormGraphics:
 
     def draw_debug_bounce(self, debug_bounce, worm_simulation, gripping):
         if gripping:
-            color = self.enemy_color
+            color = self.main_worm_color
         else:
+            return
             color = self.shot_score_color
         pos = self.np_to_screen_coord(debug_bounce.position, worm_simulation)
         pygame.draw.circle(self.screen, color,
-                           pos, 2)
+                           pos, 4)#2)
 
 
     def draw_ball(self, ball, worm_simulation):
         pos = self.np_to_screen_coord(ball.position, worm_simulation)
         pygame.draw.circle(self.screen, self.main_worm_color,
                            pos, int(ball.radius))
+
+    def draw_muscles(self, worm_simulation):
+        for m in worm_simulation.worm.muscles:
+            self.draw_muscle(m, worm_simulation)
+
+    def draw_muscle(self, muscle, worm_simulation):
+        a = muscle.b1.position
+        delta = muscle.line_segment.delta
+        length = np.linalg.norm(delta)
+
+        flex = 1.3
+        extend = 0.6
+        extendedness = length / worm_simulation.worm.max_real_muscle_length
+        frac = extend + (flex-extend) * (1.0 - extendedness)
+
+        n = 10
+
+        extra_base = 1.2 * (1.2 + frac)
+
+        r = worm_simulation.worm.balls[0].radius * frac * 0.8
+        for i in range(n):
+            worm_frac = (i+0.5)/n
+            p = a + delta * worm_frac
+            extra = extra_base / (0.5 + abs(worm_frac-0.7))
+            self.draw_muscle_part(p, worm_simulation, r + extra)
+
+    def draw_muscle_part(self, position, worm_simulation, radius):
+        pos = self.np_to_screen_coord(position, worm_simulation)
+        pygame.draw.circle(self.screen, self.main_worm_color,
+                           pos, int(radius))
+
 
     def draw_enemy(self, enemy, worm_simulation):
         if not enemy.exploded:

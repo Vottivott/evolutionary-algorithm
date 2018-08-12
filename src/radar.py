@@ -110,10 +110,10 @@ class BinaryRadar:
             if self.only_bottom_half:
                 angle = -np.arctan2(-diff[1], diff[0])
                 if angle >= 0: # Ignore points on the upper half
-                    dir_index = int(angle / self.angle_slice)
+                    dir_index = min(len(contact_vector)-1, int(angle / self.angle_slice))
                     contact_vector[dir_index] = 1.0
             else:
                 angle = np.pi + np.arctan2(-diff[1],diff[0])
-                dir_index = int(angle / self.angle_slice)
+                dir_index = min(len(contact_vector)-1, int(angle / self.angle_slice))
                 contact_vector[dir_index] = 1.0
         return contact_vector

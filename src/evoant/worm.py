@@ -6,16 +6,16 @@ from evomath import *
 from itertools import izip
 
 class Worm:
-    def __init__(self, position, ball_radius, segment_size, num_segments, ball_ball_friction, ball_ground_friction, ball_mass, spring_constant):
+    def __init__(self, position, ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant):
         self.num_balls = num_segments + 1
-        self.balls = [Ball(position + np.array([[i*segment_size],[0]]), ball_radius, ball_ball_friction, ball_ground_friction, ball_mass) for i in range(self.num_balls)]
+        self.balls = [Ball(position + np.array([[i*segment_size],[0]]), ball_radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass) for i in range(self.num_balls)]
         self.muscles = [Muscle(b1, b2, segment_size, spring_constant) for b1,b2 in izip(self.balls[:-1],self.balls[1:])]
         self.max_y_velocity = 50.0
         self.max_x_velocity = 50.0
         self.max_real_muscle_length = 40.0
         self.muscle_flex_length = 13.0
         self.muscle_extend_length = 28.0
-        self.initial_rightmost_x = max(b.position[0] for b in self.balls)
+        self.initial_rightmost_x = np.copy(max(b.position[0] for b in self.balls))
 
     def get_distance_travelled(self):
         return max(b.position[0] for b in self.balls) - self.initial_rightmost_x
@@ -84,8 +84,8 @@ class Worm:
                         v1 = (I - m2*R) / (m1 + m2)
                         v2 = R + v1
 
-                        v1 *= b.ball_ball_friction
-                        v2 *= other.ball_ball_friction
+                        v1 *= b.ball_ball_restitution
+                        v2 *= other.ball_ball_restitution
 
                         b.velocity += -u1Vector + collisionLine * v1
                         other.velocity += -u2Vector + collisionLine * v2
@@ -109,7 +109,7 @@ class Worm:
             if not b.gripping:
                 acceleration = gravity
                 b.velocity += acceleration * delta_time
-                b.velocity *= 0.975 # viscosity to prevent erratic movement from spring simulation
+                b.velocity *= 0.98#0.975 # viscosity to prevent erratic movement from spring simulation
                 b.position += b.velocity * delta_time
                 b.position += b.planned_offset
 

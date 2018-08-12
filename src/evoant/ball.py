@@ -13,13 +13,14 @@ class Bounce():
         self.hit_point = hit_point
 
     def __div__(self, other):
-        return Bounce(self.normal / other, self.overlap / other, self.closest_edge / other)
+        return Bounce(self.normal / other, self.overlap / other, self.closest_edge / other, self.hit_point / other)
 
 class Ball(Circular):
-    def __init__(self, position, radius, ball_ball_friction, ball_ground_friction, mass):
+    def __init__(self, position, radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, mass):
         Circular.__init__(self, position, radius, 12)
         self.velocity = np.array([[0.0], [0.0]])
-        self.ball_ball_friction = ball_ball_friction
+        self.ball_ball_restitution = ball_ball_restitution
+        self.ball_ground_restitution = ball_ground_restitution
         self.ball_ground_friction = ball_ground_friction
         # self.planned_offset = np.array([[0.0], [0.0]])
         # self.bounced = False
@@ -124,9 +125,15 @@ class Ball(Circular):
         vel_component_in_normal_direction = np.dot(self.velocity.T, final_bounce.normal)
         # (1) Remove all motion in bounce direction
         self.velocity += -vel_component_in_normal_direction * final_bounce.normal
+
+        # (1.5) Apply friction on the remaining velocity = the tangent component of the velocity
+        self.velocity *= (1.0 - self.ball_ground_friction)
+
         # (2) Add motion opposite to bounce direction, modulated by friction
-        self.velocity += -self.ball_ground_friction * vel_component_in_normal_direction * final_bounce.normal
+        self.velocity += -self.ball_ground_restitution * vel_component_in_normal_direction * final_bounce.normal
         self.position += final_bounce.overlap * final_bounce.normal
+
+
 
         self.debug_bounces.append(DebugBounce(final_bounce.hit_point, self.position))
 

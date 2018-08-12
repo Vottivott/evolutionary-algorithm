@@ -10,7 +10,7 @@ from genetic.initialization.real_number import RealNumberInitialization
 from genetic.mutation.binary import BinaryMutation
 from genetic.mutation.creep import CreepMutation
 from genetic.selection.tournament import TournamentSelection
-from stats import *
+# from stats import *
 
 import random
 

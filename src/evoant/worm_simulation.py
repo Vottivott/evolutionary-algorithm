@@ -14,7 +14,7 @@ from genetic.mutation.binary import BinaryMutation
 from genetic.mutation.creep import CreepMutation
 from genetic.selection.tournament import TournamentSelection
 from worm_graphics import WormGraphics
-from bar_level import generate_bar_level
+from bar_level import generate_bar_level, generate_planar_bar_level
 from neural_net_integration import evocopter_neural_net_integration, black_neural_net_integration
 from population_data_io import save_population_data, load_population_data
 from radar_system import RadarSystem, EnemysRadarSystem
@@ -22,9 +22,13 @@ from score_colors import get_color_from_score
 from shot import Shot
 from smoke import Smoke
 
+import pygame
+
 from worm_neural_net_integration import get_worm_neural_net_integration
 
 import sys
+
+
 
 
 enemy_mode = True
@@ -37,8 +41,9 @@ min_x = base_start_x+view_offset+5*enemy_width
 
 ball_radius = 10.0
 segment_size = 13.0#17.0
-num_segments = 6
-ball_ball_friction = 0.0#0.4
+num_segments = 2 #6 # worm_b=6
+ball_ball_restitution = 0.0#0.4
+ball_ground_restitution = 0.7
 ball_ground_friction = 0.4
 ball_mass = 10.0
 spring_constant = 30.0
@@ -49,7 +54,7 @@ class WormSimulation:
         self.level = level
         self.worm = worm
         self.worm_radar_system = WormRadarSystem(worm.num_balls-1)
-        self.gravity = np.array([[0.0],[0.4*9.8]])
+        self.gravity = np.array([[0.0],[0.6*9.8]])
         self.delta_t = 1.0/4
         self.graphics = None
         self.score = 0.0
@@ -57,7 +62,12 @@ class WormSimulation:
         self.worm_neural_net_integration = None
 
     def termination_condition(self):
-        return self.time_since_improvement > 600 #0
+        # return self.time_since_improvement > 600 #0
+        # return self.timestep > 300
+        # return (not (self.graphics and self.graphics.user_control)) and self.timestep > 150
+        # return (not (self.graphics and self.graphics.user_control)) and self.timestep > 200
+        return (not (self.graphics and self.graphics.user_control)) and self.timestep > 600
+        # return False
 
     def run(self, graphics=None):
         self.graphics = graphics
@@ -69,22 +79,31 @@ class WormSimulation:
 
             if self.worm_neural_net_integration is not None:
                 self.worm_neural_net_integration.run_network(self)
+            elif self.graphics is not None and self.graphics.user_control:
+                if self.graphics.keys is not None:
+                    key_names = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9, pygame.K_0]
+                    keys = [self.graphics.keys[k] for k in key_names]
+                    for i,m in enumerate(self.worm.muscles):
+                        m.target_length = keys[i] and self.worm.muscle_flex_length or self.worm.muscle_extend_length
+                    for i, b in enumerate(self.worm.balls):
+                        b.grippingness = keys[self.worm.num_balls-1 + i] and 1.0 or 0.0
+
 
             self.worm.step(self.level, self.gravity, self.delta_t)
 
             if self.graphics:
                 space, enter, ctrl = self.graphics.update(self)
-                self.worm.muscles[0].target_length = space and self.worm.muscle_flex_length or self.worm.muscle_extend_length
-                self.worm.balls[-1].grippingness = ctrl
-                if not ctrl:
-                    self.worm.balls[-1].gripping = False
+                # self.worm.muscles[0].target_length = space and self.worm.muscle_flex_length or self.worm.muscle_extend_length
+                # self.worm.balls[-1].grippingness = ctrl
+                # if not ctrl:
+                #     self.worm.balls[-1].gripping = False
                 if enter:
                     return
 
             potential_score = self.worm.get_distance_travelled()
             if potential_score > self.score:
                 self.time_since_improvement = 0
-                self.score = potential_score
+                self.score = np.copy(potential_score)
             else:
                 self.time_since_improvement += 1
             self.timestep += 1
@@ -100,7 +119,7 @@ def run_evaluation(level, fitness_calculator, use_graphics=False):
     s.worm_neural_net_integration = worm_neural_net_integration
     if s.worm_neural_net_integration is not None:
         s.worm_neural_net_integration.initialize_h()
-    s.worm = Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_friction, ball_ground_friction, ball_mass, spring_constant)
+    s.worm = Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant)
     s.run(graphics if use_graphics else None)  # - start_x  # use moved distance from start point as fitness score
     # if watch_only:
     #     print fitness
@@ -124,7 +143,8 @@ def run_worm_evaluation(variables, use_graphics=False):
 def generate_levels(close_end=True):
     result = []
     for i in range(num_levels):
-        level = generate_bar_level(level_length, close_end)
+        # level = generate_bar_level(level_length, close_end)
+        level = generate_planar_bar_level(level_length, close_end)
         result.append(level)
     return result
 
@@ -150,7 +170,8 @@ class WormFitnessFunction:
         return fitness
 
 
-worm_subfoldername = "worm_a"
+# worm_subfoldername = "worm_b"
+worm_subfoldername = "worm_2segs_planar"
 
 
 def run_evolution_on_worm():
@@ -184,9 +205,9 @@ def run_evolution_on_worm():
         print "\n[ " + str(p.generation) + ": " + str(
             p.best_fitness) + " : " + str(
             average_fitness) + " ]\n"
-        if watch_only or (graphics is not None):# and p.generation % 10 == 0):
-            fitness = run_worm_evaluation(p.best_variables, True)
-            print "Fitness: " + str(fitness)
+        # if watch_only or (graphics is not None):# and p.generation % 10 == 0):
+        #     fitness = run_worm_evaluation(p.best_variables, True)
+        #     print "Fitness: " + str(fitness)
 
     watch_only = False
     global worm_population_data
@@ -223,18 +244,24 @@ graphics = WormGraphics()
 levels = []
 
 
-num_levels = 7
+num_levels = 4#30#15
 level_length = 10000
 
 
 new_level = generate_bar_level(5000)
-s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_friction, ball_ground_friction, ball_mass, spring_constant))
+# new_level = generate_planar_bar_level(5000)
+s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant))
 worm_neural_net_integration = get_worm_neural_net_integration(s)
 s.worm_neural_net_integration = worm_neural_net_integration
 
 
-run_evolution_on_worm()
-# watch_best_worm()
+# import sys
+# old_stdout = sys.stdout
+# log_file = open("evolution.txt","w")
+# sys.stdout = log_file
+
+# run_evolution_on_worm()
+watch_best_worm()
 
 
 # while 1:
@@ -242,9 +269,11 @@ run_evolution_on_worm()
 #
 #
 #     new_level = generate_bar_level(5000)
-#     s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_friction, ball_ground_friction, ball_mass, spring_constant))
+#     # new_level = generate_planar_bar_level(5000)
+#     s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant))
 #
-#     worm_neural_net_integration = get_worm_neural_net_integration(s)
+#     # worm_neural_net_integration = get_worm_neural_net_integration(s)
 #
+#     graphics.user_control = True
 #
 #     s.run(graphics)

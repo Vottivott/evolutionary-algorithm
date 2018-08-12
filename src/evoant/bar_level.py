@@ -38,6 +38,22 @@ def generate_bar_level(length, close_end=True):
     return BarLevel(ceiling[::bar_width], ground[::bar_width], float(bar_width))
 
 
+def generate_planar_bar_level(length, close_end=True):
+    n = length / 70.0
+    amp_factor = 0.01
+    basic_shape = _get_randcurve(length, n, 10)
+    ceiling = basic_shape + _get_randcurve(length, 1.5*n, amp_factor * 10) + _get_randcurve(length, 1.7*n, amp_factor * 4)
+    ceiling = 125 + _smoothify(ceiling)
+    ground = basic_shape + _get_randcurve(length, 1.5*n, amp_factor * 18) + _get_randcurve(length, 1.7*n, amp_factor * 8)
+    ground = 305 + _smoothify(ground) #prev 305
+    if close_end:
+        ceiling[-1] = ground[-1]
+        ceiling[0] = ground[0]
+
+
+    bar_width = 50
+    return BarLevel(ceiling[::bar_width], ground[::bar_width], float(bar_width))
+
 
 
 
