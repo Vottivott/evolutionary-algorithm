@@ -2,6 +2,7 @@ import numpy as np
 
 from genetic.decoding.real_number import RealNumberDecoding
 from genetic.initialization.real_number import RealNumberInitialization
+from pso.algorithm import ParticleSwarmOptimizationAlgorithm
 from worm_radar_system import WormRadarSystem
 from worm import Worm
 from enemy import Enemy
@@ -41,7 +42,7 @@ min_x = base_start_x+view_offset+5*enemy_width
 
 ball_radius = 10.0
 segment_size = 13.0#17.0
-num_segments = 2 #6 # worm_b=6
+num_segments = 3 #6 # worm_b=6
 ball_ball_restitution = 0.0#0.4
 ball_ground_restitution = 0.7
 ball_ground_friction = 0.4
@@ -171,7 +172,8 @@ class WormFitnessFunction:
 
 
 # worm_subfoldername = "worm_b"
-worm_subfoldername = "worm_2segs_planar"
+# worm_subfoldername = "worm_2segs_planar"
+worm_subfoldername = "PSO_worm_3segs_planar"
 
 
 def run_evolution_on_worm():
@@ -226,6 +228,54 @@ def run_evolution_on_worm():
         else:
             ga.run(None, worm_callback, population_data=worm_population_data)
 
+def run_pso_on_worm():
+    num_vars = worm_neural_net_integration.get_number_of_variables()
+
+    pso = ParticleSwarmOptimizationAlgorithm(30,  # swarm_size
+                                             num_vars,  # num_variables
+                                             WormFitnessFunction(),  # fitness_function
+                                             -5.0, 5.0,  # x_min, x_max
+                                             8.0,  # v_max
+                                             0.1,  # alpha
+                                             0.1,  # delta_t
+                                             2.0,  # cognition
+                                             2.0,  # sociability
+                                             1.4,  # initial_inertia_weight
+                                             0.99,  # inertia_weight_decay
+                                             0.35)  # min_inertia_weight
+
+    def worm_callback(p, watch_only=False):
+
+        # # if p.generation == 100:
+        if not watch_only:
+            #if p.generation % 50 == 0: # Save only every 50th generation
+            save_population_data(worm_subfoldername, p, keep_last_n=10, keep_mod = None)
+        average_fitness = sum(p.fitness_scores) / len(p.fitness_scores)
+        print "\n[ " + str(p.generation) + ": " + str(
+            p.best_fitness) + " : " + str(
+            average_fitness) + " ]     inertia = " + str(p.inertia_weight) + "\n"
+        # if watch_only or (graphics is not None):# and p.generation % 10 == 0):
+        #     fitness = run_worm_evaluation(p.best_variables, True)
+        #     print "Fitness: " + str(fitness)
+
+    watch_only = False
+    global worm_population_data
+    worm_population_data = load_population_data(worm_subfoldername, -1)
+    # # g = worm_population_data.best_individual_genes
+
+    if True:
+        if watch_only:
+            while 1:
+                # BinaryMutation(100.0 / m).mutate(g, 1)
+                # worm_population_data.best_variables = BinaryDecoding(5, vars, var_size).decode(g)
+                global levels
+                levels = generate_levels()
+                worm_callback(worm_population_data, True)
+                # watch_run(worm_population_data)
+        else:
+            pso.run(None, worm_callback, population_data=worm_population_data)
+
+
 def watch_best_worm():
     global worm_population_data
     worm_population_data = load_population_data(worm_subfoldername, -1)
@@ -261,8 +311,10 @@ s.worm_neural_net_integration = worm_neural_net_integration
 # sys.stdout = log_file
 
 # run_evolution_on_worm()
-watch_best_worm()
+# watch_best_worm()
 
+#run_pso_on_worm()
+watch_best_worm()
 
 # while 1:
 #

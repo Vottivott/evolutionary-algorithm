@@ -28,6 +28,8 @@ class PSOPopulationData:
         self.swarm_best_position = swarm_best_position
         self.swarm_best_performance = swarm_best_performance
         self.inertia_weight = inertia_weight
+        self.best_variables = self.swarm_best_position
+        self.best_fitness = self.swarm_best_performance
 
 class PrunedPSOPopulationData:
     """
@@ -136,6 +138,7 @@ class ParticleSwarmOptimizationAlgorithm:
                 positions[i] += velocities[i] * self.delta_t
 
             generation += 1
+            inertia_weight = max(self.min_inertia_weight, inertia_weight * self.inertia_weight_decay)
 
     def use_population_data(self, population_data):
         return population_data.positions,\
