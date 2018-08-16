@@ -28,6 +28,9 @@ class Ball(Circular):
         self.debug_bounces = []
         self.grippingness = 0.0 # Between 0 and 1, is the ball holding a grip to the ground?
         self.gripping = False
+        self.reaching = 0.0
+        self.connections = []
+
 
     # def bounce_on_line_segment(self, seg):
     #     dist = np.dot(seg.normal.T, self.position-seg.left)

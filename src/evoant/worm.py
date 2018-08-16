@@ -6,16 +6,21 @@ import numpy as np
 from evomath import *
 from itertools import izip
 
+
+
 class Worm:
     def __init__(self, position, ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant):
         self.num_balls = num_segments + 1
         self.fish = [Fish(position + np.array([[i*segment_size],[0]]), ball_radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass) for i in range(self.num_balls)]
         self.balls = self.fish
         # self.muscles = [Muscle(b1, b2, segment_size, spring_constant) for b1,b2 in izip(self.balls[:-1],self.balls[1:])]
+        self.muscles = []
         self.balls[0].velocity[1] = -50.0
+        self.balls[1].reaching = 1.0
         self.max_y_velocity = 50.0
         self.max_x_velocity = 50.0
         self.max_real_muscle_length = 40.0
+        self.spring_constant = spring_constant
         self.muscle_flex_length = 13.0
         self.muscle_extend_length = 28.0
         self.initial_rightmost_x = np.copy(max(b.position[0] for b in self.balls))
@@ -78,6 +83,11 @@ class Worm:
                         if not other.gripping:
                             other.position += collisionLine * margin / 2.0
 
+                        if b.reaching >= 0.5 and other.reaching >= 0.5 and other not in b.connections and b not in other.connections:
+                            self.muscles.append(Muscle(b, other, b.radius + other.radius + 5.0, self.spring_constant))
+                            b.connections.append(other)
+                            other.connections.append(b)
+
                         u1Vector = b.velocity.T.dot(collisionLine) * collisionLine
                         u2Vector = other.velocity.T.dot(collisionLine) * collisionLine
                         u1 = collisionLine.T.dot(u1Vector)
@@ -100,9 +110,16 @@ class Worm:
             # acceleration = numpy.random.permutation(np.array([[-1.0], [0.0]]))
             # acceleration = numpy.random.rand(1.0)*np.array([[1.0],[0.0]])
 
-
-        # for muscle in self.muscles:
-        #     muscle.step(delta_time)
+        # Release unreaching muscles
+        i = 0
+        while i < len(self.muscles):
+            self.muscles[i].step(delta_time)
+            if self.muscles[i].b1.reaching < 0.5 or self.muscles[i].b2.reaching < 0.5:
+                self.muscles[i].b1.connections.remove(self.muscles[i].b2)
+                self.muscles[i].b2.connections.remove(self.muscles[i].b1)
+                del self.muscles[i]
+            else:
+                i += 1
 
         # for muscle in self.muscles:
         #     for b in self.balls:

@@ -105,6 +105,8 @@ class WormSimulation:
                     down = (self.graphics.keys[pygame.K_DOWN] - self.graphics.keys[pygame.K_UP]) * acc
                     self.worm.fish[0].velocity[0] += right
                     self.worm.fish[0].velocity[1] += down
+                    connect = self.graphics.keys[pygame.K_SPACE]
+                    self.worm.fish[0].reaching = connect and 1.0 or 0.0
                     key_names = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9, pygame.K_0]
                     keys = [self.graphics.keys[k] for k in key_names]
                     # for i,m in enumerate(self.worm.muscles):

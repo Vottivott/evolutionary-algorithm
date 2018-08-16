@@ -101,6 +101,7 @@ class WormGraphics:
         #     color = min(np.random.normal(200, 30, 1), 255)
 
         self.draw_fish(worm_simulation.worm, worm_simulation)
+        self.draw_grips(worm_simulation)
         self.draw_stones(worm_simulation.level, worm_simulation)
         self.draw_bar_level(worm_simulation)
         self.draw_debug_bounces(worm_simulation.worm, worm_simulation)
@@ -240,6 +241,25 @@ class WormGraphics:
         for m in worm_simulation.worm.muscles:
             self.draw_muscle(m, worm_simulation)
 
+    def draw_grips(self, worm_simulation):
+        for m in worm_simulation.worm.muscles:
+            self.draw_grip(m, worm_simulation)
+
+
+
+    def draw_grip(self, muscle, worm_simulation):
+        a = muscle.b1.position
+        b = muscle.b2.position
+        delta = muscle.line_segment.delta
+        length = np.linalg.norm(delta)
+        dir = delta / length
+        d = 8.0
+
+        self.draw_dynamic_fish_part(a + dir * d, worm_simulation, 5.0, self.get_fish_color(muscle.b1.energy, muscle.b1.age))
+        self.draw_dynamic_fish_part(b - dir * d, worm_simulation, 5.0, self.get_fish_color(muscle.b2.energy, muscle.b2.age))
+
+
+
     def draw_muscle(self, muscle, worm_simulation):
         a = muscle.b1.position
         delta = muscle.line_segment.delta
@@ -270,12 +290,12 @@ class WormGraphics:
 
 
     def draw_dynamic_fish(self, fish, worm_simulation):
-        a = fish.position
         if fish.animation_velocity is None:
             fish.animation_velocity = np.array(fish.velocity)
         else:
             acc = (fish.velocity - fish.animation_velocity) * 0.2
             fish.animation_velocity += acc # make the animation smoother on bounces
+        a = fish.position - fish.animation_velocity
         delta = fish.animation_velocity
         length = np.linalg.norm(delta)
 
