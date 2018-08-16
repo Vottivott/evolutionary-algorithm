@@ -49,7 +49,10 @@ class WormGraphics:
         # self.enemy_sputter_sound = pyglet.media.StaticSource(pyglet.media.load('../enemy_sputter_sound.wav'))
         # self.enemy_dive_sound = pyglet.media.StaticSource(pyglet.media.load('../enemy_dive_sound.wav'))
         self.main_worm_smoke_color = (200, 0, 0)
-        self.main_worm_color = (175,20,0)
+        self.main_worm_color = (0, 60, 75)
+        self.starve_color = (178, 30, 35)
+        self.middle_color = (0, 60, 75)
+        self.full_color = (0, 240, 255)
         self.enemy_smoke_color = (40, 40, 40)
         self.enemy_color = (30, 30, 30)
         self.who_to_follow = 'main' # True = main robot, number n = enemy with index n
@@ -97,7 +100,8 @@ class WormGraphics:
         #     pointlists = get_curve()
         #     color = min(np.random.normal(200, 30, 1), 255)
 
-        self.draw_worm(worm_simulation.worm, worm_simulation)
+        self.draw_fish(worm_simulation.worm, worm_simulation)
+        self.draw_stones(worm_simulation.level, worm_simulation)
         self.draw_bar_level(worm_simulation)
         self.draw_debug_bounces(worm_simulation.worm, worm_simulation)
 
@@ -173,9 +177,41 @@ class WormGraphics:
 
 
     def draw_worm(self, worm, worm_simulation):
-        self.draw_muscles(worm_simulation)
-        # for b in worm.balls:
-        #     self.draw_ball(b, worm_simulation)
+        # self.draw_muscles(worm_simulation)
+        for b in worm.balls:
+            self.draw_ball(b, worm_simulation)
+
+    def draw_fish(self, worm, worm_simulation):
+        # self.draw_muscles(worm_simulation)
+        for f in worm.fish:
+            self.draw_dynamic_fish(f, worm_simulation)
+            # self.draw_one_fish(f, worm_simulation)
+
+    def get_fish_color(self, energy, age):
+        energy = float(np.clip(energy, 0.0, 1.0))
+        age = float(np.clip(age, 0.0, 1.0))
+        if energy < 0.5:
+            color = [a * (1.0 - energy / 0.5) + b * energy / 0.5 for a, b in zip(self.starve_color, self.middle_color)]
+        else:
+            color = [a * (1.0 - (energy-0.5) / 0.5) + b * (energy-0.5) / 0.5 for a, b in zip(self.middle_color, self.full_color)]
+        if age > 0.9:
+            color = [a * (1.0 - (age-0.9)/0.1) for a in color]
+        return color
+
+    def draw_stones(self, level, worm_simulation):
+        for stone in level.stones:
+            self.draw_stone(stone, worm_simulation)
+
+    def draw_stone(self, stone, worm_simulation):
+        pos = self.np_to_screen_coord(stone.position, worm_simulation)
+        c_cave = (150, 160, 170)
+        pygame.draw.circle(self.screen, c_cave,#self.middle_color,
+                           pos, int(stone.radius))
+
+    def draw_one_fish(self, fish, worm_simulation):
+        pos = self.np_to_screen_coord(fish.position, worm_simulation)
+        pygame.draw.circle(self.screen, self.get_fish_color(fish.energy, fish.age),
+                           pos, int(fish.radius))
 
     def draw_debug_bounces(self, worm, worm_simulation):
         for b in worm.balls:
@@ -229,6 +265,40 @@ class WormGraphics:
         pos = self.np_to_screen_coord(position, worm_simulation)
         pygame.draw.circle(self.screen, self.main_worm_color,
                            pos, int(radius))
+
+
+
+
+    def draw_dynamic_fish(self, fish, worm_simulation):
+        a = fish.position
+        if fish.animation_velocity is None:
+            fish.animation_velocity = np.array(fish.velocity)
+        else:
+            acc = (fish.velocity - fish.animation_velocity) * 0.2
+            fish.animation_velocity += acc # make the animation smoother on bounces
+        delta = fish.animation_velocity
+        length = np.linalg.norm(delta)
+
+        flex = 1.0
+        extend = 0.6
+        extendedness = length / 20.0
+        frac = extend + (flex-extend) * (1.0 - extendedness)
+
+        n = 10
+
+        extra_base = 1.2 * (1.2 + frac)
+
+        r = fish.radius * frac * 0.3
+        for i in range(n):
+            worm_frac = (i+0.5)/n
+            p = a + delta * worm_frac
+            extra = extra_base / (0.4 + abs(worm_frac-0.85)*abs(worm_frac-0.85))
+            self.draw_dynamic_fish_part(p, worm_simulation, r + extra, self.get_fish_color(fish.energy, fish.age))
+
+    def draw_dynamic_fish_part(self, position, worm_simulation, radius, color):
+        pos = self.np_to_screen_coord(position, worm_simulation)
+        pygame.draw.circle(self.screen, color,
+                           pos, max(0, int(radius)))
 
 
     def draw_enemy(self, enemy, worm_simulation):

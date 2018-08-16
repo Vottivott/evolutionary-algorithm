@@ -2,6 +2,9 @@ from itertools import izip
 
 import numpy as np
 
+from evoant.stone import Stone
+
+
 def _get_randcurve(length, n, amplitude):
     x = np.linspace(0, 2*np.pi, n)
     xvals = np.linspace(0, 2*np.pi, length)
@@ -21,6 +24,30 @@ def _smoothify(curve):
         running_sum = running_sum - curve[left] + curve[right]
         smooth_curve.append(running_sum * 1.0 / smooth_factor)
     return np.array(smooth_curve)
+
+def generate_bar_level_with_stones(length, close_end=True):
+    lvl = generate_bar_level(length, close_end)
+    lvl.stones = []
+    stone_density_per_1000 = 2.0
+    num_stones = int(stone_density_per_1000 * length / 1000.0)
+    for i in range(num_stones):
+        pos = np.clip(length * np.random.rand(), 0.0, length - 3)
+        ceil = lvl.get_ceiling(pos)
+        ground = lvl.get_ground(pos)
+        half = (ground - ceil) / 2.0
+        stone = get_random_stone(np.array([[pos],[0.0]]))
+        is_ceil = float(np.random.rand()) > 0.5
+        if is_ceil:
+            stone.position[1] = ceil + min(0.0, half - stone.radius)
+            stone.position[1] -= np.random.rand() * stone.radius / 2.0
+        else:
+            stone.position[1] = ground - min(0.0, half - stone.radius)
+            stone.position[1] += np.random.rand() * stone.radius / 2.0
+        lvl.stones.append(stone)
+    # for stone in lvl.stones:
+    #     print stone.radius
+    lvl.stones = sorted(lvl.stones, key = lambda stone: stone.position[0])
+    return lvl
 
 def generate_bar_level(length, close_end=True):
     n = length / 70.0
@@ -54,7 +81,14 @@ def generate_planar_bar_level(length, close_end=True):
     bar_width = 50
     return BarLevel(ceiling[::bar_width], ground[::bar_width], float(bar_width))
 
-
+def get_random_stone(position):
+    radius = np.clip(np.random.normal(50.0, 20.0), 20.0, 100.0)
+    strength = np.clip(np.random.normal(1.0, 0.2), 0.5, 1.5) * radius
+    if np.random.rand() > 0.2:
+        num_foods_inside = np.clip(np.random.normal(7.0, 5.0), 1.0, 1000.0)
+    else:
+        num_foods_inside = 0.0
+    return Stone(position, radius, strength, num_foods_inside)
 
 
 class BarLevel:
@@ -63,9 +97,10 @@ class BarLevel:
         self.ground = ground
         self.bar_width = bar_width
 
+
     def get_ceiling(self, x):
         index = x/self.bar_width
-        left_index = int(index)
+        left_index = min(len(self.ceiling)-2, int(index))
         frac = index - left_index
         left = self.ceiling[left_index]
         right = self.ceiling[left_index+1]
@@ -74,7 +109,7 @@ class BarLevel:
 
     def get_ground(self, x):
         index = x/self.bar_width
-        left_index = int(index)
+        left_index = min(len(self.ground) - 2, int(index))
         frac = index - left_index
         left = self.ground[left_index]
         right = self.ground[left_index+1]

@@ -1,5 +1,6 @@
 from circular import Circular
 from ball import Ball
+from evoant.fish import Fish
 from muscle import Muscle
 import numpy as np
 from evomath import *
@@ -8,8 +9,10 @@ from itertools import izip
 class Worm:
     def __init__(self, position, ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant):
         self.num_balls = num_segments + 1
-        self.balls = [Ball(position + np.array([[i*segment_size],[0]]), ball_radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass) for i in range(self.num_balls)]
-        self.muscles = [Muscle(b1, b2, segment_size, spring_constant) for b1,b2 in izip(self.balls[:-1],self.balls[1:])]
+        self.fish = [Fish(position + np.array([[i*segment_size],[0]]), ball_radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass) for i in range(self.num_balls)]
+        self.balls = self.fish
+        # self.muscles = [Muscle(b1, b2, segment_size, spring_constant) for b1,b2 in izip(self.balls[:-1],self.balls[1:])]
+        self.balls[0].velocity[1] = -50.0
         self.max_y_velocity = 50.0
         self.max_x_velocity = 50.0
         self.max_real_muscle_length = 40.0
@@ -43,6 +46,8 @@ class Worm:
         for b in self.balls:
             b.planned_offset = np.array([[0.0], [0.0]])
 
+        for f in self.fish:
+            f.step(delta_time)
 
 
 
@@ -96,20 +101,21 @@ class Worm:
             # acceleration = numpy.random.rand(1.0)*np.array([[1.0],[0.0]])
 
 
-        for muscle in self.muscles:
-            muscle.step(delta_time)
+        # for muscle in self.muscles:
+        #     muscle.step(delta_time)
 
-        for muscle in self.muscles:
-            for b in self.balls:
-                if b is not muscle.b1 and b is not muscle.b2:
-                    muscle.collide_with_ball(b)
+        # for muscle in self.muscles:
+        #     for b in self.balls:
+        #         if b is not muscle.b1 and b is not muscle.b2:
+        #             muscle.collide_with_ball(b)
 
         for i,b in enumerate(self.balls):
             # if i>0:
             if not b.gripping:
-                acceleration = gravity
-                b.velocity += acceleration * delta_time
-                b.velocity *= 0.98#0.975 # viscosity to prevent erratic movement from spring simulation
+                # acceleration = gravity
+                # b.velocity += acceleration * delta_time
+                b.velocity *= 0.97 # viscosity
+
                 b.position += b.velocity * delta_time
                 b.position += b.planned_offset
 
