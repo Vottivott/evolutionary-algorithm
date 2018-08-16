@@ -1,8 +1,12 @@
 import numpy as np
 
+from pso_stats_handler import PSOStatsHandler
+
+from mail import send_mail_message_with_image
 from genetic.decoding.real_number import RealNumberDecoding
 from genetic.initialization.real_number import RealNumberInitialization
 from pso.algorithm import ParticleSwarmOptimizationAlgorithm
+from stats_data_io import save_stats, load_stats
 from worm_radar_system import WormRadarSystem
 from worm import Worm
 from enemy import Enemy
@@ -42,7 +46,7 @@ min_x = base_start_x+view_offset+5*enemy_width
 
 ball_radius = 10.0
 segment_size = 13.0#17.0
-num_segments = 3 #6 # worm_b=6
+num_segments = 6#3 #6 # worm_b=6
 ball_ball_restitution = 0.0#0.4
 ball_ground_restitution = 0.7
 ball_ground_friction = 0.4
@@ -173,7 +177,8 @@ class WormFitnessFunction:
 
 # worm_subfoldername = "worm_b"
 # worm_subfoldername = "worm_2segs_planar"
-worm_subfoldername = "PSO_worm_3segs_planar"
+# worm_subfoldername = "PSO_worm_3segs_planar"
+worm_subfoldername = "PSO_worm_6segs_planar"
 
 
 def run_evolution_on_worm():
@@ -231,17 +236,17 @@ def run_evolution_on_worm():
 def run_pso_on_worm():
     num_vars = worm_neural_net_integration.get_number_of_variables()
 
-    pso = ParticleSwarmOptimizationAlgorithm(30,  # swarm_size
+    pso = ParticleSwarmOptimizationAlgorithm(30,#30,  # swarm_size
                                              num_vars,  # num_variables
                                              WormFitnessFunction(),  # fitness_function
-                                             -5.0, 5.0,  # x_min, x_max
-                                             8.0,  # v_max
-                                             0.1,  # alpha
-                                             0.1,  # delta_t
+                                             -1.5, 1.5,  # x_min, x_max
+                                             3.0,#8.0,  # v_max
+                                             0.3,  # alpha
+                                             1.0,  # delta_t
                                              2.0,  # cognition
                                              2.0,  # sociability
                                              1.4,  # initial_inertia_weight
-                                             0.99,  # inertia_weight_decay
+                                             0.995,  # inertia_weight_decay
                                              0.35)  # min_inertia_weight
 
     def worm_callback(p, watch_only=False):
@@ -250,6 +255,13 @@ def run_pso_on_worm():
         if not watch_only:
             #if p.generation % 50 == 0: # Save only every 50th generation
             save_population_data(worm_subfoldername, p, keep_last_n=10, keep_mod = None)
+            save_stats(worm_subfoldername, stats_handler, p)
+            stats = load_stats(worm_subfoldername)
+            if stats is not None and (len(stats["best_fitness"]) < 2 or stats["best_fitness"][-1] != stats["best_fitness"][-2]):
+                stats_handler.produce_graph(stats, worm_subfoldername + ".png")
+                msg = str(float(p.best_fitness)) + "\ngeneration " + str(p.generation)
+                send_mail_message_with_image(worm_subfoldername, msg, worm_subfoldername + ".png", worm_subfoldername)
+
         average_fitness = sum(p.fitness_scores) / len(p.fitness_scores)
         print "\n[ " + str(p.generation) + ": " + str(
             p.best_fitness) + " : " + str(
@@ -289,12 +301,14 @@ def load_latest_worm_network():
     global worm_neural_net_integration
     worm_neural_net_integration.set_weights_and_possibly_initial_h(worm_population_data.best_variables)
 
-graphics = WormGraphics()
+stats_handler = PSOStatsHandler()
+
+# graphics = WormGraphics()
 
 levels = []
 
 
-num_levels = 4#30#15
+num_levels = 15#4#30#15
 level_length = 10000
 
 
@@ -313,8 +327,8 @@ s.worm_neural_net_integration = worm_neural_net_integration
 # run_evolution_on_worm()
 # watch_best_worm()
 
-#run_pso_on_worm()
-watch_best_worm()
+run_pso_on_worm()
+# watch_best_worm()
 
 # while 1:
 #
