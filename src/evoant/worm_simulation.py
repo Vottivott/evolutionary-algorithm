@@ -179,6 +179,7 @@ class WormFitnessFunction:
 # worm_subfoldername = "worm_2segs_planar"
 # worm_subfoldername = "PSO_worm_3segs_planar"
 worm_subfoldername = "PSO_worm_6segs_planar"
+# worm_subfoldername = "PSO_worm_1seg"
 
 
 def run_evolution_on_worm():
@@ -303,12 +304,12 @@ def load_latest_worm_network():
 
 stats_handler = PSOStatsHandler()
 
-# graphics = WormGraphics()
+graphics = WormGraphics()
 
 levels = []
 
 
-num_levels = 15#4#30#15
+num_levels = 30#15#4#30#15
 level_length = 10000
 
 
@@ -327,8 +328,8 @@ s.worm_neural_net_integration = worm_neural_net_integration
 # run_evolution_on_worm()
 # watch_best_worm()
 
-run_pso_on_worm()
-# watch_best_worm()
+# run_pso_on_worm()
+watch_best_worm()
 
 # while 1:
 #
