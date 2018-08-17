@@ -12,7 +12,7 @@ class Worm:
     def __init__(self, position, ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant):
         self.num_balls = num_segments + 1
         self.fish = [Fish(position + np.array([[i*segment_size],[0]]), ball_radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass) for i in range(self.num_balls)]
-        self.balls = self.fish
+        self.balls = self.fish#[f for f in self.fish]
         # self.muscles = [Muscle(b1, b2, segment_size, spring_constant) for b1,b2 in izip(self.balls[:-1],self.balls[1:])]
         self.muscles = []
         self.balls[0].velocity[1] = -50.0
@@ -23,6 +23,7 @@ class Worm:
         self.spring_constant = spring_constant
         self.muscle_flex_length = 13.0
         self.muscle_extend_length = 28.0
+        self.muscle_break_length = 40.0
         self.initial_rightmost_x = np.copy(max(b.position[0] for b in self.balls))
 
     def get_distance_travelled(self):
@@ -57,7 +58,7 @@ class Worm:
 
 
 
-        for i in range(self.num_balls):
+        for i in range(len(self.balls)):
             b = self.balls[i]
             if not b.gripping:
                 b.bounce_on_level(level)
@@ -65,9 +66,9 @@ class Worm:
                 b.gripping = False
 
 
-        for i in range(self.num_balls):
+        for i in range(len(self.balls)):
             b = self.balls[i]
-            for j in range(self.num_balls):
+            for j in range(len(self.balls)):
                 if i != j:
                     other = self.balls[j]
                     distSq = np.dot((other.get_position()-b.get_position()).T, other.get_position()-b.get_position())
@@ -84,7 +85,7 @@ class Worm:
                             other.position += collisionLine * margin / 2.0
 
                         if b.reaching >= 0.5 and other.reaching >= 0.5 and other not in b.connections and b not in other.connections:
-                            self.muscles.append(Muscle(b, other, b.radius + other.radius + 5.0, self.spring_constant))
+                            self.muscles.append(Muscle(b, other, b.radius + other.radius + 5.0, self.spring_constant, self.muscle_break_length))
                             b.connections.append(other)
                             other.connections.append(b)
 
@@ -105,7 +106,42 @@ class Worm:
                         b.velocity += -u1Vector + collisionLine * v1
                         other.velocity += -u2Vector + collisionLine * v2
 
-                        # print "bounce, %d, %d" % (i,j)
+            for stone in level.stones:
+                distSq = np.dot((stone.get_position() - b.get_position()).T,
+                                stone.get_position() - b.get_position())
+                if distSq < (stone.radius + b.radius) * (stone.radius + b.radius):
+                    # If collision
+                    collisionLine = normalized(stone.position - b.position)
+                    dist = distSq ** 0.5
+                    margin = b.radius + stone.radius - dist
+
+                    # Move to contact point (moving both balls the same distance)
+                    b.position += collisionLine * -margin / 2.0
+
+
+                    u1Vector = b.velocity.T.dot(collisionLine) * collisionLine
+                    u2Vector = stone.velocity.T.dot(collisionLine) * collisionLine
+                    u1 = collisionLine.T.dot(u1Vector)
+                    u2 = collisionLine.T.dot(u2Vector)
+                    m1 = b.mass
+                    m2 = stone.mass
+                    I = m1 * u1 + m2 * u2
+                    R = -(u2 - u1)
+                    v1 = (I - m2 * R) / (m1 + m2)
+                    v2 = R + v1
+
+                    v1 *= b.ball_ball_restitution
+                    v2 *= stone.ball_ball_restitution
+
+                    b.velocity += -u1Vector + collisionLine * v1
+
+                    if stone.strength > 0.0:
+                        stone.strength -= 0.04 * u1*u1
+                        print stone.strength + 0.04 * u1*u1, stone.strength
+                    if stone.strength <= 0.0:
+                        print stone.num_foods_inside
+
+                                            # print "bounce, %d, %d" % (i,j)
             import numpy.random
             # acceleration = numpy.random.permutation(np.array([[-1.0], [0.0]]))
             # acceleration = numpy.random.rand(1.0)*np.array([[1.0],[0.0]])
@@ -114,7 +150,7 @@ class Worm:
         i = 0
         while i < len(self.muscles):
             self.muscles[i].step(delta_time)
-            if self.muscles[i].b1.reaching < 0.5 or self.muscles[i].b2.reaching < 0.5:
+            if self.muscles[i].b1.reaching < 0.5 or self.muscles[i].b2.reaching < 0.5:# or np.linalg.norm(self.muscles[i].line_segment.delta) > self.muscles[i].break_length:
                 self.muscles[i].b1.connections.remove(self.muscles[i].b2)
                 self.muscles[i].b2.connections.remove(self.muscles[i].b1)
                 del self.muscles[i]

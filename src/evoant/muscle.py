@@ -5,11 +5,12 @@ from line_segment import LineSegment
 # Implementation of a muscle modeled as a spring, but where the neutral/unstretched length of the spring (target_length) can be changed dynamically
 
 class Muscle:
-    def __init__(self, b1, b2, target_length, spring_constant):
+    def __init__(self, b1, b2, target_length, spring_constant, break_length):
         self.b1 = b1
         self.b2 = b2
         self.target_length = target_length
         self.spring_constant = spring_constant
+        self.break_length = break_length
         self.line_segment = None
 
     def set_target_length(self, target_length):

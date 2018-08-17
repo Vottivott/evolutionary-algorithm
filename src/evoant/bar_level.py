@@ -82,12 +82,14 @@ def generate_planar_bar_level(length, close_end=True):
     return BarLevel(ceiling[::bar_width], ground[::bar_width], float(bar_width))
 
 def get_random_stone(position):
-    radius = np.clip(np.random.normal(50.0, 20.0), 20.0, 100.0)
+    radius = float(np.clip(np.random.normal(50.0, 20.0), 20.0, 100.0))
     strength = np.clip(np.random.normal(1.0, 0.2), 0.5, 1.5) * radius
-    if np.random.rand() > 0.2:
-        num_foods_inside = np.clip(np.random.normal(7.0, 5.0), 1.0, 1000.0)
-    else:
-        num_foods_inside = 0.0
+    # if np.random.rand() > 0.2:
+    num_foods_inside = np.clip(np.random.normal(7.0, 5.0), 1.0, 1000.0)
+    if np.random.rand() > radius / 150.0:
+        num_foods_inside += np.clip(np.random.normal(3.0 * radius/100.0, 1.0), 0.0, 15.0)
+    # else:
+    #     num_foods_inside = 0.0
     return Stone(position, radius, strength, num_foods_inside)
 
 

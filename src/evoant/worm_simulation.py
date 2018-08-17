@@ -107,17 +107,17 @@ class WormSimulation:
                     self.worm.fish[0].velocity[1] += down
                     connect = self.graphics.keys[pygame.K_SPACE]
                     self.worm.fish[0].reaching = connect and 1.0 or 0.0
-                    key_names = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9, pygame.K_0]
-                    keys = [self.graphics.keys[k] for k in key_names]
+                    # key_names = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9, pygame.K_0]
+                    # keys = [self.graphics.keys[k] for k in key_names]
                     # for i,m in enumerate(self.worm.muscles):
                     #     m.target_length = keys[i] and self.worm.muscle_flex_length or self.worm.muscle_extend_length
-                    for i, b in enumerate(self.worm.balls):
-                        b.grippingness = keys[self.worm.num_balls-1 + i] and 1.0 or 0.0
+                    # for i, b in enumerate(self.worm.balls):
+                    #     b.grippingness = keys[self.worm.num_balls-1 + i] and 1.0 or 0.0
 
 
             self.worm.step(self.level, self.gravity, self.delta_t)
             # TEST Water-like
-            for b in self.worm.balls:
+            for b in self.worm.fish:
                 self.water_modulator.apply(b, self.timestep, self.delta_t)
 
 
