@@ -73,6 +73,8 @@ class WormNeuralNetIntegration:
 
 def get_worm_neural_net_integration(worm_simulation):
 
+    # worm_simulation.num_fish =
+
     ground_contact_radar_size = worm_simulation.worm_radar_system.ground_contact_radars[0].number_of_neurons
     num_ground_contact_radars = len(worm_simulation.worm_radar_system.ground_contact_radars)
     muscle_direction_radar_size = worm_simulation.worm_radar_system.muscle_direction_radars[0].number_of_neurons
@@ -91,7 +93,7 @@ def get_worm_neural_net_integration(worm_simulation):
     input_layer_size += ground_contact_radar_size * num_ground_contact_radars
     input_layer_size += muscle_direction_radar_size * num_muscle_direction_radars
 
-    middle_layer_size = 100
+    middle_layer_size = 50
 
     output_layer_size = num_muscles + num_balls # target length for muscle + grippedness for balls
 
