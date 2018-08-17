@@ -19,7 +19,7 @@ from genetic.mutation.binary import BinaryMutation
 from genetic.mutation.creep import CreepMutation
 from genetic.selection.tournament import TournamentSelection
 from worm_graphics import WormGraphics
-from bar_level import generate_bar_level_with_stones, generate_planar_bar_level
+from bar_level import generate_bar_level_with_stones, generate_planar_bar_level, get_doorway_level
 from neural_net_integration import evocopter_neural_net_integration, black_neural_net_integration
 from population_data_io import save_population_data, load_population_data
 from radar_system import RadarSystem, EnemysRadarSystem
@@ -39,14 +39,17 @@ import sys
 enemy_mode = True
 view_offset = 1200 / 7.0
 enemy_view_offset = 6.0 * 1200 / 7.0
-base_start_x = 1200
+
+base_start_x = 120 # For corridor
+
+# base_start_x = 1200
 enemy_width = 20
 start_x = base_start_x + view_offset
 min_x = base_start_x+view_offset+5*enemy_width
 
 ball_radius = 10.0
 segment_size = 13.0#17.0
-num_segments = 4#3 #6 # worm_b=6
+num_segments = 12#4#3 #6 # worm_b=6
 ball_ball_restitution = 1.0#0.4
 ball_ground_restitution = 0.7
 ball_ground_friction = 0.0#0.4
@@ -103,10 +106,15 @@ class WormSimulation:
                     acc = 1.0
                     right = (self.graphics.keys[pygame.K_RIGHT] - self.graphics.keys[pygame.K_LEFT]) * acc
                     down = (self.graphics.keys[pygame.K_DOWN] - self.graphics.keys[pygame.K_UP]) * acc
-                    self.worm.fish[0].velocity[0] += right
-                    self.worm.fish[0].velocity[1] += down
                     connect = self.graphics.keys[pygame.K_SPACE]
-                    self.worm.fish[0].reaching = connect and 1.0 or 0.0
+                    # self.worm.fish[0].reaching = connect and 1.0 or 0.0
+                    for i in range(len(self.worm.fish)):
+                        self.worm.fish[i].velocity[0] += right
+                        self.worm.fish[i].velocity[1] += down
+                        self.worm.fish[i].reaching = connect and 1.0 or 0.0
+
+                        # self.worm.fish[0].velocity[0] += right
+                    # self.worm.fish[0].velocity[1] += down
                     # key_names = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9, pygame.K_0]
                     # keys = [self.graphics.keys[k] for k in key_names]
                     # for i,m in enumerate(self.worm.muscles):
@@ -116,9 +124,14 @@ class WormSimulation:
 
 
             self.worm.step(self.level, self.gravity, self.delta_t)
+
+            # if all(f.position[0] >= self.level.corridor_end_x for f in self.worm.fish):
+            #     print self.timestep
+            #     return
+
             # TEST Water-like
-            for b in self.worm.fish:
-                self.water_modulator.apply(b, self.timestep, self.delta_t)
+            # for b in self.worm.fish:
+            #     self.water_modulator.apply(b, self.timestep, self.delta_t)
 
 
             if self.graphics:
@@ -141,7 +154,8 @@ class WormSimulation:
 
 
 
-
+def get_corridor_fish_start_pos(lvl):
+    return np.array([[lvl.start_x + lvl.range_x * np.random.rand()],[lvl.start_y + lvl.range_y * np.random.rand()]])
 
 
 def run_evaluation(level, fitness_calculator, use_graphics=False):
@@ -149,7 +163,8 @@ def run_evaluation(level, fitness_calculator, use_graphics=False):
     s.worm_neural_net_integration = worm_neural_net_integration
     if s.worm_neural_net_integration is not None:
         s.worm_neural_net_integration.initialize_h()
-    s.worm = Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant)
+    s.worm = Worm([get_corridor_fish_start_pos(level) for _ in range(num_segments+1)], ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant)
+    # s.worm = Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant)
     s.run(graphics if use_graphics else None)  # - start_x  # use moved distance from start point as fitness score
     # if watch_only:
     #     print fitness
@@ -174,7 +189,8 @@ def generate_levels(close_end=True):
     result = []
     for i in range(num_levels):
         # level = generate_bar_level_with_stones(level_length, close_end)
-        level = generate_planar_bar_level(level_length, close_end)
+        # level = generate_planar_bar_level(level_length, close_end)
+        level = get_doorway_level(level_length, close_end)
         result.append(level)
     return result
 
@@ -337,10 +353,16 @@ levels = []
 num_levels = 30#15#4#30#15
 level_length = 10000
 
+new_level = get_doorway_level(1200, True)
 
-new_level = generate_bar_level_with_stones(5000)
+# new_level = generate_bar_level_with_stones(5000)
 # new_level = generate_planar_bar_level(5000)
-s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant))
+# s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant))
+s = WormSimulation(new_level,
+                   Worm([get_corridor_fish_start_pos(new_level) for _ in range(num_segments + 1)], ball_radius,
+                        segment_size, num_segments, ball_ball_restitution, ball_ground_restitution,
+                        ball_ground_friction, ball_mass, spring_constant))
+
 worm_neural_net_integration = get_worm_neural_net_integration(s)
 s.worm_neural_net_integration = worm_neural_net_integration
 
@@ -356,13 +378,18 @@ s.worm_neural_net_integration = worm_neural_net_integration
 # run_pso_on_worm()
 # watch_best_worm()
 
+
 while 1:
 
 
 
-    new_level = generate_bar_level_with_stones(5000)
+    # new_level = generate_bar_level_with_stones(5000)
     # new_level = generate_planar_bar_level(5000)
-    s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant))
+    new_level = get_doorway_level(1200, True)
+    graphics.who_to_follow = None
+
+    s = WormSimulation(new_level, Worm([get_corridor_fish_start_pos(new_level) for _ in range(num_segments+1)], ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant))
+    # s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant))
 
     # worm_neural_net_integration = get_worm_neural_net_integration(s)
 

@@ -36,7 +36,7 @@ class WormGraphics:
     def __init__(self):
         pygame.init()
         pygame.font.init()
-        self.size = w, h = 1200, 500
+        self.size = w, h = 1200, 500#1200, 500
         self.screen = pygame.display.set_mode(self.size)
         self.clock = pygame.time.Clock()
         self.view_offset = w/7#17.0
@@ -126,10 +126,13 @@ class WormGraphics:
     def draw_bar_level(self, worm_simulation):
         level = worm_simulation.level
         bar_width = worm_simulation.level.bar_width
-        if self.who_to_follow == 'main' or self.who_to_follow >= len(worm_simulation.enemy_instances):
-            cx = worm_simulation.worm.get_x()
+        if self.who_to_follow == None:
+            cx = 0.0
         else:
-            cx = worm_simulation.enemy_instances[self.who_to_follow].enemy.get_x()
+            if self.who_to_follow == 'main' or self.who_to_follow >= len(worm_simulation.enemy_instances):
+                cx = worm_simulation.worm.get_x()
+            else:
+                cx = worm_simulation.enemy_instances[self.who_to_follow].enemy.get_x()
         start = cx - self.get_view_offset(worm_simulation)
         end = start + self.size[0]
         start /= bar_width
@@ -341,17 +344,24 @@ class WormGraphics:
             self.draw_smoke_particle(particle, worm_simulation)
 
     def np_to_screen_coord(self, np_vector, worm_simulation):
-        if self.who_to_follow == 'main' or self.who_to_follow >= len(worm_simulation.enemy_instances): # follow main robot
-            x = np_vector[0] - worm_simulation.worm.get_x()
+        if self.who_to_follow is None:
+            x = np_vector[0]
             y = np_vector[1]
-            view_offset = self.view_offset
+            view_offset = 0.0
         else:
-            x = np_vector[0] - worm_simulation.enemy_instances[self.who_to_follow].enemy.get_x()
-            y = np_vector[1]
-            view_offset = self.enemy_view_offset
+            if self.who_to_follow == 'main' or self.who_to_follow >= len(worm_simulation.enemy_instances): # follow main robot
+                x = np_vector[0] - worm_simulation.worm.get_x()
+                y = np_vector[1]
+                view_offset = self.view_offset
+            else:
+                x = np_vector[0] - worm_simulation.enemy_instances[self.who_to_follow].enemy.get_x()
+                y = np_vector[1]
+                view_offset = self.enemy_view_offset
         return (view_offset + x, y)
 
     def get_view_offset(self, worm_simulation):
+        if self.who_to_follow is None:
+            return 0.0
         return self.view_offset if self.who_to_follow == 'main' or self.who_to_follow >= len(worm_simulation.enemy_instances) else self.enemy_view_offset
 
     def draw_smoke_particle(self, particle, worm_simulation):

@@ -65,6 +65,60 @@ def generate_bar_level(length, close_end=True):
     return BarLevel(ceiling[::bar_width], ground[::bar_width], float(bar_width))
 
 
+def get_doorway_level(length, close_end=True):
+    # n = length / 70.0
+    # basic_shape = _get_randcurve(length, n, 40)
+    # ceiling = basic_shape + _get_randcurve(length, 1.5*n, 10) + _get_randcurve(length, 1.7*n, 4)
+    # ceiling = 125 + _smoothify(ceiling)
+    # ground = basic_shape + _get_randcurve(length, 1.5*n, 18) + _get_randcurve(length, 1.7*n, 8)
+    # ground = 305 + _smoothify(ground) #prev 305
+    # if close_end:
+    #     ceiling[-1] = ground[-1]
+    #     ceiling[0] = ground[0]
+    #
+    #
+    # bar_width = 50
+    bar_width = 50
+    n = length / bar_width
+    c = 125 - 50.0
+    g = 305 + 50.0
+    half = (g - c) / 2.0
+    door_halfwidth = 15.0
+
+    ceiling = [c] * n
+    ground = [g] * n
+
+    middle = 2*n/3
+
+    door_c = c + half - door_halfwidth
+    door_g = c + half + door_halfwidth
+
+    ceiling[middle] = door_c
+    ground[middle] = door_g
+    ceiling[middle - 1] = door_c
+    ground[middle - 1] = door_g
+    ceiling[middle + 1] = door_c
+    ground[middle + 1] = door_g
+
+    end_offset = int(160 / bar_width)
+
+    if close_end:
+        for i in range(end_offset):
+            ceiling[i] = ground[i] = c + half
+            ceiling[-i] = ground[-i] = c + half
+
+    lvl = BarLevel(ceiling, ground, float(bar_width))
+    lvl.stones = []
+    lvl.corridor_end_x = (middle + 1) * bar_width
+    lvl.start_x = (end_offset) * bar_width
+    lvl.range_x = (middle - 2) * bar_width - lvl.start_x
+    lvl.start_y = c
+    lvl.range_y = g - c
+
+    return lvl
+
+
+
 def generate_planar_bar_level(length, close_end=True):
     n = length / 70.0
     amp_factor = 0.01

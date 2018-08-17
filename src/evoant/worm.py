@@ -9,14 +9,15 @@ from itertools import izip
 
 
 class Worm:
-    def __init__(self, position, ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant):
+    def __init__(self, positions, ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant):
         self.num_balls = num_segments + 1
-        self.fish = [Fish(position + np.array([[i*segment_size],[0]]), ball_radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass) for i in range(self.num_balls)]
+        self.fish = [Fish(positions[i], ball_radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass) for i in range(self.num_balls)]
+        # self.fish = [Fish(position + np.array([[i*segment_size],[0]]), ball_radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass) for i in range(self.num_balls)]
         self.balls = self.fish#[f for f in self.fish]
         # self.muscles = [Muscle(b1, b2, segment_size, spring_constant) for b1,b2 in izip(self.balls[:-1],self.balls[1:])]
         self.muscles = []
-        self.balls[0].velocity[1] = -50.0
-        self.balls[1].reaching = 1.0
+        # self.balls[0].velocity[1] = -50.0
+        # self.balls[1].reaching = 1.0
         self.max_y_velocity = 50.0
         self.max_x_velocity = 50.0
         self.max_real_muscle_length = 40.0
