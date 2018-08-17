@@ -73,7 +73,7 @@ class WormSimulation:
     def __init__(self, level, worm):
         self.level = level
         self.worm = worm
-        self.worm_radar_system = WormRadarSystem(worm.num_balls-1)
+        # self.worm_radar_system = WormRadarSystem(worm.num_balls-1)
         self.gravity = np.array([[0.0],[0.6*9.8]])
         self.delta_t = 1.0/4
         self.graphics = None

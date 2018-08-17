@@ -73,7 +73,7 @@ class WormNeuralNetIntegration:
 
 def get_worm_neural_net_integration(worm_simulation):
 
-    # worm_simulation.num_fish =
+    num_fish = len(worm_simulation.worm.fish)
 
     ground_contact_radar_size = worm_simulation.worm_radar_system.ground_contact_radars[0].number_of_neurons
     num_ground_contact_radars = len(worm_simulation.worm_radar_system.ground_contact_radars)

@@ -28,6 +28,26 @@ class RadarSystem:
         self.enemy_radar = ObjectRadar(number_of_neurons, x_step_size, max_num_steps, max_dist, only_left_half)
 
 
+class FishRadarSystem:
+    def __init__(self):
+        max_steps = BASE_MAX_STEPS
+        step_size = -BASE_STEP_SIZE
+        self.num_front_radars = 4
+        directions = np.linspace(-3.0*np.pi/7, 3.0*np.pi/7, self.num_front_radars)
+        self.radars = [Radar(dir, max_steps, step_size) for dir in directions]
+        max_steps = BASE_MAX_STEPS
+        step_size = BASE_STEP_SIZE
+        self.num_back_radars = 4
+        directions = np.linspace(np.pi - 3.0 * np.pi / 7, np.pi + 3.0 * np.pi / 7, self.num_back_radars)
+        self.radars.extend([Radar(dir, max_steps, step_size) for dir in directions])
+
+        number_of_neurons = 8
+        x_step_size = BASE_OBJECT_STEP_SIZE
+        max_num_steps = 100
+        max_dist = 1000
+        only_left_half = False
+        # self.enemy_radar = ObjectAndSpeedRadar(number_of_neurons, x_step_size, max_num_steps, max_dist, only_left_half) # for detecting other enemies
+
 
 class EnemysRadarSystem:
     def __init__(self):

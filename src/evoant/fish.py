@@ -16,6 +16,8 @@ class Fish(Ball):
         self.energy = np.random.rand(1.0)#0.7
         self.age = np.random.rand(1.0)#0.0
         self.animation_velocity = None # only used for graphics
+        self.worm_radar_system = FishRadarSystem()
+
 
     def step(self, delta_t):
         self.energy -= LIVING_COST * delta_t
