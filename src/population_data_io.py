@@ -1,7 +1,7 @@
 import pickle
 import os
 
-# from genetic.algorithm import PrunedPopulationData
+from genetic.algorithm import PrunedPopulationData, PopulationData
 from pso.algorithm import PrunedPSOPopulationData
 
 def get_main_dir():
@@ -13,8 +13,10 @@ def get_main_dir():
 
 def prune_population_data(subfoldername, num):
     p = load_population_data(subfoldername, num)
-    pruned = PrunedPSOPopulationData(p)
-    # pruned = PrunedPopulationData(p)
+    if isinstance(p, PopulationData):
+        pruned = PrunedPopulationData(p)
+    else:
+        pruned = PrunedPSOPopulationData(p)
     directory_path = get_main_dir() + subfoldername + "/pruned/"
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)

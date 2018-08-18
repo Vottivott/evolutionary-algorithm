@@ -83,7 +83,7 @@ def get_doorway_level(length, num_fish, close_end=True):
     c = 125 - 50.0
     g = 305 + 50.0
     half = (g - c) / 2.0
-    door_halfwidth = 15.0
+    door_halfwidth = 30.0#15.0
 
     ceiling = [c] * n
     ground = [g] * n

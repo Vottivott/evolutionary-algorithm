@@ -3,7 +3,7 @@ import numpy as np
 from evoant.evo_stats_handler import EvoStatsHandler
 from pso_stats_handler import PSOStatsHandler
 
-from mail import send_mail_message_with_image
+from mail import send_mail_message_with_image, send_mail_message
 from genetic.decoding.real_number import RealNumberDecoding
 from genetic.initialization.real_number import RealNumberInitialization
 from pso.algorithm import ParticleSwarmOptimizationAlgorithm
@@ -110,12 +110,12 @@ class WormSimulation:
                     connect = self.graphics.keys[pygame.K_SPACE]
                     # self.worm.fish[0].reaching = connect and 1.0 or 0.0
                     for i in range(len(self.worm.fish)):
-                        self.worm.fish[i].velocity[0] += right
-                        self.worm.fish[i].velocity[1] += down
+                        # self.worm.fish[i].velocity[0] += right
+                        # self.worm.fish[i].velocity[1] += down
                         self.worm.fish[i].reaching = connect and 1.0 or 0.0
 
-                    # self.worm.fish[0].velocity[0] += right
-                    # self.worm.fish[0].velocity[1] += down
+                    self.worm.fish[0].velocity[0] += right
+                    self.worm.fish[0].velocity[1] += down
                     # key_names = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9, pygame.K_0]
                     # keys = [self.graphics.keys[k] for k in key_names]
                     # for i,m in enumerate(self.worm.muscles):
@@ -193,6 +193,7 @@ def run_worm_evaluation(variables, use_graphics=False):
 
 def generate_levels(close_end=True):
     result = []
+    np.random.seed(0)
     for i in range(num_levels):
         # level = generate_bar_level_with_stones(level_length, close_end)
         # level = generate_planar_bar_level(level_length, close_end)
@@ -227,8 +228,9 @@ class WormFitnessFunction:
 # worm_subfoldername = "PSO_worm_3segs_planar"
 # worm_subfoldername = "PSO_worm_6segs_planar"
 # worm_subfoldername = "PSO_worm_1seg"
-worm_subfoldername = "PSO35 Doorway"
 # worm_subfoldername = "EVO150 Doorway"
+worm_subfoldername = "PSO35 Large Doorway"
+# worm_subfoldername = "EVO80 Large Doorway"
 
 
 def run_evolution_on_worm():
@@ -243,11 +245,17 @@ def run_evolution_on_worm():
     # var_size = 30
     # m = vars * var_size
 
-    ga = GeneticAlgorithm(150,
+    population_size = 80
+    mutate_c = 1.5
+    crossover_p = 0.75
+
+    send_mail_message(worm_subfoldername, "population_size = " + str(population_size) + "\nmutate_c = " + str(mutate_c) + "\ncrossover_p = " + str(crossover_p))
+
+    ga = GeneticAlgorithm(population_size,#150,
                           WormFitnessFunction(),
                           TournamentSelection(0.75, 3),
-                          SinglePointCrossover(0.75),#0.9),
-                          CreepMutation(1.5 / vars, 0.8, 0.005, True), #BinaryMutation(2.0 / m),
+                          SinglePointCrossover(crossover_p),#0.9),
+                          CreepMutation(mutate_c / vars, 0.8, 0.005, True), #BinaryMutation(2.0 / m),
                           Elitism(1),
                           RealNumberDecoding(5.0), #BinaryDecoding(5, vars, var_size),
                           RealNumberInitialization(vars))# BinaryInitialization(m))
@@ -261,7 +269,7 @@ def run_evolution_on_worm():
             save_stats(worm_subfoldername, stats_handler, p)
             stats = load_stats(worm_subfoldername)
             if stats is not None and (
-                    len(stats["best_fitness"]) < 2 or stats["best_fitness"][-1] != stats["best_fitness"][-2]):
+                    len(stats["best_fitness_all_time"]) < 2 or stats["best_fitness_all_time"][-1] != stats["best_fitness_all_time"][-2]):
                 stats_handler.produce_graph(stats, worm_subfoldername + ".png")
                 msg = str(float(p.best_fitness)) + "\ngeneration " + str(p.generation)
                 send_mail_message_with_image(worm_subfoldername, msg, worm_subfoldername + ".png")
@@ -358,15 +366,15 @@ def load_latest_worm_network():
     global worm_neural_net_integration
     worm_neural_net_integration.set_weights_and_possibly_initial_h(worm_population_data.best_variables)
 
-stats_handler = PSOStatsHandler()
-# stats_handler = EvoStatsHandler()
+# stats_handler = PSOStatsHandler()
+stats_handler = EvoStatsHandler()
 
-# graphics = WormGraphics(); graphics.who_to_follow = None
+graphics = WormGraphics(); graphics.who_to_follow = None
 
 levels = []
 
 
-num_levels = 1#30#15#4#30#15
+num_levels = 4#30#15#4#30#15
 level_length = 10000
 
 new_level = get_doorway_level(1200, num_segments+1, True)
@@ -394,24 +402,25 @@ s.worm_neural_net_integration = worm_neural_net_integration
 # run_evolution_on_worm()
 # watch_best_worm()
 
-run_pso_on_worm()
+# run_pso_on_worm()
 # watch_best_worm()
 
 
-# while 1:
-#
-#
-#
-#     # new_level = generate_bar_level_with_stones(5000)
-#     # new_level = generate_planar_bar_level(5000)
-#     new_level = get_doorway_level(1200, num_segments+1, True)
-#     graphics.who_to_follow = None
-#
-#     s = WormSimulation(new_level, Worm([get_corridor_fish_start_pos(new_level, i) for i in range(num_segments+1)], ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant))
-#     # s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant))
-#
-#     # worm_neural_net_integration = get_worm_neural_net_integration(s)
-#
-#     graphics.user_control = True
-#
-#     s.run(graphics)
+while 1:
+
+
+
+    # new_level = generate_bar_level_with_stones(5000)
+    # new_level = generate_planar_bar_level(5000)
+    # np.random.seed(0)
+    new_level = get_doorway_level(1200, num_segments+1, True)
+    graphics.who_to_follow = None
+
+    s = WormSimulation(new_level, Worm([get_corridor_fish_start_pos(new_level, i) for i in range(num_segments+1)], ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant))
+    # s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant))
+
+    # worm_neural_net_integration = get_worm_neural_net_integration(s)
+
+    graphics.user_control = True
+
+    s.run(graphics)

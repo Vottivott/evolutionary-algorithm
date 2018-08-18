@@ -69,43 +69,49 @@ class Worm:
 
         for i in range(len(self.balls)):
             b = self.balls[i]
-            for j in range(len(self.balls)):
-                if i != j:
-                    other = self.balls[j]
-                    distSq = np.dot((other.get_position()-b.get_position()).T, other.get_position()-b.get_position())
-                    if distSq < (other.radius+b.radius)*(other.radius+b.radius):
-                        # If collision
-                        collisionLine = normalized(other.position - b.position)
-                        dist = distSq**0.5
-                        margin = b.radius + other.radius - dist
+            for j in range(i+1,len(self.balls)):
+                other = self.balls[j]
+                distSq = np.dot((other.get_position()-b.get_position()).T, other.get_position()-b.get_position())
+                if distSq < (other.radius+b.radius)*(other.radius+b.radius):
+                    # If collision
+                    collisionLine = normalized(other.position - b.position)
+                    dist = distSq**0.5
+                    margin = b.radius + other.radius - dist
 
-                        # Move to contact point (moving both balls the same distance)
-                        if not b.gripping:
-                            b.position += collisionLine * -margin / 2.0
-                        if not other.gripping:
-                            other.position += collisionLine * margin / 2.0
+                    # Move to contact point (moving both balls the same distance)
+                    if not b.gripping:
+                        b.position += collisionLine * -margin / 2.0
+                    if not other.gripping:
+                        other.position += collisionLine * margin / 2.0
 
-                        if b.reaching >= 0.5 and other.reaching >= 0.5 and other not in b.connections and b not in other.connections:
-                            self.muscles.append(Muscle(b, other, b.radius + other.radius + 5.0, self.spring_constant, self.muscle_break_length))
-                            b.connections.append(other)
-                            other.connections.append(b)
+                    if b.reaching >= 0.5 and other.reaching >= 0.5 and other not in b.connections and b not in other.connections:
+                        self.muscles.append(Muscle(b, other, b.radius + other.radius + 5.0, self.spring_constant, self.muscle_break_length))
+                        b.connections.append(other)
+                        other.connections.append(b)
 
-                        u1Vector = b.velocity.T.dot(collisionLine) * collisionLine
-                        u2Vector = other.velocity.T.dot(collisionLine) * collisionLine
-                        u1 = collisionLine.T.dot(u1Vector)
-                        u2 = collisionLine.T.dot(u2Vector)
-                        m1 = b.mass
-                        m2 = other.mass
-                        I = m1*u1 + m2*u2
-                        R = -(u2 - u1)
-                        v1 = (I - m2*R) / (m1 + m2)
-                        v2 = R + v1
+                    u1Vector = b.velocity.T.dot(collisionLine) * collisionLine
+                    u2Vector = other.velocity.T.dot(collisionLine) * collisionLine
+                    u1 = collisionLine.T.dot(u1Vector)
+                    u2 = collisionLine.T.dot(u2Vector)
+                    m1 = b.mass
+                    m2 = other.mass
+                    I = m1*u1 + m2*u2
+                    R = -(u2 - u1)
+                    v1 = (I - m2*R) / (m1 + m2)
+                    v2 = R + v1
 
-                        v1 *= b.ball_ball_restitution
-                        v2 *= other.ball_ball_restitution
+                    v1 *= b.ball_ball_restitution
+                    v2 *= other.ball_ball_restitution
 
-                        b.velocity += -u1Vector + collisionLine * v1
-                        other.velocity += -u2Vector + collisionLine * v2
+                    b.velocity += -u1Vector + collisionLine * v1
+                    other.velocity += -u2Vector + collisionLine * v2
+
+                    # if i == 0: #TEST
+                    #     other.velocity[0] = 30.0
+                    #     other.velocity[1] = 9.0
+                    # else:
+                    #     b.velocity += -u1Vector + collisionLine * v1
+                    #     other.velocity += -u2Vector + collisionLine * v2
 
             for stone in level.stones:
                 distSq = np.dot((stone.get_position() - b.get_position()).T,

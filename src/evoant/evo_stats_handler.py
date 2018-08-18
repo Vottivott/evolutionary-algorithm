@@ -18,10 +18,12 @@ class EvoStatsHandler:
             old_stats = {}
             old_stats["generations"] = []
             old_stats["best_fitness"] = []
+            old_stats["best_fitness_all_time"] = []
             old_stats["avg_fitness"] = []
             old_stats["decoded_variable_vectors"] = []
         old_stats["generations"].append(population_data.generation)
         old_stats["best_fitness"].append(population_data.best_fitness)
+        old_stats["best_fitness_all_time"].append(max(population_data.fitness_scores))
         old_stats["avg_fitness"].append(mean(population_data.fitness_scores))
         old_stats["decoded_variable_vectors"] = np.ndarray.flatten(np.array(population_data.decoded_variable_vectors))
         return old_stats
@@ -33,7 +35,8 @@ class EvoStatsHandler:
         current_plot = 1
         fitness_plot = plt.subplot(num_plots, 1, current_plot)
         # plt.title('Fitness')
-        plt.plot(stats["generations"], stats["best_fitness"], "r",
+        plt.plot(stats["generations"], stats["best_fitness_all_time"], "r",
+                 stats["generations"], stats["best_fitness"], "m",
                  stats["generations"], stats["avg_fitness"], "b")
         current_plot += 1
 
