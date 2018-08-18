@@ -121,6 +121,74 @@ def get_doorway_level(length, num_fish, close_end=True):
 
 
 
+def get_soccer_level(length, num_fish, close_end=True):
+    # n = length / 70.0
+    # basic_shape = _get_randcurve(length, n, 40)
+    # ceiling = basic_shape + _get_randcurve(length, 1.5*n, 10) + _get_randcurve(length, 1.7*n, 4)
+    # ceiling = 125 + _smoothify(ceiling)
+    # ground = basic_shape + _get_randcurve(length, 1.5*n, 18) + _get_randcurve(length, 1.7*n, 8)
+    # ground = 305 + _smoothify(ground) #prev 305
+    # if close_end:
+    #     ceiling[-1] = ground[-1]
+    #     ceiling[0] = ground[0]
+    #
+    #
+    # bar_width = 50
+    bar_width = 50
+    n = length / bar_width
+    c = 125 - 50.0
+    g = 305 + 50.0
+    half = (g - c) / 2.0
+    door_halfwidth = 30.0#15.0
+
+    ceiling = [c] * n
+    ground = [g] * n
+
+    # middle = 2*n/3
+    goal_offset = 3
+
+    door_c = c + half - door_halfwidth
+    door_g = c + half + door_halfwidth
+
+    ceiling[goal_offset] = door_c
+    ground[goal_offset] = door_g
+    ceiling[goal_offset - 1] = door_c
+    ground[goal_offset - 1] = door_g
+    ceiling[goal_offset + 1] = door_c
+    ground[goal_offset + 1] = door_g
+
+
+    ceiling[-goal_offset] = door_c
+    ground[-goal_offset] = door_g
+    ceiling[-goal_offset - 1] = door_c
+    ground[-goal_offset - 1] = door_g
+    ceiling[-goal_offset + 1] = door_c
+    ground[-goal_offset + 1] = door_g
+
+    end_offset = int(160 / bar_width)
+
+    if close_end:
+        for i in range(end_offset):
+            ceiling[i] = ground[i] = c + half
+            ceiling[-i] = ground[-i] = c + half
+
+    lvl = BarLevel(ceiling, ground, float(bar_width))
+    lvl.stones = []
+    lvl.corridor_end_x = (goal_offset + 1) * bar_width
+    lvl.start_x = (end_offset) * bar_width
+    lvl.range_x = (goal_offset - 2) * bar_width - lvl.start_x
+    lvl.start_y = c
+    lvl.range_y = g - c
+
+    lvl.left_goal_x = (goal_offset + 1) * bar_width
+    lvl.right_goal_x = (n - goal_offset - 1) * bar_width
+
+    lvl.initial_fish_pos = [np.array([[lvl.start_x + lvl.range_x * np.random.rand()],[lvl.start_y + lvl.range_y * np.random.rand()]]) for _ in range(num_fish)]
+
+    return lvl
+
+
+
 def generate_planar_bar_level(length, close_end=True):
     n = length / 70.0
     amp_factor = 0.01

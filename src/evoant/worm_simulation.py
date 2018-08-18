@@ -20,7 +20,7 @@ from genetic.mutation.binary import BinaryMutation
 from genetic.mutation.creep import CreepMutation
 from genetic.selection.tournament import TournamentSelection
 from worm_graphics import WormGraphics
-from bar_level import generate_bar_level_with_stones, generate_planar_bar_level, get_doorway_level
+from bar_level import generate_bar_level_with_stones, generate_planar_bar_level, get_soccer_level
 from neural_net_integration import evocopter_neural_net_integration, black_neural_net_integration
 from population_data_io import save_population_data, load_population_data
 from radar_system import RadarSystem, EnemysRadarSystem
@@ -197,7 +197,7 @@ def generate_levels(close_end=True):
     for i in range(num_levels):
         # level = generate_bar_level_with_stones(level_length, close_end)
         # level = generate_planar_bar_level(level_length, close_end)
-        level = get_doorway_level(1200, num_segments+1, True)
+        level = get_soccer_level(1200, num_segments+1, True)
         result.append(level)
     return result
 
@@ -377,8 +377,8 @@ levels = []
 num_levels = 4#30#15#4#30#15
 level_length = 10000
 
-new_level = get_doorway_level(1200, num_segments+1, True)
-# new_level = get_doorway_level(1200, num_segments+1, True)
+new_level = get_soccer_level(1200, num_segments+1, True)
+# new_level = get_soccer_level(1200, num_segments+1, True)
 
 
 
@@ -413,7 +413,7 @@ while 1:
     # new_level = generate_bar_level_with_stones(5000)
     # new_level = generate_planar_bar_level(5000)
     # np.random.seed(0)
-    new_level = get_doorway_level(1200, num_segments+1, True)
+    new_level = get_soccer_level(1200, num_segments+1, True)
     graphics.who_to_follow = None
 
     s = WormSimulation(new_level, Worm([get_corridor_fish_start_pos(new_level, i) for i in range(num_segments+1)], ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant))
