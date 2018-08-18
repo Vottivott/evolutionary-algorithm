@@ -106,6 +106,9 @@ class WormGraphics:
         self.draw_bar_level(worm_simulation)
         self.draw_debug_bounces(worm_simulation.worm, worm_simulation)
 
+        self.draw_fish_radars(worm_simulation)
+        self.draw_fish_object_radars(worm_simulation)
+
 
         # self.draw_shots(worm_simulation)
 
@@ -122,6 +125,20 @@ class WormGraphics:
 
         self.keys = pygame.key.get_pressed()  # checking pressed keys
         return self.keys[pygame.K_SPACE], self.keys[pygame.K_KP_ENTER], (self.keys[pygame.K_LCTRL] or self.keys[pygame.K_RCTRL] or self.keys[pygame.K_DOWN])#, (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL] or keys[pygame.K_DOWN]), keys[pygame.K_LEFT]
+
+
+    def draw_fish_radars(self, worm_simulation):
+        for f in worm_simulation.worm.fish:
+        # f = worm_simulation.worm.fish[0]
+            for radar in f.radar_system.radars:
+                point, dist = radar.point, radar.dist
+                if True:#(point,dist) == (None,None):
+                    point,dist = radar.read(f.position, worm_simulation.level)
+                if True:#dist < 1:
+                    dist = 0.5 + dist/2 # for drawing only
+                    color = (255, int(150+(255-150)*dist), int(dist*255))
+                    pygame.draw.circle(self.screen, color, self.np_to_screen_coord(point, worm_simulation), 5)
+
 
     def draw_bar_level(self, worm_simulation):
         level = worm_simulation.level
@@ -406,6 +423,13 @@ class WormGraphics:
         if not worm_simulation.worm.exploded:
             self.draw_object_radar(worm_simulation.radar_system.enemy_radar, worm_simulation.worm.position, worm_simulation.get_living_enemy_instances(), (255,80,255), (255,255,255), worm_simulation)
 
+    def draw_fish_object_radars(self, worm_simulation):
+        for i,f in enumerate(worm_simulation.worm.fish):
+            object_list = list(worm_simulation.worm.fish)
+            del object_list[i]
+            self.draw_fish_attr_radar(f.radar_system.fish_radar, f.position, object_list, (255,80,255), (255,255,255), worm_simulation)
+
+
     def draw_enemy_object_radars(self, worm_simulation):
         for i,ei in enumerate(worm_simulation.enemy_instances):
             enemy = ei.enemy
@@ -431,6 +455,30 @@ class WormGraphics:
                 color = c_close + c_diff * dist_vec[i]
                 self.draw_circle_at_angle(color, position, dist_vec[i] * 150, angle,
                                           worm_simulation)
+
+
+    def draw_fish_attr_radar(self, radar, position, object_list, close_color, far_color, worm_simulation):
+        dist_vec, attr_vectors = radar.read_dist_vector_and_attribute_vectors(position, object_list, worm_simulation.level)
+        x_pos, x_neg, y_pos, y_neg = attr_vectors
+        #print attr_vectors
+        c_x_pos = np.array((0, 255, 0))
+        c_x_neg = np.array((0, 0, 255))
+        c_y_pos = np.array((255, 0, 0))
+        c_y_neg = np.array((255, 255, 255))
+        # c_close = np.array(close_color)
+        # c_far = np.array(far_color)
+        # c_diff = c_far - c_close
+        for i in range(radar.number_of_neurons_per_vector):
+            if dist_vec[i] < 1.0:
+                if radar.only_left_half:
+                    angle = -(i + 0.5) * radar.angle_slice - np.pi / 2.0
+                else:
+                    angle = (i + 0.5) * radar.angle_slice - np.pi
+                color = np.clip(c_x_pos * x_pos[i] + c_x_neg * x_neg[i] + c_y_pos * y_pos[i] + c_y_neg * y_neg[i], 0, 255)
+                # color = c_close + c_diff * dist_vec[i]
+                self.draw_circle_at_angle(color, position, dist_vec[i] * 150, angle,
+                                          worm_simulation)
+
 
     def draw_player_box(self, rect, worm_simulation):
         line_fraction = 0.4 # 1.0 = full bounding box ~0 = only a pixel at each corner

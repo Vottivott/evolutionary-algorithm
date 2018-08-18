@@ -18,8 +18,8 @@ class Worm:
         self.muscles = []
         # self.balls[0].velocity[1] = -50.0
         # self.balls[1].reaching = 1.0
-        self.max_y_velocity = 50.0
-        self.max_x_velocity = 50.0
+        self.max_y_velocity = 30.0#50.0
+        self.max_x_velocity = 30.0#50.0
         self.max_real_muscle_length = 40.0
         self.spring_constant = spring_constant
         self.muscle_flex_length = 13.0

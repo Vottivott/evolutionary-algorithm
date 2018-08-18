@@ -193,7 +193,7 @@ class BarLevel:
 
     def collides_with_point(self, point):
         x = int(point[0])
-        return x < 0 or x >= len(self.ceiling) or \
+        return x < 0 or x >= len(self.ceiling) * self.bar_width or \
                (point[1] < self.get_ceiling(x) or point[1] > self.get_ground(x))
 
 

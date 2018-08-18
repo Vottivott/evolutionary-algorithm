@@ -73,7 +73,7 @@ class WormSimulation:
     def __init__(self, level, worm):
         self.level = level
         self.worm = worm
-        # self.worm_radar_system = WormRadarSystem(worm.num_balls-1)
+        self.worm_radar_system = WormRadarSystem(worm.num_balls-1)
         self.gravity = np.array([[0.0],[0.6*9.8]])
         self.delta_t = 1.0/4
         self.graphics = None
@@ -113,7 +113,7 @@ class WormSimulation:
                         self.worm.fish[i].velocity[1] += down
                         self.worm.fish[i].reaching = connect and 1.0 or 0.0
 
-                        # self.worm.fish[0].velocity[0] += right
+                    # self.worm.fish[0].velocity[0] += right
                     # self.worm.fish[0].velocity[1] += down
                     # key_names = [pygame.K_1, pygame.K_2, pygame.K_3, pygame.K_4, pygame.K_5, pygame.K_6, pygame.K_7, pygame.K_8, pygame.K_9, pygame.K_0]
                     # keys = [self.graphics.keys[k] for k in key_names]

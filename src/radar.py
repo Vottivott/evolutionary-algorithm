@@ -60,8 +60,8 @@ class ObjectAttributeRadar:
 
     def read_dist_vector_and_attribute_vectors(self, position, object_list, level):
         dist_vector = np.ones((self.number_of_neurons_per_vector, 1))
-        hit_objects = [None for _ in self.number_of_neurons_per_vector]
-        attribute_vectors = [np.zeros((self.number_of_neurons_per_vector, 1)) for _ in self.num_attributes]
+        hit_objects = [None for _ in range(self.number_of_neurons_per_vector)]
+        attribute_vectors = [np.zeros((self.number_of_neurons_per_vector, 1)) for _ in range(self.num_attributes)]
         for object in object_list:
             p = object.get_position()
             diff = p - position
@@ -70,15 +70,15 @@ class ObjectAttributeRadar:
             dist = np.linalg.norm(diff)
             if dist > self.max_dist:
                 continue
-            num_steps = min(int(abs(diff[0]) / self.x_step_size), self.max_num_steps)
-            step = 0 if num_steps == 0 else diff / num_steps
-            mid_pos = np.copy(position)
+            # num_steps = min(int(abs(diff[0]) / self.x_step_size), self.max_num_steps)
+            # step = 0 if num_steps == 0 else diff / num_steps
+            # mid_pos = np.copy(position)
             viewable = True
-            for i in range(num_steps):
-                mid_pos += step
-                if level.collides_with_point(mid_pos):
-                    viewable = False
-                    break
+            # for i in range(num_steps):
+            #     mid_pos += step
+            #     if level.collides_with_point(mid_pos):
+            #         viewable = False
+            #         break
             if viewable:
                 dist_value = dist / self.max_dist
                 if self.only_left_half:
