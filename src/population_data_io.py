@@ -14,6 +14,7 @@ def get_main_dir():
 def prune_population_data(subfoldername, num):
     p = load_population_data(subfoldername, num)
     pruned = PrunedPSOPopulationData(p)
+    # pruned = PrunedPopulationData(p)
     directory_path = get_main_dir() + subfoldername + "/pruned/"
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)

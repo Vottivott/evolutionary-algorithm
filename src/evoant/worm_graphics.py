@@ -106,8 +106,8 @@ class WormGraphics:
         self.draw_bar_level(worm_simulation)
         self.draw_debug_bounces(worm_simulation.worm, worm_simulation)
 
-        self.draw_fish_radars(worm_simulation)
-        self.draw_fish_object_radars(worm_simulation)
+        # self.draw_fish_radars(worm_simulation)
+        # self.draw_fish_object_radars(worm_simulation)
 
 
         # self.draw_shots(worm_simulation)

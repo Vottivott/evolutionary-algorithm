@@ -6,7 +6,7 @@ from recurrent_neural_network import RecurrentNeuralNetwork
 
 
 class WormNeuralNetIntegration:
-    def __init__(self, layer_sizes, input_function, output_function, recurrent=False):
+    def __init__(self, layer_sizes, input_function, output_function, concurrency, recurrent=False):
         """
         :param layer_sizes: the sizes of the layers in a feed-forward neural network
         :param input_function: function that takes a copter_simulation and an enemy_index (or None for main copter) and returns the input to the network
@@ -19,6 +19,7 @@ class WormNeuralNetIntegration:
             self.neural_network = NeuralNetwork(layer_sizes)
         self.input_function = input_function
         self.output_function = output_function
+        self.concurrency = concurrency
 
     def run_network(self, copter_simulation, custom_h_layer=None):
         network_output = self.neural_network.run(self.input_function(copter_simulation), custom_h_layer)
@@ -36,7 +37,7 @@ class WormNeuralNetIntegration:
     def set_weights_and_possibly_initial_h(self, variables):
         num_weights = self.neural_network.number_of_weights
         if len(variables) > num_weights:
-            self.set_weights_and_initial_h(variables[:num_weights], variables[num_weights:])
+            self.set_weights_and_initial_h(variables[:num_weights], np.hstack(np.array(variables[num_weights:]) for _ in range(self.concurrency)))
         else:
             print "No initial h encoded in the chromosome, initializing to all zeros."
             self.neural_network.initial_h = self.get_all_zeros_h_vector()
@@ -75,95 +76,66 @@ def get_worm_neural_net_integration(worm_simulation):
 
     num_fish = len(worm_simulation.worm.fish)
 
-    ground_contact_radar_size = worm_simulation.worm_radar_system.ground_contact_radars[0].number_of_neurons
-    num_ground_contact_radars = len(worm_simulation.worm_radar_system.ground_contact_radars)
-    muscle_direction_radar_size = worm_simulation.worm_radar_system.muscle_direction_radars[0].number_of_neurons
-    num_muscle_direction_radars = len(worm_simulation.worm_radar_system.muscle_direction_radars)
-
-    num_balls = worm_simulation.worm.num_balls
-    num_muscles = num_balls - 1
+    num_ground_radars = worm_simulation.worm.fish[0].radar_system.num_front_radars + worm_simulation.worm.fish[0].radar_system.num_back_radars
+    num_attr_radars = worm_simulation.worm.fish[0].radar_system.num_attr_radars
 
     input_layer_size = 0
 
-    input_layer_size += 2 * num_balls # velocity in up-direction + velocity in down-direction
-    input_layer_size += 2 * num_balls # velocity in left-direction + velocity in right-direction
+    input_layer_size += 2 # velocity in up-direction + velocity in down-direction
+    input_layer_size += 2 # velocity in left-direction + velocity in right-direction
 
-    input_layer_size += num_muscles # real (not target) length of muscle
-
-    input_layer_size += ground_contact_radar_size * num_ground_contact_radars
-    input_layer_size += muscle_direction_radar_size * num_muscle_direction_radars
+    input_layer_size += num_ground_radars
+    input_layer_size += num_attr_radars
 
     middle_layer_size = 50
 
-    output_layer_size = num_muscles + num_balls # target length for muscle + grippedness for balls
+    output_layer_size = 4 # output acc +x, -x, +y, -y
 
     layer_sizes = (input_layer_size, middle_layer_size, output_layer_size)
 
 
     def worm_input_function(sim):
-        input_vectors = []
-        for i, b in enumerate(sim.worm.balls):
-            yvel = np.asscalar(b.velocity[1])
+        input = np.zeros((input_layer_size, num_fish))
+
+        for i, f in enumerate(sim.worm.fish):
+            yvel = np.asscalar(f.velocity[1])
             if yvel <= 0:
                 velocity_up = -yvel / sim.worm.max_y_velocity
                 velocity_down = 0
             else:
                 velocity_up = 0
                 velocity_down = yvel / sim.worm.max_y_velocity
-            y_velocity_inputs = np.array([[velocity_up], [velocity_down]])
 
-            xvel = np.asscalar(b.velocity[0])
+            xvel = np.asscalar(f.velocity[0])
             if xvel <= 0:
                 velocity_left = -xvel / sim.worm.max_x_velocity
                 velocity_right = 0
             else:
                 velocity_left = 0
                 velocity_right = xvel / sim.worm.max_x_velocity
-            x_velocity_inputs = np.array([[velocity_left], [velocity_right]])
+            input[0:4, i:i+1] = np.array([[velocity_up], [velocity_down], [velocity_left], [velocity_right]])
+            index = 4
 
-            input_vectors.extend((y_velocity_inputs, x_velocity_inputs))
-
-        for i, m in enumerate(sim.worm.muscles):
-            real_length = np.linalg.norm(m.b2.position - m.b1.position)
-            input_vectors.append(np.array([[real_length / sim.worm.max_real_muscle_length]]))
-
-        for i, b in enumerate(sim.worm.balls):
-            radar = worm_simulation.worm_radar_system.ground_contact_radars[i]
-            if len(b.debug_bounces):
-                bounce = b.debug_bounces[0]
-                ground_contact_vec = radar.read_contact_vector_from_points(bounce.ball_center, bounce.position)
-            else:
-                ground_contact_vec = radar.read_contact_vector_from_points(None, None)
-            input_vectors.append(ground_contact_vec)
-
-        for i, m in enumerate(sim.worm.muscles):
-            radar = worm_simulation.worm_radar_system.muscle_direction_radars[i]
-            muscle_direction_vec = radar.read_contact_vector_from_points(m.b1.position, m.b2.position)
-            input_vectors.append(muscle_direction_vec)
+            input[index:index + num_ground_radars, i:i+1] = np.array(
+                [[radar.read(f.position, sim.level)[1]] for radar in f.radar_system.radars])
+            index += num_ground_radars
 
 
-        input = np.vstack(input_vectors)
-        # print input
-        assert len(input) == input_layer_size
+            object_list = list(worm_simulation.worm.fish)
+            del object_list[i]
+
+            dist_vec, attr_vecs = f.radar_system.fish_radar.read_dist_vector_and_attribute_vectors(f.position, object_list, worm_simulation.level)
+            input[index:index + num_attr_radars, i:i+1] = np.vstack([dist_vec] + attr_vecs)
+            index += num_attr_radars
+
+            assert index == input_layer_size
+
         return input
 
     def worm_output_function(network_output, sim):
 
-        for muscle_index in range(num_muscles):
-            extension = network_output[muscle_index]
-            target = sim.worm.muscle_flex_length + extension * (sim.worm.muscle_extend_length - sim.worm.muscle_flex_length)
-            sim.worm.muscles[muscle_index].target_length = target
+        for i,f in enumerate(sim.worm.fish):
+            f.velocity[0] += float(network_output[0, i] - network_output[1, i]) # * 1.0=acc
+            f.velocity[1] += float(network_output[2, i] - network_output[3, i]) # * 1.0=acc
 
-        i_offset = num_muscles
-
-        for ball_index in range(num_balls):
-            grip_decision = network_output[i_offset + ball_index]
-            if grip_decision >= 0.5:
-                grippingness = 1.0
-            else:
-                grippingness = 0.0
-            sim.worm.balls[ball_index].grippingness = grippingness
-
-        i_offset += num_balls
-
-    return WormNeuralNetIntegration(layer_sizes, worm_input_function, worm_output_function, recurrent=True)
+    return WormNeuralNetIntegration(layer_sizes, worm_input_function, worm_output_function, concurrency=num_fish, recurrent=True)

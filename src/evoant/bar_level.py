@@ -65,7 +65,7 @@ def generate_bar_level(length, close_end=True):
     return BarLevel(ceiling[::bar_width], ground[::bar_width], float(bar_width))
 
 
-def get_doorway_level(length, close_end=True):
+def get_doorway_level(length, num_fish, close_end=True):
     # n = length / 70.0
     # basic_shape = _get_randcurve(length, n, 40)
     # ceiling = basic_shape + _get_randcurve(length, 1.5*n, 10) + _get_randcurve(length, 1.7*n, 4)
@@ -114,6 +114,8 @@ def get_doorway_level(length, close_end=True):
     lvl.range_x = (middle - 2) * bar_width - lvl.start_x
     lvl.start_y = c
     lvl.range_y = g - c
+
+    lvl.initial_fish_pos = [np.array([[lvl.start_x + lvl.range_x * np.random.rand()],[lvl.start_y + lvl.range_y * np.random.rand()]]) for _ in range(num_fish)]
 
     return lvl
 

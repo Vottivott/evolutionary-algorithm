@@ -19,6 +19,7 @@ class Fish(Ball):
         self.age = np.random.rand(1.0)#0.0
         self.animation_velocity = None # only used for graphics
         self.radar_system = FishRadarSystem()
+        self.has_scored = False
 
 
     def step(self, delta_t):

@@ -58,6 +58,7 @@ class FishRadarSystem:
                                 lambda f: max(0.0, -f.velocity[0]) / MAX_V_X,
                                 lambda f: max(0.0, f.velocity[1]) / MAX_V_Y,
                                 lambda f: max(0.0, -f.velocity[1]) / MAX_V_Y ]
+        self.num_attr_radars = number_of_neurons_per_vector * (1 + len(attribute_functions))
         self.fish_radar = ObjectAttributeRadar(number_of_neurons_per_vector, x_step_size, max_num_steps, max_dist, only_left_half, attribute_functions)
 
 

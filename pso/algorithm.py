@@ -50,7 +50,7 @@ class ParticleSwarmOptimizationAlgorithm:
     """
     def __init__(self, swarm_size, num_variables, fitness_function, x_min, x_max, v_max, alpha, delta_t, cognition, sociability, initial_inertia_weight, inertia_weight_decay, min_inertia_weight):
         """
-        :param swarm_size: typically between 30 and 1000 (must be even)
+        :param swarm_size: typically between 30 and 1000
         :param fitness_function: function, or object with function, evaluate(variables, generation) returning the fitness score
         :param initialization_algorithm: function, or object with function, initialize_chromosome() returning a new chromosome. If a population is to be specified to the run function, this is not needed.
         """
@@ -66,8 +66,6 @@ class ParticleSwarmOptimizationAlgorithm:
         self.initial_inertia_weight = initial_inertia_weight
         self.inertia_weight_decay = inertia_weight_decay
         self.min_inertia_weight = min_inertia_weight
-        if swarm_size % 2 == 1:
-            raise ValueError('The population size must be even!')
         self.evaluate = extract_function(fitness_function, "evaluate")
         # self.initialize = extract_function(initialization_algorithm, "initialize")
         # self.update = extract_function(update_algorithm, "update")
