@@ -29,7 +29,7 @@ class RadarSystem:
 
 
 class FishRadarSystem:
-    def __init__(self):
+    def __init__(self, mirrored):
         BASE_STEP_SIZE = 40#3  # 4
         BASE_OBJECT_STEP_SIZE = 4
 
@@ -39,12 +39,12 @@ class FishRadarSystem:
         step_size = -BASE_STEP_SIZE
         self.num_front_radars = 2
         directions = np.linspace(-3.0*np.pi/4, 3.0*np.pi/4, self.num_front_radars)
-        self.radars = [Radar(dir, max_steps, step_size) for dir in directions]
+        self.radars = [Radar(dir, max_steps, step_size, mirrored) for dir in directions]
         max_steps = BASE_MAX_STEPS
         step_size = BASE_STEP_SIZE
         self.num_back_radars = 2
         directions = np.linspace(np.pi - 3.0 * np.pi / 4, np.pi + 3.0 * np.pi / 4, self.num_back_radars)
-        self.radars.extend([Radar(dir, max_steps, step_size) for dir in directions])
+        self.radars.extend([Radar(dir, max_steps, step_size, mirrored) for dir in directions])
 
 
         MAX_V_X = 30.0
@@ -54,12 +54,19 @@ class FishRadarSystem:
         max_num_steps = 100
         max_dist = 1000
         only_left_half = False
-        attribute_functions = [ lambda f: max(0.0, f.velocity[0]) / MAX_V_X,
-                                lambda f: max(0.0, -f.velocity[0]) / MAX_V_X,
-                                lambda f: max(0.0, f.velocity[1]) / MAX_V_Y,
-                                lambda f: max(0.0, -f.velocity[1]) / MAX_V_Y ]
+        if mirrored:
+            attribute_functions = [ lambda f: max(0.0, -1.0 * f.velocity[0]) / MAX_V_X,
+                                    lambda f: max(0.0, -1.0 * -f.velocity[0]) / MAX_V_X,
+                                    lambda f: max(0.0, f.velocity[1]) / MAX_V_Y,
+                                    lambda f: max(0.0, -f.velocity[1]) / MAX_V_Y ]
+        else:
+            attribute_functions = [ lambda f: max(0.0, f.velocity[0]) / MAX_V_X,
+                                    lambda f: max(0.0, -f.velocity[0]) / MAX_V_X,
+                                    lambda f: max(0.0, f.velocity[1]) / MAX_V_Y,
+                                    lambda f: max(0.0, -f.velocity[1]) / MAX_V_Y ]
+
         self.num_attr_radars = number_of_neurons_per_vector * (1 + len(attribute_functions))
-        self.fish_radar = ObjectAttributeRadar(number_of_neurons_per_vector, x_step_size, max_num_steps, max_dist, only_left_half, attribute_functions)
+        self.fish_radar = ObjectAttributeRadar(number_of_neurons_per_vector, x_step_size, max_num_steps, max_dist, only_left_half, attribute_functions, mirrored)
 
 
 class EnemysRadarSystem:

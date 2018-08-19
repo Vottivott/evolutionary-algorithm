@@ -72,7 +72,7 @@ class WormNeuralNetIntegration:
     def get_number_of_variables(self):
         return self.neural_network.get_total_number_of_weights() + self.neural_network.get_h_size()
 
-def get_worm_neural_net_integration(worm_simulation):
+def get_worm_neural_net_integration(worm_simulation, mirrored = False):
 
     num_fish = len(worm_simulation.worm.fish)
 
@@ -106,7 +106,10 @@ def get_worm_neural_net_integration(worm_simulation):
                 velocity_up = 0
                 velocity_down = yvel / sim.worm.max_y_velocity
 
-            xvel = np.asscalar(f.velocity[0])
+            if mirrored:
+                xvel = np.asscalar(f.velocity[0]) * -1.0
+            else:
+                xvel = np.asscalar(f.velocity[0])
             if xvel <= 0:
                 velocity_left = -xvel / sim.worm.max_x_velocity
                 velocity_right = 0
@@ -134,8 +137,14 @@ def get_worm_neural_net_integration(worm_simulation):
 
     def worm_output_function(network_output, sim):
 
-        for i,f in enumerate(sim.worm.fish):
-            f.velocity[0] += float(network_output[0, i] - network_output[1, i]) # * 1.0=acc
-            f.velocity[1] += float(network_output[2, i] - network_output[3, i]) # * 1.0=acc
+        if mirrored:
+            for i,f in enumerate(sim.worm.fish):
+                f.velocity[0] += -1.0 * float(network_output[0, i] - network_output[1, i]) # * 1.0=acc
+                f.velocity[1] += float(network_output[2, i] - network_output[3, i]) # * 1.0=acc
+        else:
+            for i,f in enumerate(sim.worm.fish):
+                f.velocity[0] += float(network_output[0, i] - network_output[1, i]) # * 1.0=acc
+                f.velocity[1] += float(network_output[2, i] - network_output[3, i]) # * 1.0=acc
+
 
     return WormNeuralNetIntegration(layer_sizes, worm_input_function, worm_output_function, concurrency=num_fish, recurrent=True)

@@ -47,7 +47,7 @@ class ObjectRadar:
 
 
 class ObjectAttributeRadar:
-    def __init__(self, number_of_neurons_per_vector, x_step_size, max_num_steps, max_dist, only_left_half, attribute_functions):
+    def __init__(self, number_of_neurons_per_vector, x_step_size, max_num_steps, max_dist, only_left_half, attribute_functions, mirrored = False):
         self.number_of_neurons_per_vector = number_of_neurons_per_vector
         self.num_attributes = len(attribute_functions)
         self.number_of_neurons = number_of_neurons_per_vector * self.num_attributes
@@ -57,6 +57,10 @@ class ObjectAttributeRadar:
         self.max_dist = max_dist
         self.only_left_half = only_left_half
         self.angle_slice = 2.0*np.pi / number_of_neurons_per_vector if not only_left_half else np.pi / number_of_neurons_per_vector # slice watched by a single neuron
+        if mirrored:
+            self.mirror_factor = -1.0
+        else:
+            self.mirror_factor = 1.0
 
     def read_dist_vector_and_attribute_vectors(self, position, object_list, level):
         dist_vector = np.ones((self.number_of_neurons_per_vector, 1))
@@ -82,10 +86,10 @@ class ObjectAttributeRadar:
             if viewable:
                 dist_value = dist / self.max_dist
                 if self.only_left_half:
-                    angle = np.pi/2.0 + np.arctan2(-diff[1], -diff[0])
+                    angle = np.pi/2.0 + np.arctan2(-diff[1], -diff[0] * self.mirror_factor)
                     dir_index = min(len(dist_vector)-1, int(angle / self.angle_slice))
                 else:
-                    angle = np.pi + np.arctan2(-diff[1],diff[0])
+                    angle = np.pi + np.arctan2(-diff[1],diff[0] * self.mirror_factor)
                     dir_index = min(len(dist_vector)-1, int(angle / self.angle_slice))
                 dist_vector[dir_index] = min(dist_vector[dir_index], dist_value)
                 hit_objects[dir_index] = object
@@ -105,9 +109,12 @@ class ObjectAttributeRadar:
 
 
 class Radar:
-    def __init__(self, direction, max_steps, x_step_size):
+    def __init__(self, direction, max_steps, x_step_size, mirrored = False):
         # self.direction = direction
-        direction_vector = np.array([[np.cos(direction)],[-np.sin(direction)]])
+        if mirrored:
+            direction_vector = np.array([[-np.cos(direction)],[-np.sin(direction)]])
+        else:
+            direction_vector = np.array([[np.cos(direction)],[-np.sin(direction)]])
         self.step = np.array([[x_step_size], [x_step_size * direction_vector[1]/direction_vector[0]]])
         self.single_pixel_step = self.step / abs(x_step_size)
         self.single_pixel_fraction = 1.0 / abs(x_step_size)

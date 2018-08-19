@@ -13,12 +13,12 @@ BIRTH_ENERGY_REQUIREMENT = 0.9
 
 
 class Fish(Ball):
-    def __init__(self, position, radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, mass):
+    def __init__(self, position, radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, mass, mirrored = False):
         Ball.__init__(self, position, radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, mass)
         self.energy = np.random.rand(1.0)#0.7
         self.age = np.random.rand(1.0)#0.0
         self.animation_velocity = None # only used for graphics
-        self.radar_system = FishRadarSystem()
+        self.radar_system = FishRadarSystem(mirrored)
         self.has_scored = False
 
 
