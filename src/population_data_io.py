@@ -68,8 +68,13 @@ def load_population_data(subfoldername, generation):
                     generation = nums[-1]
                     print "ValueError on " + str(old) + ", trying with " + str(generation) + " instead!"
     else:
-        with open(directory_path + str(generation) + ".pkl") as file:
-            return pickle.load(file)
+        try:
+            with open(directory_path + str(generation) + ".pkl") as file:
+                return pickle.load(file)
+        except IOError:
+            print "Loading pruned version of " + str(generation) + ".pkl"
+            with open(directory_path + "pruned/" + str(generation) + ".pkl") as file:
+                return pickle.load(file)
 
 
 def count_genes():

@@ -95,7 +95,11 @@ class WormSimulation:
         if self.worm.football.position[0] <= self.level.left_goal_x:
             self.score = -(1000.0 - self.timestep)
             return True
-        return (not (self.graphics and self.graphics.user_control)) and self.timestep > 1000
+        # return (not (self.graphics and self.graphics.user_control)) and self.timestep > 1000
+        if (not (self.graphics and self.graphics.user_control)) and self.timestep > 1000:
+            if self.score == 0.0:
+                self.score = 10.0 * (self.worm.football.position[0] - (self.level.left_goal_x + self.level.game_width / 2.0)) / (self.level.game_width / 2.0)
+            return True
         # return False
 
     def run(self, graphics=None):
@@ -266,7 +270,7 @@ def run_evolution_on_worm():
         # # if p.generation == 100:
         if not watch_only:
             #if p.generation % 50 == 0: # Save only every 50th generation
-            save_population_data(worm_subfoldername, p, keep_last_n=4, keep_mod = None)
+            save_population_data(worm_subfoldername, p, keep_last_n=15, keep_mod = None)
             save_stats(worm_subfoldername, stats_handler, p)
             stats = load_stats(worm_subfoldername)
             if stats is not None and (
@@ -366,6 +370,7 @@ def run_pso_on_worm():
 def watch_best_worm():
     global worm_population_data
     worm_population_data = load_population_data(worm_subfoldername, -1)
+    # worm_population_data = load_population_data(worm_subfoldername+"/pruned", 3)
     global levels
     levels = generate_levels()
     fitness = run_worm_evaluation(worm_population_data.best_variables, True)
@@ -376,12 +381,10 @@ def load_latest_worm_network():
     global left_neural_net_integration
     left_neural_net_integration.set_weights_and_possibly_initial_h(worm_population_data.best_variables)
 
-# graphics = WormGraphics(); graphics.who_to_follow = None
 
 levels = []
 
 
-num_levels = 1#4#30#15#4#30#15
 level_length = 10000
 
 new_level = get_soccer_level(1200, num_segments+1, True)
@@ -400,9 +403,9 @@ s = WormSimulation(new_level,
 left_neural_net_integration = get_worm_neural_net_integration(s)
 s.left_neural_net_integration = left_neural_net_integration
 
-right_neural_net_integration = None
-# right_neural_net_integration = get_worm_neural_net_integration(s, mirrored = True)
-# s.right_neural_net_integration = right_neural_net_integration
+# right_neural_net_integration = None
+right_neural_net_integration = get_worm_neural_net_integration(s, mirrored = True)
+s.right_neural_net_integration = right_neural_net_integration
 
 
 # import sys
@@ -420,12 +423,22 @@ right_neural_net_integration = None
 # worm_subfoldername = "PSO35 Large Doorway"
 # worm_subfoldername = "EVO80 Large Doorway"
 # worm_subfoldername = "PSO35 Football 1" # Against static enemy
-worm_subfoldername = "EVO80 Football 1" # Against static enemy, with random ball velocity
+worm_subfoldername = "EVO80 Football 1" # Against static enemy, with random ball velocity ; 42 num_levels=5, against 41
+
+num_levels = 5#1#4#30#15#4#30#15
+
+
+enemy_variables = load_population_data(worm_subfoldername, 41).best_variables
+
+
 
 stats_handler = EvoStatsHandler(); run_evolution_on_worm()
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()
 
-# watch_best_worm()
+graphics = WormGraphics(); graphics.who_to_follow = None
+while 1:
+    watch_best_worm()
+
 
 
 while 1:

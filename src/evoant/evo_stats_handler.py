@@ -23,7 +23,7 @@ class EvoStatsHandler:
             old_stats["decoded_variable_vectors"] = []
         old_stats["generations"].append(population_data.generation)
         old_stats["best_fitness"].append(population_data.best_fitness)
-        old_stats["best_fitness_all_time"].append(max(population_data.fitness_scores))
+        old_stats["best_fitness_all_time"].append(max(old_stats["best_fitness"]))
         old_stats["avg_fitness"].append(mean(population_data.fitness_scores))
         old_stats["decoded_variable_vectors"] = np.ndarray.flatten(np.array(population_data.decoded_variable_vectors))
         return old_stats
