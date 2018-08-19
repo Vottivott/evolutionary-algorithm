@@ -74,14 +74,14 @@ class WormSimulation:
     def __init__(self, level, worm):
         self.level = level
         self.worm = worm
-        self.worm_radar_system = WormRadarSystem(worm.num_balls-1)
         self.gravity = np.array([[0.0],[0.6*9.8]])
         self.delta_t = 1.0/4
         self.graphics = None
         self.score = 0.0
         self.timestep = 0
         self.time_since_improvement = 0
-        self.worm_neural_net_integration = None
+        self.left_neural_net_integration = None
+        self.right_neural_net_integration = None
         self.water_modulator = WaterModulator()
 
     def termination_condition(self):
@@ -89,7 +89,13 @@ class WormSimulation:
         # return self.timestep > 300
         # return (not (self.graphics and self.graphics.user_control)) and self.timestep > 150
         # return (not (self.graphics and self.graphics.user_control)) and self.timestep > 200
-        return (not (self.graphics and self.graphics.user_control)) and self.timestep > 500
+        if self.worm.football.position[0] >= self.level.right_goal_x:
+            self.score = 1000.0 - self.timestep
+            return True
+        if self.worm.football.position[0] <= self.level.left_goal_x:
+            self.score = -(1000.0 - self.timestep)
+            return True
+        return (not (self.graphics and self.graphics.user_control)) and self.timestep > 1000
         # return False
 
     def run(self, graphics=None):
@@ -100,8 +106,10 @@ class WormSimulation:
 
         while not self.termination_condition():
 
-            if self.worm_neural_net_integration is not None:
-                self.worm_neural_net_integration.run_network(self)
+            if self.left_neural_net_integration is not None:
+                self.left_neural_net_integration.run_network(self)
+                if self.right_neural_net_integration is not None:
+                    self.right_neural_net_integration.run_network(self)
             elif self.graphics is not None and self.graphics.user_control:
                 if self.graphics.keys is not None:
                     acc = 1.0
@@ -150,10 +158,10 @@ class WormSimulation:
             #     self.score = np.copy(potential_score)
             # else:
             #     self.time_since_improvement += 1
-            for f in self.worm.fish:
-                if not f.has_scored and f.position[0] >= self.level.corridor_end_x:
-                    self.score += 500.0 - self.timestep
-                    f.has_scored = True
+            # for f in self.worm.fish:
+            #     if not f.has_scored and f.position[0] >= self.level.corridor_end_x:
+            #         self.score += 500.0 - self.timestep
+            #         f.has_scored = True
 
             self.timestep += 1
 
@@ -166,10 +174,10 @@ def get_corridor_fish_start_pos(lvl, i):
 
 def run_evaluation(level, fitness_calculator, use_graphics=False):
     s.level = level
-    s.worm_neural_net_integration = worm_neural_net_integration
-    if s.worm_neural_net_integration is not None:
-        s.worm_neural_net_integration.initialize_h()
-    s.worm = Worm([get_corridor_fish_start_pos(level, i) for i in range(num_segments+1)], ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant)
+    s.left_neural_net_integration = left_neural_net_integration
+    if s.left_neural_net_integration is not None:
+        s.left_neural_net_integration.initialize_h()
+    s.worm = Worm([get_corridor_fish_start_pos(level, i) for i in range(num_segments+1)], ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant, level.football_initial_position, level.football_initial_y_velocity)
     # s.worm = Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant)
     s.run(graphics if use_graphics else None)  # - start_x  # use moved distance from start point as fitness score
     # if watch_only:
@@ -184,7 +192,9 @@ def run_evaluations(levels, fitness_calculator, use_graphics=False):
 
 
 def run_worm_evaluation(variables, use_graphics=False):
-    worm_neural_net_integration.set_weights_and_possibly_initial_h(variables)
+    left_neural_net_integration.set_weights_and_possibly_initial_h(variables)
+    if right_neural_net_integration is not None:
+        right_neural_net_integration.set_weights_and_possibly_initial_h(enemy_variables)
     def fitness_calculator(sim):
         return sim.score
     return run_evaluations(levels, fitness_calculator, use_graphics)
@@ -239,7 +249,7 @@ def run_evolution_on_worm():
     # enemy_neural_net_integration.set_weights_and_possibly_initial_h(enemy_population_data.best_variables)
     # load_latest_enemy_network()
 
-    vars = worm_neural_net_integration.get_number_of_variables()
+    vars = left_neural_net_integration.get_number_of_variables()
 
 
     # var_size = 30
@@ -299,7 +309,7 @@ def run_evolution_on_worm():
             ga.run(None, worm_callback, population_data=worm_population_data)
 
 def run_pso_on_worm():
-    num_vars = worm_neural_net_integration.get_number_of_variables()
+    num_vars = left_neural_net_integration.get_number_of_variables()
 
     pso = ParticleSwarmOptimizationAlgorithm(35,#30,  # swarm_size
                                              num_vars,  # num_variables
@@ -363,8 +373,8 @@ def watch_best_worm():
 
 def load_latest_worm_network():
     worm_population_data = load_population_data(worm_subfoldername, -1)
-    global worm_neural_net_integration
-    worm_neural_net_integration.set_weights_and_possibly_initial_h(worm_population_data.best_variables)
+    global left_neural_net_integration
+    left_neural_net_integration.set_weights_and_possibly_initial_h(worm_population_data.best_variables)
 
 # stats_handler = PSOStatsHandler()
 stats_handler = EvoStatsHandler()
@@ -374,7 +384,7 @@ graphics = WormGraphics(); graphics.who_to_follow = None
 levels = []
 
 
-num_levels = 4#30#15#4#30#15
+num_levels = 1#4#30#15#4#30#15
 level_length = 10000
 
 new_level = get_soccer_level(1200, num_segments+1, True)
@@ -388,10 +398,14 @@ new_level = get_soccer_level(1200, num_segments+1, True)
 s = WormSimulation(new_level,
                    Worm([get_corridor_fish_start_pos(new_level, i) for i in range(num_segments + 1)], ball_radius,
                         segment_size, num_segments, ball_ball_restitution, ball_ground_restitution,
-                        ball_ground_friction, ball_mass, spring_constant))
+                        ball_ground_friction, ball_mass, spring_constant, new_level.football_initial_position, new_level.football_initial_y_velocity))
 
-worm_neural_net_integration = get_worm_neural_net_integration(s)
-s.worm_neural_net_integration = worm_neural_net_integration
+left_neural_net_integration = get_worm_neural_net_integration(s)
+s.left_neural_net_integration = left_neural_net_integration
+
+right_neural_net_integration = None
+# right_neural_net_integration = get_worm_neural_net_integration(s, mirrored = True)
+# s.right_neural_net_integration = right_neural_net_integration
 
 
 # import sys
@@ -416,7 +430,7 @@ while 1:
     new_level = get_soccer_level(1200, num_segments+1, True)
     graphics.who_to_follow = None
 
-    s = WormSimulation(new_level, Worm([get_corridor_fish_start_pos(new_level, i) for i in range(num_segments+1)], ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant))
+    s = WormSimulation(new_level, Worm([get_corridor_fish_start_pos(new_level, i) for i in range(num_segments+1)], ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant, new_level.football_initial_position, new_level.football_initial_y_velocity))
     # s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant))
 
     # worm_neural_net_integration = get_worm_neural_net_integration(s)

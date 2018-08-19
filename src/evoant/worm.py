@@ -9,17 +9,31 @@ from itertools import izip
 
 
 class Worm:
-    def __init__(self, positions, ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant):
-        self.num_balls = num_segments + 1
-        self.fish = [Fish(positions[i], ball_radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass) for i in range(self.num_balls)]
+    def __init__(self, positions, ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant, football_initial_position, football_initial_y_velocity):
+        # self.num_balls = (num_segments + 1) / 2
+        self.team_size = (num_segments + 1) / 2
+        self.left_fish = [Fish(positions[i], ball_radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass) for i in range(self.team_size)]
+        self.right_fish = [Fish(positions[i + self.team_size], ball_radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, mirrored=True) for i in range(self.team_size)]
+        for f in self.left_fish:
+            f.energy = 1.0 - float(0.2*np.random.rand())
+            f.age = 0.0
+        for f in self.right_fish:
+            f.energy = float(0.2*np.random.rand())
+            f.age = 0.0
+        self.football = Ball(football_initial_position, ball_radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass)
+        self.football.velocity[1] = football_initial_y_velocity
         # self.fish = [Fish(position + np.array([[i*segment_size],[0]]), ball_radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass) for i in range(self.num_balls)]
-        self.balls = self.fish#[f for f in self.fish]
+        self.fish = self.left_fish + self.right_fish
+        self.balls = self.left_fish + self.right_fish + [self.football]#[f for f in self.fish]
         # self.muscles = [Muscle(b1, b2, segment_size, spring_constant) for b1,b2 in izip(self.balls[:-1],self.balls[1:])]
         self.muscles = []
         # self.balls[0].velocity[1] = -50.0
         # self.balls[1].reaching = 1.0
-        self.max_y_velocity = 30.0#50.0
-        self.max_x_velocity = 30.0#50.0
+        self.max_y_velocity = 30.0  # 50.0
+        self.max_x_velocity = 30.0  # 50.0
+        self.football_max_y_velocity = 30.0  # 50.0
+        self.football_max_x_velocity = 30.0  # 50.0
+        self.max_shoot_velocity = 30.0
         self.max_real_muscle_length = 40.0
         self.spring_constant = spring_constant
         self.muscle_flex_length = 13.0
@@ -103,8 +117,13 @@ class Worm:
                     v1 *= b.ball_ball_restitution
                     v2 *= other.ball_ball_restitution
 
-                    b.velocity += -u1Vector + collisionLine * v1
-                    other.velocity += -u2Vector + collisionLine * v2
+
+
+                    if j == len(self.balls)-1 and b.do_shoot: # meaning other is the ball, and b wants to shoot
+                        other.velocity = np.array(b.shoot_velocity)
+                    else:
+                        b.velocity += -u1Vector + collisionLine * v1
+                        other.velocity += -u2Vector + collisionLine * v2
 
                     # if i == 0: #TEST
                     #     other.velocity[0] = 30.0

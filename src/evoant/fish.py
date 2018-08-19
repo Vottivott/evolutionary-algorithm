@@ -20,6 +20,8 @@ class Fish(Ball):
         self.animation_velocity = None # only used for graphics
         self.radar_system = FishRadarSystem(mirrored)
         self.has_scored = False
+        self.shoot_velocity = np.array([[0.0],[0.0]])
+        self.do_shoot = False
 
 
     def step(self, delta_t):

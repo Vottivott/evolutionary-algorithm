@@ -1,6 +1,7 @@
 from itertools import izip
 
 import pygame, sys
+import pygame.gfxdraw
 from pygame.locals import *
 import numpy as np
 # import pyglet.media
@@ -55,6 +56,10 @@ class WormGraphics:
         self.full_color = (0, 240, 255)
         self.enemy_smoke_color = (40, 40, 40)
         self.enemy_color = (30, 30, 30)
+        w = 0.8
+        self.sky_color = [255.0 * w + b * (1.0 - w) for b in self.middle_color]
+        w = 0.3
+        self.ground_color = [255.0 * w + b * (1.0 - w) for b in self.middle_color]
         self.who_to_follow = 'main' # True = main robot, number n = enemy with index n
         self.user_control = None
         self.keys = None
@@ -89,7 +94,10 @@ class WormGraphics:
             #if event.type == KEYDOWN and event.key == K_KP_ENTER:
 
 
-        self.screen.fill((240, 245, 250))
+        self.screen.fill(self.sky_color)
+        # self.screen.fill((208, 212, 224))
+        # self.screen.fill((240, 245, 250))
+
         # s = pygame.Surface(self.size)  # the size of your rect
         # if trace:
         #     s.set_alpha(28)  # alpha level
@@ -101,6 +109,7 @@ class WormGraphics:
         #     color = min(np.random.normal(200, 30, 1), 255)
 
         self.draw_fish(worm_simulation.worm, worm_simulation)
+        self.draw_ball(worm_simulation.worm.football, worm_simulation)
         self.draw_grips(worm_simulation)
         self.draw_stones(worm_simulation.level, worm_simulation)
         self.draw_bar_level(worm_simulation)
@@ -168,7 +177,7 @@ class WormGraphics:
         # ceiling_pointlist = [(this, next) for this, next in izip(ceiling_coords, ceiling_coords[1:])]
         ground_coords = [(bar_width * x + xoff, y) for x, y in enumerate(list(ground_region))]
         # ground_pointlist = [(this, next) for this, next in izip(ground_coords, ground_coords[1:])]
-        c_cave = (150,160,170)
+        c_cave = self.ground_color#(150,160,170)
         # for point in ceiling_pointlist:
         #     pygame.draw.lines(self.screen, (255, color, 0), False, point, 2)
         # for point in ground_pointlist:
@@ -254,8 +263,16 @@ class WormGraphics:
 
     def draw_ball(self, ball, worm_simulation):
         pos = self.np_to_screen_coord(ball.position, worm_simulation)
-        pygame.draw.circle(self.screen, self.main_worm_color,
+        # pygame.draw.circle(self.screen, (0, 0, 0),
+        #                    pos, int(ball.radius))
+        # pygame.draw.circle(self.screen, (255, 255, 255),
+        #                    pos, int(ball.radius/2))
+        pygame.draw.circle(self.screen, (255, 255, 255),
                            pos, int(ball.radius))
+        # pygame.gfxdraw.aacircle(self.screen, pos[0], pos[1],
+        #                         int(ball.radius/4), (0, 0, 0))
+        # pygame.gfxdraw.aacircle(self.screen, pos[0], pos[1],
+        #                         int(ball.radius), (0, 0, 0))
 
     def draw_muscles(self, worm_simulation):
         for m in worm_simulation.worm.muscles:
