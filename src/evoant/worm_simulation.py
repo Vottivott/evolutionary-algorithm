@@ -239,8 +239,9 @@ class WormFitnessFunction:
 # worm_subfoldername = "PSO_worm_6segs_planar"
 # worm_subfoldername = "PSO_worm_1seg"
 # worm_subfoldername = "EVO150 Doorway"
-worm_subfoldername = "PSO35 Large Doorway"
+# worm_subfoldername = "PSO35 Large Doorway"
 # worm_subfoldername = "EVO80 Large Doorway"
+worm_subfoldername = "PSO35 Football 1" # Against static enemy
 
 
 def run_evolution_on_worm():
@@ -311,13 +312,22 @@ def run_evolution_on_worm():
 def run_pso_on_worm():
     num_vars = left_neural_net_integration.get_number_of_variables()
 
-    pso = ParticleSwarmOptimizationAlgorithm(35,#30,  # swarm_size
+    swarm_size = 35
+    x_min = -1.5
+    x_max = 1.5
+    v_max = 8.0
+    alpha = 0.3
+    delta_t = 0.5
+
+    send_mail_message(worm_subfoldername, "swarm_size = " + str(swarm_size) + "\nx_min = " + str(x_min) + "\nx_max = " + str(x_max) + "\nv_max = " + str(v_max) + "\nalpha = " + str(alpha) + "\ndelta_t = " + str(delta_t))
+
+    pso = ParticleSwarmOptimizationAlgorithm(swarm_size,#30,  # swarm_size
                                              num_vars,  # num_variables
                                              WormFitnessFunction(),  # fitness_function
-                                             -1.5, 1.5,  # x_min, x_max
-                                             8.0,#8.0,  # v_max
-                                             0.3,  # alpha
-                                             0.5,  # delta_t
+                                             x_min, x_max,  # x_min, x_max
+                                             v_max,#8.0,  # v_max
+                                             alpha,  # alpha
+                                             delta_t,  # delta_t
                                              2.0,  # cognition
                                              2.0,  # sociability
                                              1.4,  # initial_inertia_weight
@@ -376,10 +386,7 @@ def load_latest_worm_network():
     global left_neural_net_integration
     left_neural_net_integration.set_weights_and_possibly_initial_h(worm_population_data.best_variables)
 
-# stats_handler = PSOStatsHandler()
-stats_handler = EvoStatsHandler()
-
-graphics = WormGraphics(); graphics.who_to_follow = None
+# graphics = WormGraphics(); graphics.who_to_follow = None
 
 levels = []
 
@@ -413,10 +420,13 @@ right_neural_net_integration = None
 # log_file = open("evolution.txt","w")
 # sys.stdout = log_file
 
-# run_evolution_on_worm()
-# watch_best_worm()
 
-# run_pso_on_worm()
+# stats_handler = EvoStatsHandler()
+# run_evolution_on_worm()
+
+stats_handler = PSOStatsHandler()
+run_pso_on_worm()
+
 # watch_best_worm()
 
 
