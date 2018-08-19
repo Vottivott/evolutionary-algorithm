@@ -136,8 +136,8 @@ def get_soccer_level(length, num_fish, close_end=True):
     # bar_width = 50
     bar_width = 50
     n = length / bar_width
-    c = 125 - 50.0
-    g = 305 + 50.0
+    c = 125 - 75.0
+    g = 305 + 75.0
     half = (g - c) / 2.0
     door_halfwidth = 30.0#15.0
 
@@ -183,7 +183,38 @@ def get_soccer_level(length, num_fish, close_end=True):
     lvl.left_goal_x = (goal_offset + 1) * bar_width
     lvl.right_goal_x = (n - goal_offset - 1) * bar_width
 
-    lvl.initial_fish_pos = [np.array([[lvl.start_x + lvl.range_x * np.random.rand()],[lvl.start_y + lvl.range_y * np.random.rand()]]) for _ in range(num_fish)]
+    lvl.game_width = lvl.right_goal_x - lvl.left_goal_x
+    lvl.game_height = g - c
+    first_x = 1.0 / 6.0 * lvl.game_width
+    second_x = 2.0 / 6.0 * lvl.game_width
+    third_x = 3.5 / 6.0 * lvl.game_width
+    fourth_x = 4.2 / 6.0 * lvl.game_width
+
+    first_y = 1.0 / 2.0 * lvl.game_height
+    second_y = 1.0 / 3.0 * lvl.game_height
+    third_y = 1.0 / 8.0 * lvl.game_height
+    third_y_middle = 1.0 / 2.0 * lvl.game_height
+    fourth_y = 1.0 / 2.0 * lvl.game_height
+
+    lvl.left_initial_pos = [np.array([[lvl.left_goal_x + first_x], [c + first_y]]),
+                            np.array([[lvl.left_goal_x + second_x], [c + second_y]]),
+                            np.array([[lvl.left_goal_x + second_x], [g - second_y]]),
+                            np.array([[lvl.left_goal_x + third_x], [c + third_y]]),
+                            np.array([[lvl.left_goal_x + third_x], [c + third_y_middle]]),
+                            np.array([[lvl.left_goal_x + third_x], [g - third_y]]),
+                            np.array([[lvl.left_goal_x + fourth_x], [c + fourth_y]])]
+
+    lvl.right_initial_pos = [np.array([[lvl.right_goal_x - first_x], [c + first_y]]),
+                            np.array([[lvl.right_goal_x - second_x], [c + second_y]]),
+                            np.array([[lvl.right_goal_x - second_x], [g - second_y]]),
+                            np.array([[lvl.right_goal_x - third_x], [c + third_y]]),
+                            np.array([[lvl.right_goal_x - third_x], [c + third_y_middle]]),
+                            np.array([[lvl.right_goal_x - third_x], [g - third_y]]),
+                            np.array([[lvl.right_goal_x - fourth_x], [c + fourth_y]])]
+
+    lvl.combined_initial_pos = lvl.left_initial_pos + lvl.right_initial_pos
+
+    # lvl.initial_fish_pos = [np.array([[lvl.start_x + lvl.range_x * np.random.rand()],[lvl.start_y + lvl.range_y * np.random.rand()]]) for _ in range(num_fish)]
 
     return lvl
 

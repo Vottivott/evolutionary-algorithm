@@ -50,7 +50,7 @@ min_x = base_start_x+view_offset+5*enemy_width
 
 ball_radius = 10.0
 segment_size = 13.0#17.0
-num_segments = 12#4#3 #6 # worm_b=6
+num_segments = 13#12#4#3 #6 # worm_b=6
 ball_ball_restitution = 1.0#0.4
 ball_ground_restitution = 0.7
 ball_ground_friction = 0.0#0.4
@@ -161,7 +161,7 @@ class WormSimulation:
 
 
 def get_corridor_fish_start_pos(lvl, i):
-    return np.array(lvl.initial_fish_pos[i])
+    return np.array(lvl.combined_initial_pos[i])
 
 
 def run_evaluation(level, fitness_calculator, use_graphics=False):
