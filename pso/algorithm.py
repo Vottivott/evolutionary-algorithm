@@ -98,7 +98,7 @@ class ParticleSwarmOptimizationAlgorithm:
         while True:
 
 
-            if population_data is not None:
+            if population_data is not None and population_data.swarm_best_position is not None:
 
                 # Use stored data first time if supplied
 
@@ -106,6 +106,12 @@ class ParticleSwarmOptimizationAlgorithm:
                 population_data = None
 
             else:
+
+                if population_data is not None and population_data.swarm_best_position is None:
+                    # Use converted stored data first time if supplied
+                    positions, velocities, fitness_scores, particle_best_position, particle_best_performance, swarm_best_position, swarm_best_performance, inertia_weight = self.use_population_data(
+                        population_data)
+                    population_data = None
 
                 # Evaluate the particles
 

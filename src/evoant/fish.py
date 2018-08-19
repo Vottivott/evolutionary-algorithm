@@ -17,11 +17,16 @@ class Fish(Ball):
         Ball.__init__(self, position, radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, mass)
         self.energy = np.random.rand(1.0)#0.7
         self.age = np.random.rand(1.0)#0.0
-        self.animation_velocity = None # only used for graphics
         self.radar_system = FishRadarSystem(mirrored)
         self.has_scored = False
         self.shoot_velocity = np.array([[0.0],[0.0]])
         self.do_shoot = False
+
+        # FOR ANIMATION ONLY
+        self.animation_velocity = None # only used for graphics
+        self.start_shoot_animation = False
+        self.animation_shoot_timer = 0
+        self.animation_foot_dir = None
 
 
     def step(self, delta_t):

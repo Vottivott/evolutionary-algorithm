@@ -4,6 +4,7 @@ import pygame, sys
 import pygame.gfxdraw
 from pygame.locals import *
 import numpy as np
+from evomath import *
 # import pyglet.media
 
 def tuple_add(a,b):
@@ -114,6 +115,7 @@ class WormGraphics:
         self.draw_stones(worm_simulation.level, worm_simulation)
         self.draw_bar_level(worm_simulation)
         self.draw_debug_bounces(worm_simulation.worm, worm_simulation)
+        self.draw_kicks(worm_simulation)
 
         # self.draw_fish_radars(worm_simulation)
         # self.draw_fish_object_radars(worm_simulation)
@@ -281,6 +283,25 @@ class WormGraphics:
     def draw_grips(self, worm_simulation):
         for m in worm_simulation.worm.muscles:
             self.draw_grip(m, worm_simulation)
+
+
+    def draw_kicks(self, worm_simulation):
+        for f in worm_simulation.worm.fish:
+            if f.start_shoot_animation:
+                if f.animation_shoot_timer == 0: # if new kick
+                    f.animation_foot_dir = np.array([[0.0],[0.0]]) # reset foot position to center
+                f.animation_shoot_timer = 11
+                f.start_shoot_animation = False
+            if f.animation_shoot_timer > 0:
+                f.animation_shoot_timer -= 1
+                target_dir = normalized(worm_simulation.worm.football.position - f.position) * 15.0
+                acc = (target_dir - f.animation_foot_dir) * 0.2
+                f.animation_foot_dir += acc
+                t = 11.0 - f.animation_shoot_timer
+                dist = max(0, 5.0*t - 0.7*t**2)# - 1.0*max(0, t-8.0)**2
+                d = normalized(f.animation_foot_dir) * dist
+                self.draw_dynamic_fish_part(f.position + d, worm_simulation, 5.0,
+                                            self.get_fish_color(f.energy, f.age))
 
 
 

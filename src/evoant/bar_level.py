@@ -215,7 +215,7 @@ def get_soccer_level(length, num_fish, close_end=True):
     lvl.combined_initial_pos = lvl.left_initial_pos + lvl.right_initial_pos
 
     lvl.football_initial_position = np.array([[lvl.left_goal_x + lvl.game_width / 2.0], [c + lvl.game_height / 2.0]])
-    lvl.football_initial_y_velocity = -5.0 + 10.0 * np.random.rand()
+    lvl.football_initial_y_velocity = -15.0 + 30.0 * np.random.rand()
 
     # lvl.initial_fish_pos = [np.array([[lvl.start_x + lvl.range_x * np.random.rand()],[lvl.start_y + lvl.range_y * np.random.rand()]]) for _ in range(num_fish)]
 

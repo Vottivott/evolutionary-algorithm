@@ -80,7 +80,7 @@ class Worm:
             if b.grippingness == 0.0:
                 b.gripping = False
 
-
+        ball_competing_shoot_velocities = []
         for i in range(len(self.balls)):
             b = self.balls[i]
             for j in range(i+1,len(self.balls)):
@@ -120,7 +120,8 @@ class Worm:
 
 
                     if j == len(self.balls)-1 and b.do_shoot: # meaning other is the ball, and b wants to shoot
-                        other.velocity = np.array(b.shoot_velocity)
+                        ball_competing_shoot_velocities.append(np.array(b.shoot_velocity))
+                        b.start_shoot_animation = True
                     else:
                         b.velocity += -u1Vector + collisionLine * v1
                         other.velocity += -u2Vector + collisionLine * v2
@@ -171,6 +172,9 @@ class Worm:
             import numpy.random
             # acceleration = numpy.random.permutation(np.array([[-1.0], [0.0]]))
             # acceleration = numpy.random.rand(1.0)*np.array([[1.0],[0.0]])
+
+        if len(ball_competing_shoot_velocities) > 0:
+            self.football.velocity = mean(ball_competing_shoot_velocities)
 
         # Release unreaching muscles
         i = 0

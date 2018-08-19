@@ -6,12 +6,12 @@ from pso_stats_handler import PSOStatsHandler
 from mail import send_mail_message_with_image, send_mail_message
 from genetic.decoding.real_number import RealNumberDecoding
 from genetic.initialization.real_number import RealNumberInitialization
-from pso.algorithm import ParticleSwarmOptimizationAlgorithm
+from pso.algorithm import ParticleSwarmOptimizationAlgorithm, PSOPopulationData
 from stats_data_io import save_stats, load_stats
 from worm_radar_system import WormRadarSystem
 from worm import Worm
 from enemy import Enemy
-from genetic.algorithm import GeneticAlgorithm
+from genetic.algorithm import GeneticAlgorithm, PopulationData
 from genetic.crossover.single_point import SinglePointCrossover
 from genetic.decoding.binary import BinaryDecoding
 from genetic.elitism.elitism import Elitism
@@ -303,7 +303,10 @@ def run_evolution_on_worm():
         else:
             ga.run(None, worm_callback, population_data=worm_population_data)
 
-def run_pso_on_worm():
+def run_pso_on_worm(load_population_name="global", load_population_generation=-1):
+    if load_population_name == "global":
+        load_population_name = worm_subfoldername
+
     num_vars = left_neural_net_integration.get_number_of_variables()
 
     swarm_size = 35
@@ -312,8 +315,9 @@ def run_pso_on_worm():
     v_max = 8.0
     alpha = 0.3
     delta_t = 0.5
+    initial_inertia_weight = 1.4
 
-    send_mail_message(worm_subfoldername, "swarm_size = " + str(swarm_size) + "\nx_min = " + str(x_min) + "\nx_max = " + str(x_max) + "\nv_max = " + str(v_max) + "\nalpha = " + str(alpha) + "\ndelta_t = " + str(delta_t))
+    send_mail_message(worm_subfoldername, "swarm_size = " + str(swarm_size) + "\nx_min = " + str(x_min) + "\nx_max = " + str(x_max) + "\nv_max = " + str(v_max) + "\nalpha = " + str(alpha) + "\ndelta_t = " + str(delta_t) + "\ninitial_inertia_weight = " + str(initial_inertia_weight))
 
     pso = ParticleSwarmOptimizationAlgorithm(swarm_size,#30,  # swarm_size
                                              num_vars,  # num_variables
@@ -324,7 +328,7 @@ def run_pso_on_worm():
                                              delta_t,  # delta_t
                                              2.0,  # cognition
                                              2.0,  # sociability
-                                             1.4,  # initial_inertia_weight
+                                             initial_inertia_weight,  # initial_inertia_weight
                                              0.995,  # inertia_weight_decay
                                              0.35)  # min_inertia_weight
 
@@ -351,7 +355,19 @@ def run_pso_on_worm():
 
     watch_only = False
     global worm_population_data
-    worm_population_data = load_population_data(worm_subfoldername, -1)
+    worm_population_data = load_population_data(load_population_name, load_population_generation)
+
+    if isinstance(worm_population_data, PopulationData): # If the population data is of the wrong type
+        # Convert from evolution population to PSO swarm by choosing the n best chromosomes, where n is the swarm size
+        p = worm_population_data
+        velocities = [alpha/delta_t * (-(x_max - x_min)/2.0 + np.random.random((num_vars, 1)) * (x_max - x_min)) for _ in range(swarm_size)]
+        sorted_descending_indices = sorted(range(swarm_size), key=lambda i: p.fitness_scores[i], reverse=True)
+        sorted_clipped_indices = sorted_descending_indices[:swarm_size]
+        positions = [p.decoded_variable_vectors[i] for i in sorted_clipped_indices]
+        fitness_scores = [p.fitness_scores[i] for i in sorted_clipped_indices]
+        worm_population_data = PSOPopulationData(p.generation, positions, velocities, fitness_scores, [None for _ in range(swarm_size)],
+                                                 [float('-inf') for _ in range(swarm_size)], None, float('-inf'), initial_inertia_weight)
+
     # # g = worm_population_data.best_individual_genes
 
     if True:
@@ -422,18 +438,19 @@ s.right_neural_net_integration = right_neural_net_integration
 # worm_subfoldername = "EVO150 Doorway"
 # worm_subfoldername = "PSO35 Large Doorway"
 # worm_subfoldername = "EVO80 Large Doorway"
-# worm_subfoldername = "PSO35 Football 1" # Against static enemy
+# worm_subfoldername = "PSO35 Football from EVO80 41"
 worm_subfoldername = "EVO80 Football 1" # Against static enemy, with random ball velocity ; 42 num_levels=5, against 41
+print worm_subfoldername
 
 num_levels = 5#1#4#30#15#4#30#15
 
+enemy_subfoldername = "EVO80 Football 1"
+enemy_variables = load_population_data(enemy_subfoldername, 41).best_variables
 
-enemy_variables = load_population_data(worm_subfoldername, 41).best_variables
 
 
-
-stats_handler = EvoStatsHandler(); run_evolution_on_worm()
-# stats_handler = PSOStatsHandler(); run_pso_on_worm()
+# stats_handler = EvoStatsHandler(); run_evolution_on_worm()
+# stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
 
 graphics = WormGraphics(); graphics.who_to_follow = None
 while 1:
