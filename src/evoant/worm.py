@@ -20,8 +20,8 @@ class Worm:
         for f in self.right_fish:
             f.energy = float(0.2*np.random.rand())
             f.age = 0.0
-        self.football = Ball(football_initial_position, ball_radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass)
-        self.football.velocity[1] = football_initial_y_velocity
+        self.football = Ball(np.array(football_initial_position), ball_radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass)
+        self.football.velocity[1] = np.array(football_initial_y_velocity)
         # self.fish = [Fish(position + np.array([[i*segment_size],[0]]), ball_radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass) for i in range(self.num_balls)]
         self.fish = self.left_fish + self.right_fish
         self.balls = self.left_fish + self.right_fish + [self.football]#[f for f in self.fish]

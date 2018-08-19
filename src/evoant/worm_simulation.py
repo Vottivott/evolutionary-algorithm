@@ -203,7 +203,7 @@ def run_worm_evaluation(variables, use_graphics=False):
 
 def generate_levels(close_end=True):
     result = []
-    np.random.seed(0)
+    # np.random.seed(0)
     for i in range(num_levels):
         # level = generate_bar_level_with_stones(level_length, close_end)
         # level = generate_planar_bar_level(level_length, close_end)
@@ -232,16 +232,6 @@ class WormFitnessFunction:
         self.debug_ind_n += 1
         return fitness
 
-
-# worm_subfoldername = "worm_b"
-# worm_subfoldername = "worm_2segs_planar"
-# worm_subfoldername = "PSO_worm_3segs_planar"
-# worm_subfoldername = "PSO_worm_6segs_planar"
-# worm_subfoldername = "PSO_worm_1seg"
-# worm_subfoldername = "EVO150 Doorway"
-# worm_subfoldername = "PSO35 Large Doorway"
-# worm_subfoldername = "EVO80 Large Doorway"
-worm_subfoldername = "PSO35 Football 1" # Against static enemy
 
 
 def run_evolution_on_worm():
@@ -421,11 +411,19 @@ right_neural_net_integration = None
 # sys.stdout = log_file
 
 
-# stats_handler = EvoStatsHandler()
-# run_evolution_on_worm()
+# worm_subfoldername = "worm_b"
+# worm_subfoldername = "worm_2segs_planar"
+# worm_subfoldername = "PSO_worm_3segs_planar"
+# worm_subfoldername = "PSO_worm_6segs_planar"
+# worm_subfoldername = "PSO_worm_1seg"
+# worm_subfoldername = "EVO150 Doorway"
+# worm_subfoldername = "PSO35 Large Doorway"
+# worm_subfoldername = "EVO80 Large Doorway"
+# worm_subfoldername = "PSO35 Football 1" # Against static enemy
+worm_subfoldername = "EVO80 Football 1" # Against static enemy, with random ball velocity
 
-stats_handler = PSOStatsHandler()
-run_pso_on_worm()
+stats_handler = EvoStatsHandler(); run_evolution_on_worm()
+# stats_handler = PSOStatsHandler(); run_pso_on_worm()
 
 # watch_best_worm()
 
