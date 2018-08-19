@@ -40,6 +40,8 @@ def save_population_data(subfoldername, population_data, keep_last_n=None, keep_
         pickle.dump(population_data, out)
 
 
+
+
 def load_population_data(subfoldername, generation):
     directory_path = get_main_dir() + subfoldername + "/"
     if generation == -1:
@@ -92,7 +94,17 @@ def count_genes():
     print sum(sum(ind[-1500:] for ind in p.population))
 
 if __name__ == "__main__":
-    count_genes()
+    pass
+    # count_genes()
+
+    # save_temp_fitness("hej", 4, 25.3231)
+    # save_temp_fitness("hej", 2, -5.3231)
+    # save_temp_fitness("hej", 3, -25.3231)
+    # save_temp_fitness("hej", 1, -55.3231)
+    # save_temp_fitness("hej", 0, -1525.3231)
+    # print load_temp_fitness_scores("hej", 5)
+    # clear_temp_folder("hej")
+
     # p = load_population_data(subfoldername, 105)
     # print p
     # p = load_population_data(subfoldername, 106)

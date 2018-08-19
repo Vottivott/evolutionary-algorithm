@@ -13,11 +13,15 @@ from genetic.selection.tournament import TournamentSelection
 # from stats import *
 
 import random
+import time
 
 # Fix random state for reproducability
 #random_seed = 19680601
 #np.random.seed(random_seed)
 #random.seed(random_seed)
+from temp_data_io import save_temp_data, save_temp_fitness, wait_for_temp_fitness_scores, \
+    load_temp_fitness_scores, clear_temp_folder
+
 
 def extract_function(function_or_object_with_function, function_name):
     x = function_or_object_with_function
@@ -47,6 +51,7 @@ class PrunedPopulationData:
         self.best_individual_index = population_data.best_individual_index
         self.best_variables = population_data.best_variables
         self.best_fitness = population_data.best_fitness
+
 
 
 
@@ -85,7 +90,18 @@ class GeneticAlgorithm:
         self.decode = extract_function(decoding_algorithm, "decode")
         self.initialize_chromosome = extract_function(initialization_algorithm, "initialize_chromosome")
 
-    def run(self, num_generations=None, generation_callback=None, population_data=None):
+    def multiprocess_evaluations(self, subfolder_name, decoded_variable_vectors, generation, num_processes, multiprocess_index):
+        t0 = time.time()
+        for individual_index in range(multiprocess_index, self.population_size, num_processes):
+            individual_fitness = self.evaluate(decoded_variable_vectors[individual_index], generation)
+            save_temp_fitness(subfolder_name, individual_index, individual_fitness)
+        wait_for_temp_fitness_scores(subfolder_name, self.population_size)
+        fitness_scores = load_temp_fitness_scores(subfolder_name, self.population_size)
+        clear_temp_folder(subfolder_name)
+        print "The fitness scores were evaluated in " + str(time.time() - t0) + " seconds."
+        return fitness_scores
+
+    def run(self, num_generations=None, generation_callback=None, population_data=None, multiprocess_num_processes=1, multiprocess_index=None, subfolder_name=None):
         """
         :param num_generations: the number of generations, or None to continue indefinitely
         :param generation_callback: an optional function generation_callback(population_data) returning a boolean True to continue or False to stop.
@@ -115,7 +131,12 @@ class GeneticAlgorithm:
                 # Evaluate population
 
                 decoded_variable_vectors = map(self.decode, population)
-                fitness_scores = [self.evaluate(vector, generation) for vector in decoded_variable_vectors]
+                if multiprocess_num_processes == 1:
+                    fitness_scores = [self.evaluate(vector, generation) for vector in decoded_variable_vectors]
+                else:
+                    save_temp_data(subfolder_name, "generation_and_decoded_variable_vectors", (generation, decoded_variable_vectors))
+                    self.multiprocess_evaluations(subfolder_name, decoded_variable_vectors, generation, multiprocess_num_processes, multiprocess_index)
+
                 best_individual_index = max(xrange(len(fitness_scores)), key=fitness_scores.__getitem__)
                 best_individual = np.copy(population[best_individual_index])
 

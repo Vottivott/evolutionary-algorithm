@@ -23,12 +23,15 @@ from worm_graphics import WormGraphics
 from bar_level import generate_bar_level_with_stones, generate_planar_bar_level, get_soccer_level
 from neural_net_integration import evocopter_neural_net_integration, black_neural_net_integration
 from population_data_io import save_population_data, load_population_data
+from temp_data_io import wait_and_open_temp_data, save_temp_fitness
 from radar_system import RadarSystem, EnemysRadarSystem
 from score_colors import get_color_from_score
 from shot import Shot
 from smoke import Smoke
 
+
 import pygame
+import time
 
 from worm_neural_net_integration import get_worm_neural_net_integration
 
@@ -238,7 +241,15 @@ class WormFitnessFunction:
 
 
 
-def run_evolution_on_worm():
+def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None):
+
+    fitness_function = WormFitnessFunction()
+
+    if multiprocess_num_processes > 1:
+        print "PROCESS " + str(multiprocess_index) + " OUT OF " + str(range(multiprocess_num_processes))
+        if multiprocess_index > 0:
+            fitness_process(multiprocess_num_processes, multiprocess_index, fitness_function)
+            return
 
     # enemy_population_data = load_population_data(enemy_subfoldername, -1)
     # enemy_neural_net_integration.set_weights_and_possibly_initial_h(enemy_population_data.best_variables)
@@ -257,7 +268,7 @@ def run_evolution_on_worm():
     send_mail_message(worm_subfoldername, "population_size = " + str(population_size) + "\nmutate_c = " + str(mutate_c) + "\ncrossover_p = " + str(crossover_p))
 
     ga = GeneticAlgorithm(population_size,#150,
-                          WormFitnessFunction(),
+                          fitness_function,
                           TournamentSelection(0.75, 3),
                           SinglePointCrossover(crossover_p),#0.9),
                           CreepMutation(mutate_c / vars, 0.8, 0.005, True), #BinaryMutation(2.0 / m),
@@ -301,7 +312,7 @@ def run_evolution_on_worm():
                 worm_callback(worm_population_data, True)
                 # watch_run(worm_population_data)
         else:
-            ga.run(None, worm_callback, population_data=worm_population_data)
+            ga.run(None, worm_callback, population_data=worm_population_data, multiprocess_num_processes=multiprocess_num_processes, multiprocess_index=multiprocess_index, subfolder_name=worm_subfoldername)
 
 def run_pso_on_worm(load_population_name="global", load_population_generation=-1):
     if load_population_name == "global":
@@ -398,6 +409,49 @@ def load_latest_worm_network():
     left_neural_net_integration.set_weights_and_possibly_initial_h(worm_population_data.best_variables)
 
 
+# def multiprocess_evaluations(self, subfolder_name, decoded_variable_vectors, generation, num_processes,
+#                              multiprocess_index):
+
+
+def fitness_process(multiprocess_num_processes, multiprocess_index, fitness_function):
+    def extract_function(function_or_object_with_function, function_name):
+        x = function_or_object_with_function
+        return getattr(x, function_name, x)
+    evaluate = extract_function(fitness_function, "evaluate")
+
+    global worm_population_data
+    worm_population_data = load_population_data(worm_subfoldername, -1)
+    generation = worm_population_data.generation
+    population_size = len(worm_population_data.population)
+    worm_population_data = None # free memory
+
+    while 1:
+
+        next_generation, decoded_variable_vectors = None, None
+        print "Process " + str(multiprocess_index) + " waiting for generation_and_decoded_variable_vectors for generation " + str(generation+1) + "..."
+        t0 = time.time()
+        while 1: # Wait until correct generation_and_decoded_variable_vectors file is in temp folder
+            next_generation, decoded_variable_vectors = wait_and_open_temp_data(worm_subfoldername, "generation_and_decoded_variable_vectors")
+            if next_generation == generation + 1:
+                break
+            time.sleep(1)
+        t = time.time() - t0
+        print "Process " + str(multiprocess_index) + " waited for " + str(
+            t) + " seconds."
+        print "Process " + str(
+            multiprocess_index) + " starting fitness evaluations..."
+        t0 = time.time()
+        for individual_index in range(multiprocess_index, population_size, multiprocess_num_processes):
+            individual_fitness = evaluate(decoded_variable_vectors[individual_index], next_generation)
+            save_temp_fitness(worm_subfoldername, individual_index, individual_fitness)
+        t = time.time() - t0
+        print "Process " + str(multiprocess_index) + " evaluated its individuals in " + str(
+            t) + " seconds."
+
+        generation += 1
+
+
+
 levels = []
 
 
@@ -449,7 +503,7 @@ enemy_variables = load_population_data(enemy_subfoldername, 41).best_variables
 
 
 
-# stats_handler = EvoStatsHandler(); run_evolution_on_worm()
+stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=2, multiprocess_index=1)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
 
 graphics = WormGraphics(); graphics.who_to_follow = None
