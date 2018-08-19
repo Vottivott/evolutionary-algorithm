@@ -503,7 +503,7 @@ enemy_variables = load_population_data(enemy_subfoldername, 41).best_variables
 
 
 
-stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=2, multiprocess_index=1)
+stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=0)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
 
 graphics = WormGraphics(); graphics.who_to_follow = None
