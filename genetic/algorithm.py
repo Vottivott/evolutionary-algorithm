@@ -123,7 +123,13 @@ class GeneticAlgorithm:
             generation = population_data.generation
 
         if multiprocess_num_processes > 1:
-            clear_temp_folder(subfolder_name)
+            while 1:
+                try:
+                    clear_temp_folder(subfolder_name)
+                    break
+                except WindowsError:
+                    print "WindowsError in clear_temp_folder()"
+                time.sleep(0.2)
 
         while True:
 

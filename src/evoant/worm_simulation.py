@@ -506,17 +506,18 @@ print worm_subfoldername
 num_levels = 7#5#1#4#30#15#4#30#15
 
 enemy_subfoldername = "EVO80 Football 1"
-enemy_variables = load_population_data(enemy_subfoldername, 41).best_variables
 g = ((get_latest_generation_number(enemy_subfoldername)) / 10)*10
+enemy_variables = load_population_data(enemy_subfoldername, g).best_variables
 print "Enemy team set to team " + str(g)
 
-from evomath import *
-for i in range(44, 58+1):
-    p = load_population_data(worm_subfoldername, i)
-    print p.generation, p.best_fitness, p.fitness_scores[:3], len(p.fitness_scores)
-exit()
+# from evomath import *
+# for i in range(44, 58+1):
+#     p = load_population_data(worm_subfoldername, i)
+#     print p.generation, p.best_fitness, p.fitness_scores[:3], len(p.fitness_scores)
+# exit()
 
-stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=0)
+# stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=6)
+stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=2)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
 
 graphics = WormGraphics(); graphics.who_to_follow = None
