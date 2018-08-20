@@ -21,6 +21,14 @@ class EvoStatsHandler:
             old_stats["best_fitness_all_time"] = []
             old_stats["avg_fitness"] = []
             old_stats["decoded_variable_vectors"] = []
+        if population_data.generation <= old_stats["generations"][-1]:
+            diff = 1 + old_stats["generations"][-1] - population_data.generation
+            print "Current generation " + str(population_data.generation) + " is <= latest stats generation " + str(old_stats["generations"][-1])
+            print "Removing " + str(diff) + " latest stat entries."
+            del old_stats["generations"][-diff:]
+            del old_stats["best_fitness"][-diff:]
+            del old_stats["best_fitness_all_time"][-diff:]
+            del old_stats["avg_fitness"][-diff:]
         old_stats["generations"].append(population_data.generation)
         old_stats["best_fitness"].append(population_data.best_fitness)
         old_stats["best_fitness_all_time"].append(max(old_stats["best_fitness"]))

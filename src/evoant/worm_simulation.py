@@ -22,7 +22,7 @@ from genetic.selection.tournament import TournamentSelection
 from worm_graphics import WormGraphics
 from bar_level import generate_bar_level_with_stones, generate_planar_bar_level, get_soccer_level
 from neural_net_integration import evocopter_neural_net_integration, black_neural_net_integration
-from population_data_io import save_population_data, load_population_data
+from population_data_io import save_population_data, load_population_data, get_latest_generation_number
 from temp_data_io import wait_and_open_temp_data, save_temp_fitness
 from radar_system import RadarSystem, EnemysRadarSystem
 from score_colors import get_color_from_score
@@ -284,8 +284,8 @@ def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None)
             save_population_data(worm_subfoldername, p, keep_last_n=15, keep_mod = None)
             save_stats(worm_subfoldername, stats_handler, p)
             stats = load_stats(worm_subfoldername)
-            if stats is not None and (
-                    len(stats["best_fitness_all_time"]) < 2 or stats["best_fitness_all_time"][-1] != stats["best_fitness_all_time"][-2]):
+            if stats is not None:# and (
+                    # len(stats["best_fitness_all_time"]) < 2 or stats["best_fitness_all_time"][-1] != stats["best_fitness_all_time"][-2]):
                 stats_handler.produce_graph(stats, worm_subfoldername + ".png")
                 msg = str(float(p.best_fitness)) + "\ngeneration " + str(p.generation)
                 send_mail_message_with_image(worm_subfoldername, msg, worm_subfoldername + ".png")
@@ -293,6 +293,13 @@ def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None)
         print "\n[ " + str(p.generation) + ": " + str(
             p.best_fitness) + " : " + str(
             average_fitness) + " ]\n"
+
+        if p.generation % 10 == 0:
+            global enemy_variables
+            enemy_variables = load_population_data(enemy_subfoldername, p.generation).best_variables
+            print "Enemy team updated to team " + str(p.generation)
+
+
         # if watch_only or (graphics is not None):# and p.generation % 10 == 0):
         #     fitness = run_worm_evaluation(p.best_variables, True)
         #     print "Fitness: " + str(fitness)
@@ -434,7 +441,7 @@ def fitness_process(multiprocess_num_processes, multiprocess_index, fitness_func
             next_generation, decoded_variable_vectors = wait_and_open_temp_data(worm_subfoldername, "generation_and_decoded_variable_vectors")
             if next_generation == generation + 1:
                 break
-            time.sleep(1)
+            time.sleep(3)
         t = time.time() - t0
         print "Process " + str(multiprocess_index) + " waited for " + str(
             t) + " seconds."
@@ -496,14 +503,20 @@ s.right_neural_net_integration = right_neural_net_integration
 worm_subfoldername = "EVO80 Football 1" # Against static enemy, with random ball velocity ; 42 num_levels=5, against 41
 print worm_subfoldername
 
-num_levels = 5#1#4#30#15#4#30#15
+num_levels = 7#5#1#4#30#15#4#30#15
 
 enemy_subfoldername = "EVO80 Football 1"
 enemy_variables = load_population_data(enemy_subfoldername, 41).best_variables
+g = ((get_latest_generation_number(enemy_subfoldername)) / 10)*10
+print "Enemy team set to team " + str(g)
 
+from evomath import *
+for i in range(44, 58+1):
+    p = load_population_data(worm_subfoldername, i)
+    print p.generation, p.best_fitness, p.fitness_scores[:3], len(p.fitness_scores)
+exit()
 
-
-stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=0)
+stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=0)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
 
 graphics = WormGraphics(); graphics.who_to_follow = None

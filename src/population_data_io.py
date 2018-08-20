@@ -40,6 +40,19 @@ def save_population_data(subfoldername, population_data, keep_last_n=None, keep_
         pickle.dump(population_data, out)
 
 
+def get_latest_generation_number(subfoldername):
+    directory_path = get_main_dir() + subfoldername + "/"
+    file_loaded = False
+    if not os.path.exists(directory_path):
+        return None
+    files = os.listdir(directory_path)
+    if not len(files):
+        return None
+
+    nums = (int(file[:-4]) for file in (f for f in files if f[-4:] == ".pkl"))
+    nums = sorted(nums)
+    generation = nums[-1]
+    return generation
 
 
 def load_population_data(subfoldername, generation):

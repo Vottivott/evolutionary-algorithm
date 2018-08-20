@@ -97,7 +97,13 @@ class GeneticAlgorithm:
             save_temp_fitness(subfolder_name, individual_index, individual_fitness)
         wait_for_temp_fitness_scores(subfolder_name, self.population_size)
         fitness_scores = load_temp_fitness_scores(subfolder_name, self.population_size)
-        clear_temp_folder(subfolder_name)
+        while 1:
+            try:
+                clear_temp_folder(subfolder_name)
+                break
+            except WindowsError:
+                print "WindowsError in clear_temp_folder()"
+            time.sleep(0.2)
         print "The fitness scores were evaluated in " + str(time.time() - t0) + " seconds."
         return fitness_scores
 
@@ -115,6 +121,9 @@ class GeneticAlgorithm:
         else:
             population = population_data.population
             generation = population_data.generation
+
+        if multiprocess_num_processes > 1:
+            clear_temp_folder(subfolder_name)
 
         while True:
 
@@ -135,7 +144,7 @@ class GeneticAlgorithm:
                     fitness_scores = [self.evaluate(vector, generation) for vector in decoded_variable_vectors]
                 else:
                     save_temp_data(subfolder_name, "generation_and_decoded_variable_vectors", (generation, decoded_variable_vectors))
-                    self.multiprocess_evaluations(subfolder_name, decoded_variable_vectors, generation, multiprocess_num_processes, multiprocess_index)
+                    fitness_scores = self.multiprocess_evaluations(subfolder_name, decoded_variable_vectors, generation, multiprocess_num_processes, multiprocess_index)
 
                 best_individual_index = max(xrange(len(fitness_scores)), key=fitness_scores.__getitem__)
                 best_individual = np.copy(population[best_individual_index])

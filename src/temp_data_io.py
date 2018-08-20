@@ -27,7 +27,13 @@ def wait_and_open_temp_data(subfoldername, temp_name):
         try:
             return load_temp_data(subfoldername, temp_name)
         except IOError:
-            pass
+            print "IOError in wait_and_open_temp_data()"
+        except ValueError:
+            print "ValueError in wait_and_open_temp_data()"
+        except WindowsError:
+            print "WindowsError in wait_and_open_temp_data()"
+        except EOFError:
+            print "EOFError in wait_and_open_temp_data()"
         time.sleep(1)
 
 def save_temp_fitness(subfoldername, individual_index, individual_fitness):
@@ -42,10 +48,11 @@ def load_temp_fitness_scores(subfoldername, population_size):
     files = os.listdir(directory_path)
     fitness_scores = [None] * population_size
     for filename in files:
-        s = filename.split("=")
-        individual_index = int(s[0])
-        individual_fitness = float(s[1])
-        fitness_scores[individual_index] = individual_fitness
+        if filename != "generation_and_decoded_variable_vectors.pkl":
+            s = filename.split("=")
+            individual_index = int(s[0])
+            individual_fitness = float(s[1])
+            fitness_scores[individual_index] = individual_fitness
     return fitness_scores
 
 def clear_temp_folder(subfoldername):
