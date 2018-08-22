@@ -1,5 +1,5 @@
 import pickle
-import os
+import os, sys
 import time
 
 def get_main_dir():
@@ -32,8 +32,14 @@ def wait_and_open_temp_data(subfoldername, temp_name):
             print "ValueError in wait_and_open_temp_data()"
         except WindowsError:
             print "WindowsError in wait_and_open_temp_data()"
+        except KeyError:
+            print "KeyError in wait_and_open_temp_data()"
         except EOFError:
             print "EOFError in wait_and_open_temp_data()"
+        except:
+            print "Unexpected error in wait_and_open_temp_data(): " + str(sys.exc_info()[0])
+
+
         time.sleep(1)
 
 def save_temp_fitness(subfoldername, individual_index, individual_fitness):
