@@ -39,7 +39,7 @@ def send_mail_message(subject, message, tag = None):
 
     print "successfully sent email to %s" % (msg['To'])
 
-def send_mail_message_with_image(subject, message, image, tag = None):
+def send_mail_message_with_image(subject, message, image, tag = None, image_title=None):
 
     if tag is None:
         tag_str = ""
@@ -63,6 +63,8 @@ def send_mail_message_with_image(subject, message, image, tag = None):
         fp = open(image, 'rb')
         msgImage = MIMEImage(fp.read())
         fp.close()
+        if image_title is not None:
+            msgImage.add_header("Content-Disposition", "attachment", filename=image_title)
         msg.attach(msgImage)
     except IOError:
         print "Couldn't include image '" + image + "'."
@@ -86,4 +88,4 @@ def send_mail_message_with_image(subject, message, image, tag = None):
 
 
 if __name__ == "__main__":
-    send_mail_message_with_image("HEJ", "message with image", "../andungarna.jpg")
+    send_mail_message_with_image("HEJ", "message with image", "EVO80 Football 1.png", image_title="Gen: 43  Score: 435")

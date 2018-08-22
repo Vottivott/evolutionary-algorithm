@@ -9,6 +9,13 @@ def abline(slope, intercept):
     y_vals = intercept + slope * x_vals
     plt.plot(x_vals, y_vals, '--')
 
+
+def vline(x):
+    axes = plt.gca()
+    y_vals = np.array(axes.get_ylim())
+    x_vals = 0.0 * y_vals + x
+    plt.plot(x_vals, y_vals, '--')
+
 class EvoStatsHandler:
     def __init__(self):
         pass
@@ -46,6 +53,8 @@ class EvoStatsHandler:
         plt.plot(stats["generations"], stats["best_fitness_all_time"], "r",
                  stats["generations"], stats["best_fitness"], "m",
                  stats["generations"], stats["avg_fitness"], "b")
+        for i in range(stats["generations"][-1]/10):
+            vline(i * 10)
         current_plot += 1
 
         positions_plot = plt.subplot(num_plots, 1, current_plot)

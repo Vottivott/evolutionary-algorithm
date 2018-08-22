@@ -9,6 +9,7 @@ def abline(slope, intercept):
     y_vals = intercept + slope * x_vals
     plt.plot(x_vals, y_vals, '--')
 
+
 class PSOStatsHandler:
     def __init__(self):
         pass
