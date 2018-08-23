@@ -46,8 +46,10 @@ import sys
 
 #TEST
 for i in range(60):
-    send_mail_message("Chalmersdatortest",
+    send_mail_message("Chalmersdatortest2",
                       "Minut " + str(i))
+    print i
+    time.sleep(60.0)
 exit(0)
 
 
