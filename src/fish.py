@@ -1,4 +1,4 @@
-from evoant.ball import Ball
+from ball import Ball
 import numpy as np
 
 from radar_system import FishRadarSystem
@@ -15,8 +15,8 @@ BIRTH_ENERGY_REQUIREMENT = 0.9
 class Fish(Ball):
     def __init__(self, position, radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, mass, mirrored = False):
         Ball.__init__(self, position, radius, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, mass)
-        self.energy = np.random.rand(1.0)#0.7
-        self.age = np.random.rand(1.0)#0.0
+        self.energy = np.random.rand()#0.7
+        self.age = np.random.rand()#0.0
         self.radar_system = FishRadarSystem(mirrored)
         self.has_scored = False
         self.shoot_velocity = np.array([[0.0],[0.0]])

@@ -2,9 +2,9 @@ import numpy as np
 
 from copter import Copter
 from enemy import Enemy
-from evoant.pso_stats_handler import PSOStatsHandler
+from pso_stats_handler import PSOStatsHandler
 
-from evoant.mail import send_mail_message_with_image
+from mail import send_mail_message_with_image
 from genetic.algorithm import GeneticAlgorithm
 from genetic.crossover.single_point import SinglePointCrossover
 from genetic.decoding.binary import BinaryDecoding

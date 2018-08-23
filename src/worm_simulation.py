@@ -1,6 +1,6 @@
 import numpy as np
 
-from evoant.evo_stats_handler import EvoStatsHandler
+from evo_stats_handler import EvoStatsHandler
 from pso_stats_handler import PSOStatsHandler
 
 from mail import send_mail_message_with_image, send_mail_message
@@ -501,14 +501,15 @@ s.right_neural_net_integration = right_neural_net_integration
 # worm_subfoldername = "EVO80 Large Doorway"
 # worm_subfoldername = "PSO35 Football from EVO80 41"
 worm_subfoldername = "EVO80 Football 1" # Against static enemy, with random ball velocity ; 42 num_levels=5, against 41
+# worm_subfoldername = "Test" # Against static enemy, with random ball velocity ; 42 num_levels=5, against 41
 print worm_subfoldername
 
-num_levels = 14#7#5#1#4#30#15#4#30#15
+num_levels = 4#7#5#1#4#30#15#4#30#15
 
-enemy_subfoldername = "EVO80 Football 1"
-g = ((get_latest_generation_number(enemy_subfoldername)) / 10)*10
-enemy_variables = load_population_data(enemy_subfoldername, g).best_variables
-print "Enemy team set to team " + str(g)
+# enemy_subfoldername = "EVO80 Football 1"
+# g = ((get_latest_generation_number(enemy_subfoldername)) / 10)*10
+enemy_variables = None#load_population_data(enemy_subfoldername, g).best_variables
+# print "Enemy team set to team " + str(g)
 
 # from evomath import *
 # for i in range(44, 58+1):
@@ -516,11 +517,11 @@ print "Enemy team set to team " + str(g)
 #     print p.generation, p.best_fitness, p.fitness_scores[:3], len(p.fitness_scores)
 # exit()
 
-stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=6)
-#stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=2)
+# stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=6)
+# stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=0)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
 
-graphics = WormGraphics(); graphics.who_to_follow = None
+# graphics = WormGraphics(); graphics.who_to_follow = None
 while 1:
     watch_best_worm()
 

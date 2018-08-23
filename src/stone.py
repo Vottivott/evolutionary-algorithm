@@ -1,4 +1,4 @@
-from evoant.ball import Ball
+from ball import Ball
 
 
 class Stone(Ball):

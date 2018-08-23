@@ -18,17 +18,17 @@ def save_stats(subfilename, stats_handler, population_data):
         os.makedirs(directory_path)
     old_stats = None
     try:
-        with open(directory_path + subfilename + ".pkl") as file:
+        with open(directory_path + subfilename + ".pkl", "rb") as file:
             old_stats = pickle.load(file)
     except IOError:
         old_stats = None
-    with open(directory_path + subfilename + ".pkl", 'w') as out:
+    with open(directory_path + subfilename + ".pkl", 'wb') as out:
         pickle.dump(stats_handler.update(old_stats, population_data), out)
 
 
 def load_stats(subfilename):
     directory_path = get_main_dir()
-    with open(directory_path + subfilename + ".pkl") as file:
+    with open(directory_path + subfilename + ".pkl", "rb") as file:
         return pickle.load(file)
 
 if __name__ == "__main__":

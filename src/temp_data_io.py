@@ -14,12 +14,12 @@ def save_temp_data(subfoldername, temp_name, temp_data, ):
     directory_path = get_main_dir() + subfoldername + "/temp/"
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)
-    with open(directory_path + temp_name + ".pkl", 'w') as out:
+    with open(directory_path + temp_name + ".pkl", 'wb') as out:
         pickle.dump(temp_data, out)
 
 def load_temp_data(subfoldername, temp_name):
     directory_path = get_main_dir() + subfoldername + "/temp/"
-    with open(directory_path + temp_name + ".pkl") as file:
+    with open(directory_path + temp_name + ".pkl", "rb") as file:
         return pickle.load(file)
 
 def wait_and_open_temp_data(subfoldername, temp_name):
