@@ -83,9 +83,9 @@ class Level:
 
     def bounce(self,direction, slope):
         normal = np.array([[1.0], [-1.0 / slope]])
-        projection = (direction.T.dot(normal) / direction.T.dot(direction)) * normal
+        projection = (np.dot(direction.T,normal) / np.dot(direction.T,direction)) * normal
         bounce_dir = (projection - direction)
-        bounce_dir *= 1.0 / (bounce_dir.T.dot(bounce_dir)) ** 0.5
+        bounce_dir *= 1.0 / (np.dot(bounce_dir.T,bounce_dir)) ** 0.5
         return bounce_dir
 
 

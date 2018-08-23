@@ -140,7 +140,7 @@ class SmokeParticle(Rectangular):
         if not self.has_bounced:
             bounce_direction = level.bounce_direction(self.velocity, self)
             if bounce_direction is not None:
-                self.velocity = (bounce_direction * self.velocity.T.dot(self.velocity)**0.5)
+                self.velocity = (bounce_direction * np.dot(self.velocity.T,self.velocity)**0.5)
                 self.has_bounced = True
                 if self.freeze_on_bounce:
                     return False

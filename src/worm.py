@@ -103,10 +103,10 @@ class Worm:
                         b.connections.append(other)
                         other.connections.append(b)
 
-                    u1Vector = b.velocity.T.dot(collisionLine) * collisionLine
-                    u2Vector = other.velocity.T.dot(collisionLine) * collisionLine
-                    u1 = collisionLine.T.dot(u1Vector)
-                    u2 = collisionLine.T.dot(u2Vector)
+                    u1Vector = np.dot(b.velocity.T,collisionLine) * collisionLine
+                    u2Vector = np.dot(other.velocity.T,collisionLine) * collisionLine
+                    u1 = np.dot(collisionLine.T,u1Vector)
+                    u2 = np.dot(collisionLine.T,u2Vector)
                     m1 = b.mass
                     m2 = other.mass
                     I = m1*u1 + m2*u2
@@ -146,10 +146,10 @@ class Worm:
                     b.position += collisionLine * -margin / 2.0
 
 
-                    u1Vector = b.velocity.T.dot(collisionLine) * collisionLine
-                    u2Vector = stone.velocity.T.dot(collisionLine) * collisionLine
-                    u1 = collisionLine.T.dot(u1Vector)
-                    u2 = collisionLine.T.dot(u2Vector)
+                    u1Vector = np.dot(b.velocity.T,collisionLine) * collisionLine
+                    u2Vector = np.dot(stone.velocity.T,collisionLine) * collisionLine
+                    u1 = np.dot(collisionLine.T,u1Vector)
+                    u2 = np.dot(collisionLine.T,u2Vector)
                     m1 = b.mass
                     m2 = stone.mass
                     I = m1 * u1 + m2 * u2
