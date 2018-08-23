@@ -1,7 +1,7 @@
 import numpy as np
 
-from evo_stats_handler import EvoStatsHandler
-from pso_stats_handler import PSOStatsHandler
+# from evo_stats_handler import EvoStatsHandler
+# from pso_stats_handler import PSOStatsHandler
 
 from mail import send_mail_message_with_image, send_mail_message
 from genetic.decoding.real_number import RealNumberDecoding
@@ -30,7 +30,7 @@ from shot import Shot
 from smoke import Smoke
 
 
-import pygame
+# import pygame
 import time
 
 from worm_neural_net_integration import get_worm_neural_net_integration
@@ -517,7 +517,8 @@ enemy_variables = None#load_population_data(enemy_subfoldername, g).best_variabl
 #     print p.generation, p.best_fitness, p.fitness_scores[:3], len(p.fitness_scores)
 # exit()
 
-stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=0)
+# stats_handler = EvoStatsHandler();
+run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=0)
 # stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=0)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
 
