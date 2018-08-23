@@ -1,3 +1,8 @@
+import sys, os
+path = os.path.dirname(os.path.realpath(__file__))
+print path + '/..'
+sys.path.insert(0, path + '/..')
+
 import numpy as np
 
 # from evo_stats_handler import EvoStatsHandler
