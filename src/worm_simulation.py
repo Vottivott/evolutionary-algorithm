@@ -480,9 +480,9 @@ s = WormSimulation(new_level,
 left_neural_net_integration = get_worm_neural_net_integration(s)
 s.left_neural_net_integration = left_neural_net_integration
 
-# right_neural_net_integration = None
-right_neural_net_integration = get_worm_neural_net_integration(s, mirrored = True)
-s.right_neural_net_integration = right_neural_net_integration
+right_neural_net_integration = None
+# right_neural_net_integration = get_worm_neural_net_integration(s, mirrored = True)
+# s.right_neural_net_integration = right_neural_net_integration
 
 
 # import sys
@@ -500,7 +500,7 @@ s.right_neural_net_integration = right_neural_net_integration
 # worm_subfoldername = "PSO35 Large Doorway"
 # worm_subfoldername = "EVO80 Large Doorway"
 # worm_subfoldername = "PSO35 Football from EVO80 41"
-worm_subfoldername = "EVO80 Football 1" # Against static enemy, with random ball velocity ; 42 num_levels=5, against 41
+worm_subfoldername = "EVO80 Football 2" # Against static enemy, with random ball velocity ; 42 num_levels=5, against 41
 # worm_subfoldername = "Test" # Against static enemy, with random ball velocity ; 42 num_levels=5, against 41
 print worm_subfoldername
 
@@ -517,7 +517,7 @@ enemy_variables = None#load_population_data(enemy_subfoldername, g).best_variabl
 #     print p.generation, p.best_fitness, p.fitness_scores[:3], len(p.fitness_scores)
 # exit()
 
-# stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=6)
+stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=0)
 # stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=0)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
 
