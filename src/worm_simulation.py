@@ -24,7 +24,7 @@ from genetic.initialization.binary import BinaryInitialization
 from genetic.mutation.binary import BinaryMutation
 from genetic.mutation.creep import CreepMutation
 from genetic.selection.tournament import TournamentSelection
-from worm_graphics import WormGraphics
+#from worm_graphics import WormGraphics
 from bar_level import generate_bar_level_with_stones, generate_planar_bar_level, get_soccer_level
 from neural_net_integration import evocopter_neural_net_integration, black_neural_net_integration
 from population_data_io import save_population_data, load_population_data, get_latest_generation_number
