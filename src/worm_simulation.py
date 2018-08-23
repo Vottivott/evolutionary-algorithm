@@ -44,6 +44,18 @@ import sys
 
 
 
+#TEST
+for i in range(60):
+    send_mail_message("Chalmersdatortest",
+                      "Minut " + str(i))
+exit(0)
+
+
+
+
+
+
+
 
 enemy_mode = True
 view_offset = 1200 / 7.0
