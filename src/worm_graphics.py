@@ -77,8 +77,8 @@ class WormGraphics:
         self.PLAYER_BOX_TIME = 60
 
         self.score = 0
-        self.score_font = pygame.font.Font('../Steppes.ttf', 30)
-        self.shot_score_font = pygame.font.Font('../Steppes.ttf', 50)
+        self.score_font = pygame.font.Font(None, 30)
+        self.shot_score_font = pygame.font.Font(None, 50)
         self.shot_score_color = (255,255,255)#self.main_worm_color
         self.shot_score_surface = self.score_font.render('+1000', False, self.shot_score_color)
         self.shot_score_texts = []

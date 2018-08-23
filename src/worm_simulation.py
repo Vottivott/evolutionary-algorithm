@@ -261,7 +261,7 @@ def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None)
     # var_size = 30
     # m = vars * var_size
 
-    population_size = 80
+    population_size = 2
     mutate_c = 1.5
     crossover_p = 0.75
 
@@ -504,7 +504,7 @@ worm_subfoldername = "EVO80 Football 2" # Against static enemy, with random ball
 # worm_subfoldername = "Test" # Against static enemy, with random ball velocity ; 42 num_levels=5, against 41
 print worm_subfoldername
 
-num_levels = 4#7#5#1#4#30#15#4#30#15
+num_levels = 3#7#5#1#4#30#15#4#30#15
 
 # enemy_subfoldername = "EVO80 Football 1"
 # g = ((get_latest_generation_number(enemy_subfoldername)) / 10)*10
@@ -521,7 +521,7 @@ stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_proces
 # stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=0)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
 
-# graphics = WormGraphics(); graphics.who_to_follow = None
+graphics = WormGraphics(); graphics.who_to_follow = None
 while 1:
     watch_best_worm()
 
