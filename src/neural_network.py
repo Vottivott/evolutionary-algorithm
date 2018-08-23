@@ -12,7 +12,8 @@ class SigmoidActivationFunction:
         return np.multiply(f, (1.0 - f))
 
 activation_functions_list = [SigmoidActivationFunction]
-activation_functions = {function.name:function for function in activation_functions_list}
+# activation_functions = {function.name:function for function in activation_functions_list}
+activation_functions = dict((function.name, function) for function in activation_functions_list) # python 2.6 support
 
 def initial_weights(size, prev_size):
     return 0.2 * np.random.rand(size, prev_size) - 0.1
