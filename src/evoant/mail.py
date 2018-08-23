@@ -4,6 +4,9 @@ from email.mime.image import MIMEImage
 from email.mime.text import MIMEText
 import smtplib
 
+import sys
+
+
 def send_mail_message(subject, message, tag = None):
 
     if tag is None:
@@ -24,20 +27,23 @@ def send_mail_message(subject, message, tag = None):
     # add in the message body
     msg.attach(MIMEText(message, 'plain'))
 
-    # create server
-    server = smtplib.SMTP('smtp.gmail.com: 587')
+    try:
+        # create server
+        server = smtplib.SMTP('smtp.gmail.com: 587')
 
-    server.starttls()
+        server.starttls()
 
-    # Login Credentials for sending the mail
-    server.login(msg['From'], password)
+        # Login Credentials for sending the mail
+        server.login(msg['From'], password)
 
-    # send the message via the server.
-    server.sendmail(msg['From'], msg['To'], msg.as_string())
+        # send the message via the server.
+        server.sendmail(msg['From'], msg['To'], msg.as_string())
 
-    server.quit()
+        server.quit()
 
-    print "successfully sent email to %s" % (msg['To'])
+        print "successfully sent email to %s" % (msg['To'])
+    except:
+        print "Unexpected error in wait_and_open_temp_data(): " + str(sys.exc_info()[0])
 
 def send_mail_message_with_image(subject, message, image, tag = None, image_title=None):
 
@@ -70,20 +76,23 @@ def send_mail_message_with_image(subject, message, image, tag = None, image_titl
         print "Couldn't include image '" + image + "'."
         msg.attach(MIMEText("\n\nCouldn't include image '" + image + "'.", 'plain'))
 
-    # create server
-    server = smtplib.SMTP('smtp.gmail.com: 587')
+    try:
+        # create server
+        server = smtplib.SMTP('smtp.gmail.com: 587')
 
-    server.starttls()
+        server.starttls()
 
-    # Login Credentials for sending the mail
-    server.login(msg['From'], password)
+        # Login Credentials for sending the mail
+        server.login(msg['From'], password)
 
-    # send the message via the server.
-    server.sendmail(msg['From'], msg['To'], msg.as_string())
+        # send the message via the server.
+        server.sendmail(msg['From'], msg['To'], msg.as_string())
 
-    server.quit()
+        server.quit()
 
-    print "successfully sent email to %s" % (msg['To'])
+        print "successfully sent email to %s" % (msg['To'])
+    except:
+        print "Unexpected error in wait_and_open_temp_data(): " + str(sys.exc_info()[0])
 
 
 

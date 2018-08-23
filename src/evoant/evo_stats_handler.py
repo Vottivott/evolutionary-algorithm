@@ -53,7 +53,7 @@ class EvoStatsHandler:
         plt.plot(stats["generations"], stats["best_fitness_all_time"], "r",
                  stats["generations"], stats["best_fitness"], "m",
                  stats["generations"], stats["avg_fitness"], "b")
-        for i in range(stats["generations"][-1]/10):
+        for i in range(stats["generations"][-1]/10 + 1):
             vline(i * 10)
         current_plot += 1
 
