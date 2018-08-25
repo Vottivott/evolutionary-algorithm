@@ -179,6 +179,7 @@ def get_soccer_level(length, num_fish, close_end=True):
     lvl.range_x = (goal_offset - 2) * bar_width - lvl.start_x
     lvl.start_y = c
     lvl.range_y = g - c
+    lvl.bottom = g
 
     lvl.left_goal_x = (goal_offset + 1) * bar_width
     lvl.right_goal_x = (n - goal_offset - 1) * bar_width

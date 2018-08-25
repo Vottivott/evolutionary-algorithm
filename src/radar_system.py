@@ -35,6 +35,8 @@ class FishRadarSystem:
 
         BASE_MAX_STEPS = int(250 * 2.0 / BASE_STEP_SIZE)
 
+        USE_OPTIMIZED_VERSION = True
+
         max_steps = BASE_MAX_STEPS
         step_size = -BASE_STEP_SIZE
         self.num_front_radars = 2
@@ -45,7 +47,19 @@ class FishRadarSystem:
         self.num_back_radars = 2
         directions = np.linspace(np.pi - 3.0 * np.pi / 4, np.pi + 3.0 * np.pi / 4, self.num_back_radars)
         self.radars.extend([Radar(dir, max_steps, step_size, mirrored) for dir in directions])
-
+        if USE_OPTIMIZED_VERSION:
+            SQRT_TWO = 2 ** 0.5
+            MAX_DIST = BASE_MAX_STEPS * BASE_STEP_SIZE
+            if mirrored:
+                self.radars[0].read = lambda position, level: (None, max(0,float(SQRT_TWO * min(level.right_goal_x - position[0], level.bottom - position[1]))/MAX_DIST))
+                self.radars[1].read = lambda position, level: (None, max(0,float(SQRT_TWO * min(level.right_goal_x - position[0], position[1]-level.start_y))/MAX_DIST))
+                self.radars[2].read = lambda position, level: (None, max(0,float(SQRT_TWO * min(position[0]-level.left_goal_x - position[0], position[1] - level.start_y))/MAX_DIST))
+                self.radars[3].read = lambda position, level: (None, max(0,float(SQRT_TWO * min(position[0]-level.left_goal_x, level.bottom - position[1]))/MAX_DIST))
+            else:
+                self.radars[0].read = lambda position, level: (None, max(0,float(SQRT_TWO * min(position[0]-level.left_goal_x, level.bottom - position[1]))/MAX_DIST))
+                self.radars[1].read = lambda position, level: (None, max(0,float(SQRT_TWO * min(position[0]-level.left_goal_x, position[1]-level.start_y))/MAX_DIST))
+                self.radars[2].read = lambda position, level: (None, max(0,float(SQRT_TWO * min(level.right_goal_x - position[0], position[1] - level.start_y))/MAX_DIST))
+                self.radars[3].read = lambda position, level: (None, max(0,float(SQRT_TWO * min(level.right_goal_x - position[0], level.bottom - position[1]))/MAX_DIST))
 
         MAX_V_X = 30.0
         MAX_V_Y = 30.0

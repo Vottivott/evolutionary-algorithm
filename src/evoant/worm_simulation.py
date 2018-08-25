@@ -522,11 +522,11 @@ print "Enemy team set to team " + str(g)
 #stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=2)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
 
-# graphics = WormGraphics(); graphics.who_to_follow = None
-graphics = None
-# while 1:
-watch_best_worm()
-exit(0)
+graphics = WormGraphics(); graphics.who_to_follow = None
+# graphics = None
+while 1:
+    watch_best_worm()
+# exit(0)
 
 
 
