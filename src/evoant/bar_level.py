@@ -2,6 +2,7 @@ from itertools import izip
 
 import numpy as np
 
+from evoant.circular import Circular
 from stone import Stone
 
 
@@ -183,6 +184,9 @@ def get_soccer_level(length, num_fish, close_end=True):
 
     lvl.left_goal_x = (goal_offset + 1) * bar_width
     lvl.right_goal_x = (n - goal_offset - 1) * bar_width
+
+    lvl.left_goal_x = Circular(np.array([[lvl.left_goal_x],[c]]), 0.0, 0)
+    lvl.right_goal_x = Circular(np.array([[lvl.right_goal_x],[c]]), 0.0, 0)
 
     lvl.game_width = lvl.right_goal_x - lvl.left_goal_x
     lvl.game_height = g - c

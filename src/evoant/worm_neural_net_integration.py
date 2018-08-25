@@ -1,4 +1,5 @@
 # from enemy import Enemy
+from evoant.circular import Circular
 from ..neural_network import NeuralNetwork
 import numpy as np
 from ..evomath import *
@@ -73,7 +74,11 @@ class WormNeuralNetIntegration:
     def get_number_of_variables(self):
         return self.neural_network.get_total_number_of_weights() + self.neural_network.get_h_size()
 
-def get_worm_neural_net_integration(worm_simulation, mirrored = False):
+# Version 1 middle_layer 65
+# Version 2 middle_layer 80 and added attribute radars to both goals
+#
+#
+def get_worm_neural_net_integration(worm_simulation, mirrored = False, version=1):
 
     if mirrored:
         num_fish = len(worm_simulation.worm.right_fish)
@@ -85,6 +90,7 @@ def get_worm_neural_net_integration(worm_simulation, mirrored = False):
     num_ground_radars = worm_simulation.worm.left_fish[0].radar_system.num_front_radars + worm_simulation.worm.left_fish[0].radar_system.num_back_radars
     num_attr_radars = worm_simulation.worm.left_fish[0].radar_system.num_attr_radars
     num_football_radars = worm_simulation.worm.left_fish[0].radar_system.fish_radar_num_dirs
+    num_goal_radars = worm_simulation.worm.left_fish[0].radar_system.fish_radar_num_dirs
 
     input_layer_size = 0
 
@@ -98,8 +104,13 @@ def get_worm_neural_net_integration(worm_simulation, mirrored = False):
     input_layer_size += num_ground_radars
     input_layer_size += num_attr_radars * 2 # each attr radar is used twice; once for team members and once for enemies
     input_layer_size += num_football_radars # 8dir football
+    if version == 2:
+        input_layer_size += num_goal_radars
 
-    middle_layer_size = 65#50
+    if version == 2:
+        middle_layer_size = 80
+    else:
+        middle_layer_size = 65#50
 
     output_layer_size = 4 # output acc +x, -x, +y, -y
     output_layer_size += 4 # football shoot velocity +x, -x, +y, -y
@@ -196,6 +207,14 @@ def get_worm_neural_net_integration(worm_simulation, mirrored = False):
                                                                                                    worm_simulation.level)
             input[index:index + num_football_radars, i:i + 1] = dist_vec
             index += num_football_radars
+
+            if version == 2:
+                object_list = [sim.level.left_goal, sim.level.right_goal]
+                dist_vec, _ = f.radar_system.fish_radar.read_dist_vector_and_attribute_vectors(f.position,
+                                                                                               object_list,
+                                                                                               worm_simulation.level)
+                input[index:index + num_goal_radars, i:i + 1] = dist_vec
+                index += num_goal_radars
 
             assert index == input_layer_size
 

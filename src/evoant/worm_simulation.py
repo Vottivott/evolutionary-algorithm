@@ -476,11 +476,11 @@ s = WormSimulation(new_level,
                         segment_size, num_segments, ball_ball_restitution, ball_ground_restitution,
                         ball_ground_friction, ball_mass, spring_constant, new_level.football_initial_position, new_level.football_initial_y_velocity))
 
-left_neural_net_integration = get_worm_neural_net_integration(s)
+left_neural_net_integration = get_worm_neural_net_integration(s, version=1)
 s.left_neural_net_integration = left_neural_net_integration
 
 # right_neural_net_integration = None
-right_neural_net_integration = get_worm_neural_net_integration(s, mirrored = True)
+right_neural_net_integration = get_worm_neural_net_integration(s, mirrored = True, version=1)
 s.right_neural_net_integration = right_neural_net_integration
 
 
