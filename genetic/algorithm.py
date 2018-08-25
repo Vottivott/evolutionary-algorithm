@@ -19,8 +19,10 @@ import time
 #random_seed = 19680601
 #np.random.seed(random_seed)
 #random.seed(random_seed)
-from temp_data_io import save_temp_data, save_temp_fitness, wait_for_temp_fitness_scores, \
-    load_temp_fitness_scores, clear_temp_folder
+
+# TODO: Fix import
+# from ..temp_data_io import save_temp_data, save_temp_fitness, wait_for_temp_fitness_scores, \
+#     load_temp_fitness_scores, clear_temp_folder
 
 
 def extract_function(function_or_object_with_function, function_name):

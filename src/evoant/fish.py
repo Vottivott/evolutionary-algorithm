@@ -1,7 +1,7 @@
-from evoant.ball import Ball
+from ball import Ball
 import numpy as np
 
-from radar_system import FishRadarSystem
+from ..radar_system import FishRadarSystem
 
 LIVING_COST = 0.001
 MOVEMENT_COST = 0.001

@@ -4,7 +4,7 @@ import pygame, sys
 import pygame.gfxdraw
 from pygame.locals import *
 import numpy as np
-from evomath import *
+from ..evomath import *
 # import pyglet.media
 
 def tuple_add(a,b):

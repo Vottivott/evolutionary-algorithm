@@ -1,9 +1,9 @@
 from circular import Circular
 from ball import Ball
-from evoant.fish import Fish
+from fish import Fish
 from muscle import Muscle
 import numpy as np
-from evomath import *
+from ..evomath import *
 from itertools import izip
 
 

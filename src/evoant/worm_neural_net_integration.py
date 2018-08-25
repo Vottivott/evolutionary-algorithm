@@ -1,9 +1,9 @@
-from enemy import Enemy
-from neural_network import NeuralNetwork
+# from enemy import Enemy
+from ..neural_network import NeuralNetwork
 import numpy as np
-from evomath import *
+from ..evomath import *
 
-from recurrent_neural_network import RecurrentNeuralNetwork
+from ..recurrent_neural_network import RecurrentNeuralNetwork
 
 
 class WormNeuralNetIntegration:

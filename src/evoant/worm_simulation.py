@@ -1,16 +1,15 @@
 import numpy as np
 
-from evoant.evo_stats_handler import EvoStatsHandler
+from evo_stats_handler import EvoStatsHandler
 from pso_stats_handler import PSOStatsHandler
 
 from mail import send_mail_message_with_image, send_mail_message
 from genetic.decoding.real_number import RealNumberDecoding
 from genetic.initialization.real_number import RealNumberInitialization
 from pso.algorithm import ParticleSwarmOptimizationAlgorithm, PSOPopulationData
-from stats_data_io import save_stats, load_stats
+from ..stats_data_io import save_stats, load_stats
 from worm_radar_system import WormRadarSystem
 from worm import Worm
-from enemy import Enemy
 from genetic.algorithm import GeneticAlgorithm, PopulationData
 from genetic.crossover.single_point import SinglePointCrossover
 from genetic.decoding.binary import BinaryDecoding
@@ -21,13 +20,13 @@ from genetic.mutation.creep import CreepMutation
 from genetic.selection.tournament import TournamentSelection
 from worm_graphics import WormGraphics
 from bar_level import generate_bar_level_with_stones, generate_planar_bar_level, get_soccer_level
-from neural_net_integration import evocopter_neural_net_integration, black_neural_net_integration
-from population_data_io import save_population_data, load_population_data, get_latest_generation_number
-from temp_data_io import wait_and_open_temp_data, save_temp_fitness
-from radar_system import RadarSystem, EnemysRadarSystem
-from score_colors import get_color_from_score
-from shot import Shot
-from smoke import Smoke
+from ..neural_net_integration import evocopter_neural_net_integration, black_neural_net_integration
+from ..population_data_io import save_population_data, load_population_data, get_latest_generation_number
+from ..temp_data_io import wait_and_open_temp_data, save_temp_fitness
+# from radar_system import RadarSystem, EnemysRadarSystem
+from ..score_colors import get_color_from_score
+from ..shot import Shot
+from ..smoke import Smoke
 
 
 import pygame
@@ -265,7 +264,7 @@ def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None)
     mutate_c = 1.5
     crossover_p = 0.75
 
-    send_mail_message(worm_subfoldername, "population_size = " + str(population_size) + "\nmutate_c = " + str(mutate_c) + "\ncrossover_p = " + str(crossover_p))
+    send_mail_message(worm_subfoldername, special_message + "\n\n" + "population_size = " + str(population_size) + "\nmutate_c = " + str(mutate_c) + "\ncrossover_p = " + str(crossover_p))
 
     ga = GeneticAlgorithm(population_size,#150,
                           fitness_function,
@@ -294,10 +293,10 @@ def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None)
             p.best_fitness) + " : " + str(
             average_fitness) + " ]\n"
 
-        if p.generation % 10 == 0:
-            global enemy_variables
-            enemy_variables = load_population_data(enemy_subfoldername, p.generation).best_variables
-            print "Enemy team updated to team " + str(p.generation)
+        # if p.generation % 10 == 0:
+        #     global enemy_variables
+        #     enemy_variables = load_population_data(enemy_subfoldername, p.generation).best_variables
+        #     print "Enemy team updated to team " + str(p.generation)
 
 
         # if watch_only or (graphics is not None):# and p.generation % 10 == 0):
@@ -503,10 +502,13 @@ s.right_neural_net_integration = right_neural_net_integration
 worm_subfoldername = "EVO80 Football 1" # Against static enemy, with random ball velocity ; 42 num_levels=5, against 41
 print worm_subfoldername
 
-num_levels = 14#7#5#1#4#30#15#4#30#15
+special_message = ""
+
+num_levels = 10#30  #14#7#5#1#4#30#15#4#30#15
 
 enemy_subfoldername = "EVO80 Football 1"
-g = ((get_latest_generation_number(enemy_subfoldername)) / 10)*10
+# g = ((get_latest_generation_number(enemy_subfoldername)) / 10)*10
+g = 174 # som hade 720
 enemy_variables = load_population_data(enemy_subfoldername, g).best_variables
 print "Enemy team set to team " + str(g)
 
@@ -516,13 +518,15 @@ print "Enemy team set to team " + str(g)
 #     print p.generation, p.best_fitness, p.fitness_scores[:3], len(p.fitness_scores)
 # exit()
 
-stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=6)
+# stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=6)
 #stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=2)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
 
-graphics = WormGraphics(); graphics.who_to_follow = None
-while 1:
-    watch_best_worm()
+# graphics = WormGraphics(); graphics.who_to_follow = None
+graphics = None
+# while 1:
+watch_best_worm()
+exit(0)
 
 
 

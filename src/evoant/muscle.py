@@ -1,5 +1,5 @@
 import numpy as np
-from evomath import *
+from ..evomath import *
 from line_segment import LineSegment
 
 # Implementation of a muscle modeled as a spring, but where the neutral/unstretched length of the spring (target_length) can be changed dynamically

@@ -1,6 +1,6 @@
 import numpy as np
 
-from radar import BinaryRadar
+from ..radar import BinaryRadar
 
 class WormRadarSystem:
     def __init__(self, num_segments):

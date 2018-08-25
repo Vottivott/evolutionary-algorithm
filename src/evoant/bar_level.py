@@ -2,7 +2,7 @@ from itertools import izip
 
 import numpy as np
 
-from evoant.stone import Stone
+from stone import Stone
 
 
 def _get_randcurve(length, n, amplitude):

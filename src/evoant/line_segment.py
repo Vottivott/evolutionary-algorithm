@@ -1,5 +1,5 @@
 import numpy as np
-from evomath import *
+from ..evomath import *
 
 def rotate_cw(vector):
     return np.array([[float(vector[1])], [float(-vector[0])]])

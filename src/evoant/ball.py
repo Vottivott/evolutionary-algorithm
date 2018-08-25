@@ -2,7 +2,7 @@ from circular import Circular
 from line_segment import LineSegment
 import numpy as np
 from math import ceil
-from evomath import *
+from ..evomath import *
 from debug_bounce import DebugBounce
 
 class Bounce():
