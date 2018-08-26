@@ -225,6 +225,28 @@ class WormFitnessFunction:
 
     def evaluate(self, variables, generation):
 
+        #ONLY FOR EVO140 Football Second Neural Net
+        if generation == 0:
+            num_levels = 5
+            print "num_levels = %d" % num_levels
+        if generation == 10:
+            num_levels = 10
+            print "num_levels = %d" % num_levels
+        if generation == 20:
+            num_levels = 15
+            print "num_levels = %d" % num_levels
+        if generation == 30:
+            num_levels = 20
+            print "num_levels = %d" % num_levels
+        if generation == 50:
+            num_levels = 25
+            print "num_levels = %d" % num_levels
+        if generation == 80:
+            num_levels = 30
+            print "num_levels = %d" % num_levels
+
+
+
         if generation != self.last_generation:
             # if self.last_generation == -1: # TEST: ONLY ON PROGRAM START
                 # load_latest_worm_network()
@@ -260,8 +282,8 @@ def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None)
     # var_size = 30
     # m = vars * var_size
 
-    population_size = 80
-    mutate_c = 1.5
+    population_size = 140#80
+    mutate_c = 2.0#1.5
     crossover_p = 0.75
 
     send_mail_message(worm_subfoldername, special_message + "\n\n" + "population_size = " + str(population_size) + "\nmutate_c = " + str(mutate_c) + "\ncrossover_p = " + str(crossover_p))
@@ -476,7 +498,7 @@ s = WormSimulation(new_level,
                         segment_size, num_segments, ball_ball_restitution, ball_ground_restitution,
                         ball_ground_friction, ball_mass, spring_constant, new_level.football_initial_position, new_level.football_initial_y_velocity))
 
-left_neural_net_integration = get_worm_neural_net_integration(s, version=1)
+left_neural_net_integration = get_worm_neural_net_integration(s, version=2) # Second neural net version
 s.left_neural_net_integration = left_neural_net_integration
 
 # right_neural_net_integration = None
@@ -499,16 +521,25 @@ s.right_neural_net_integration = right_neural_net_integration
 # worm_subfoldername = "PSO35 Large Doorway"
 # worm_subfoldername = "EVO80 Large Doorway"
 # worm_subfoldername = "PSO35 Football from EVO80 41"
-worm_subfoldername = "EVO80 Football 1" # Against static enemy, with random ball velocity ; 42 num_levels=5, against 41
+# worm_subfoldername = "EVO80 Football 1" # Against static enemy, with random ball velocity ; 42 num_levels=5, against 41
+worm_subfoldername = "EVO140 Football Second Neural Net" # Against team 188 from "EVO80 Football 1", mutate_c=2
+# 0: num_levels = 5
+# 10: num_levels = 10
+# 20: num_levels = 15
+# 30: num_levels = 20
+# 50: num_levels = 25
+# 80: num_levels = 30
 print worm_subfoldername
 
 special_message = ""
 
-num_levels = 10#30  #14#7#5#1#4#30#15#4#30#15
+num_levels = 5 #REMEMBER TO SET CORRECTLY   #10#30  #14#7#5#1#4#30#15#4#30#15
+
+
 
 enemy_subfoldername = "EVO80 Football 1"
 # g = ((get_latest_generation_number(enemy_subfoldername)) / 10)*10
-g = 174 # som hade 720
+g = 188#174 # som hade 720
 enemy_variables = load_population_data(enemy_subfoldername, g).best_variables
 print "Enemy team set to team " + str(g)
 
@@ -518,7 +549,7 @@ print "Enemy team set to team " + str(g)
 #     print p.generation, p.best_fitness, p.fitness_scores[:3], len(p.fitness_scores)
 # exit()
 
-# stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=6)
+stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=0)
 #stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=2)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
 
