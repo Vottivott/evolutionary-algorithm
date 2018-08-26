@@ -1,7 +1,7 @@
 import json
 import os
 
-from genetic.algorithm import PrunedPopulationData, PopulationData
+from genetic.algorithm import PrunedPopulationData
 from pso.algorithm import PrunedPSOPopulationData
 
 def get_main_dir():
@@ -13,10 +13,10 @@ def get_main_dir():
 
 def prune_population_data(subfoldername, num):
     p = load_population_data(subfoldername, num)
-    if isinstance(p, PopulationData):
-        pruned = PrunedPopulationData(p)
-    else:
+    if "swarm_best_performance" in p.keys():
         pruned = PrunedPSOPopulationData(p)
+    else:
+        pruned = PrunedPopulationData(p)
     directory_path = get_main_dir() + subfoldername + "/pruned/"
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)

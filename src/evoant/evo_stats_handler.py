@@ -40,7 +40,7 @@ class EvoStatsHandler:
         old_stats["best_fitness"].append(population_data["best_fitness"])
         old_stats["best_fitness_all_time"].append(max(old_stats["best_fitness"]))
         old_stats["avg_fitness"].append(mean(population_data["fitness_scores"]))
-        old_stats["decoded_variable_vectors"] = np.ndarray.flatten(np.array(population_data["decoded_variable_vectors"]))
+        old_stats["decoded_variable_vectors"] = np.ndarray.flatten(np.array(population_data["decoded_variable_vectors"])).tolist()
         return old_stats
 
     def produce_graph(self, stats, filename):

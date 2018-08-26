@@ -14,32 +14,32 @@ def extract_function(function_or_object_with_function, function_name):
     x = function_or_object_with_function
     return getattr(x, function_name, x)
 
-class PSOPopulationData:
-    """
-    Data from a run of a pso algorithm, containing information about the current population
-    """
-    def __init__(self, generation, positions, velocities, fitness_scores, particle_best_position, particle_best_performance, swarm_best_position, swarm_best_performance, inertia_weight):
-        self.generation = generation
-        self.positions = positions
-        self.velocities = velocities
-        self.fitness_scores = fitness_scores
-        self.particle_best_position = particle_best_position
-        self.particle_best_performance = particle_best_performance
-        self.swarm_best_position = swarm_best_position
-        self.swarm_best_performance = swarm_best_performance
-        self.inertia_weight = inertia_weight
-        self.best_variables = self.swarm_best_position
-        self.best_fitness = self.swarm_best_performance
+"""
+Data from a run of a pso algorithm, containing information about the current population
+"""
+def PSOPopulationData(generation, positions, velocities, fitness_scores, particle_best_position, particle_best_performance, swarm_best_position, swarm_best_performance, inertia_weight):
+    return {"generation": generation,
+    "positions": positions,
+    "velocities": velocities,
+    "fitness_scores": fitness_scores,
+    "particle_best_position": particle_best_position,
+    "particle_best_performance": particle_best_performance,
+    "swarm_best_position": swarm_best_position,
+    "swarm_best_performance": swarm_best_performance,
+    "inertia_weight": inertia_weight,
+    "best_variables": swarm_best_position,
+    "best_fitness": swarm_best_performance}
 
-class PrunedPSOPopulationData:
-    """
-    Data from a run of a pso algorithm, containing information about the current population
-    """
-    def __init__(self, population_data):
-        self.generation = population_data["generation"]
-        self.fitness_scores = population_data["fitness_scores"]
-        self.swarm_best_position = population_data["swarm_best_position"]
-        self.swarm_best_performance = population_data["swarm_best_performance"]
+"""
+Data from a run of a pso algorithm, containing information about the current population
+"""
+def PrunedPSOPopulationData(population_data):
+    return {"generation": population_data["generation"],
+            "fitness_scores": population_data["fitness_scores"],
+            "swarm_best_position": population_data["swarm_best_position"],
+            "swarm_best_performance": population_data["swarm_best_performance"]
+            }
+
 
 
 

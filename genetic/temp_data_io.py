@@ -1,4 +1,4 @@
-import pickle
+import json
 import os, sys
 import time
 
@@ -14,13 +14,13 @@ def save_temp_data(subfoldername, temp_name, temp_data, ):
     directory_path = get_main_dir() + subfoldername + "/temp/"
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)
-    with open(directory_path + temp_name + ".pkl", 'w') as out:
-        pickle.dump(temp_data, out)
+    with open(directory_path + temp_name + ".json", 'w') as out:
+        json.dump(temp_data, out, separators=(',',':'))
 
 def load_temp_data(subfoldername, temp_name):
     directory_path = get_main_dir() + subfoldername + "/temp/"
-    with open(directory_path + temp_name + ".pkl") as file:
-        return pickle.load(file)
+    with open(directory_path + temp_name + ".json") as file:
+        return json.load(file)
 
 def wait_and_open_temp_data(subfoldername, temp_name):
     while 1:
@@ -54,7 +54,7 @@ def load_temp_fitness_scores(subfoldername, population_size):
     files = os.listdir(directory_path)
     fitness_scores = [None] * population_size
     for filename in files:
-        if filename != "generation_and_decoded_variable_vectors.pkl":
+        if filename != "generation_and_decoded_variable_vectors.json":
             s = filename.split("=")
             individual_fitness = float(s[0])
             individual_index = int(s[1])

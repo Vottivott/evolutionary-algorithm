@@ -29,31 +29,30 @@ def extract_function(function_or_object_with_function, function_name):
     x = function_or_object_with_function
     return getattr(x, function_name, x)
 
-class PopulationData:
-    """
-    Data from a run of a genetic algorithm, containing information about the current population
-    """
-    def __init__(self, generation, population, decoded_variable_vectors, fitness_scores, best_individual_index):
-        self.generation = generation
-        self.population = population
-        self.decoded_variable_vectors = decoded_variable_vectors
-        self.fitness_scores = fitness_scores
-        self.best_individual_index = best_individual_index
-        self.best_individual_genes = population[best_individual_index]
-        self.best_variables = decoded_variable_vectors[self.best_individual_index]
-        self.best_fitness = fitness_scores[best_individual_index]
 
-class PrunedPopulationData:
-    """
-    Data from a run of a genetic algorithm, containing information about the current population
-    """
-    def __init__(self, population_data):
-        self.generation = population_data["generation"]
-        self.fitness_scores = population_data["fitness_scores"]
-        self.best_individual_index = population_data["best_individual_index"]
-        self.best_variables = population_data["best_variables"]
-        self.best_fitness = population_data["best_fitness"]
+"""
+Data from a run of a genetic algorithm, containing information about the current population
+"""
+def PopulationData(generation, population, decoded_variable_vectors, fitness_scores, best_individual_index):
+    return {"generation": generation,
+    "population": population,
+    "decoded_variable_vectors": decoded_variable_vectors,
+    "fitness_scores": fitness_scores,
+    "best_individual_index": best_individual_index,
+    "best_individual_genes": population[best_individual_index],
+    "best_variables": decoded_variable_vectors[best_individual_index],
+    "best_fitness": fitness_scores[best_individual_index]}
 
+"""
+Data from a run of a genetic algorithm, containing information about the current population
+"""
+def PrunedPopulationData(population_data):
+    return {"generation": population_data["generation"],
+            "fitness_scores": population_data["fitness_scores"],
+            "best_individual_index": population_data["best_individual_index"],
+            "best_variables": population_data["best_variables"],
+            "best_fitness": population_data["best_fitness"],
+            }
 
 
 
@@ -151,7 +150,7 @@ class GeneticAlgorithm:
                 if multiprocess_num_processes == 1:
                     fitness_scores = [self.evaluate(vector, generation) for vector in decoded_variable_vectors]
                 else:
-                    save_temp_data(subfolder_name, "generation_and_decoded_variable_vectors", (generation, decoded_variable_vectors))
+                    save_temp_data(subfolder_name, "generation_and_decoded_variable_vectors", (generation, decoded_variable_vectors.tolist()))
                     fitness_scores = self.multiprocess_evaluations(subfolder_name, decoded_variable_vectors, generation, multiprocess_num_processes, multiprocess_index)
 
                 best_individual_index = max(xrange(len(fitness_scores)), key=fitness_scores.__getitem__)
