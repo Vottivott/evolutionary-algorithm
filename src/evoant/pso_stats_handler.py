@@ -24,13 +24,13 @@ class PSOStatsHandler:
             old_stats["inertia_weight"] = []
             old_stats["current_velocities_flattened"] = []
             old_stats["current_positions_flattened"] = []
-        old_stats["generations"].append(population_data.generation)
-        old_stats["best_fitness"].append(population_data.best_fitness)
-        old_stats["best_fitness_last_only"].append(max(population_data.fitness_scores))
-        old_stats["avg_fitness"].append(mean(population_data.fitness_scores))
-        old_stats["inertia_weight"].append(population_data.inertia_weight)
-        old_stats["current_velocities_flattened"] = np.ndarray.flatten(np.array(population_data.velocities))
-        old_stats["current_positions_flattened"] = np.ndarray.flatten(np.array(population_data.positions))
+        old_stats["generations"].append(population_data["generation"])
+        old_stats["best_fitness"].append(population_data["best_fitness"])
+        old_stats["best_fitness_last_only"].append(max(population_data["fitness_scores"]))
+        old_stats["avg_fitness"].append(mean(population_data["fitness_scores"]))
+        old_stats["inertia_weight"].append(population_data["inertia_weight"])
+        old_stats["current_velocities_flattened"] = np.ndarray.flatten(np.array(population_data["velocities"]))
+        old_stats["current_positions_flattened"] = np.ndarray.flatten(np.array(population_data["positions"]))
         return old_stats
 
     def produce_graph(self, stats, filename):

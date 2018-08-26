@@ -473,7 +473,7 @@ def watch_copter_vs_enemies():
     graphics = Graphics()
 
     copter_population_data = load_population_data(copter_subfoldername, -1)
-    copter_variables = copter_population_data.best_variables
+    copter_variables = copter_population_data["best_variables"]
 
     load_latest_enemy_network()
 
@@ -493,7 +493,7 @@ def watch_copter():
     graphics = Graphics()
 
     copter_population_data = load_population_data(copter_subfoldername, -1)
-    copter_variables = copter_population_data.best_variables
+    copter_variables = copter_population_data["best_variables"]
 
     # load_latest_enemy_network()
 
@@ -527,12 +527,12 @@ def run_copter_evaluation(variables, use_graphics=False):
 def load_latest_enemy_network():
     enemy_population_data = load_population_data(enemy_subfoldername, -1)
     global enemy_neural_net_integration
-    enemy_neural_net_integration.set_weights_and_possibly_initial_h(enemy_population_data.best_variables)
+    enemy_neural_net_integration.set_weights_and_possibly_initial_h(enemy_population_data["best_variables"])
 
 def load_latest_copter_network():
     copter_population_data = load_population_data(copter_subfoldername, -1)
     global neural_net_integration
-    neural_net_integration.set_weights_and_possibly_initial_h(copter_population_data.best_variables)
+    neural_net_integration.set_weights_and_possibly_initial_h(copter_population_data["best_variables"])
 
 
 class CopterFitnessFunction:
@@ -582,7 +582,7 @@ class EnemyFitnessFunction:
 
 def run_evolution_on_enemy():
     # copter_population_data = load_population_data(copter_subfoldername, -1)
-    # neural_net_integration.set_weights_and_possibly_initial_h(copter_population_data.best_variables)
+    # neural_net_integration.set_weights_and_possibly_initial_h(copter_population_data["best_variables"])
     # load_latest_copter_network()
     s.end_when_copter_dies = True
     s.end_when_enemy_dies = False
@@ -619,13 +619,13 @@ def run_evolution_on_enemy():
 
     watch_only = False
     enemy_population_data = load_population_data(enemy_subfoldername, -1)
-    # g = enemy_population_data.best_individual_genes
+    # g = enemy_population_data["best_individual_genes"]
 
     if True:
         if watch_only:
             while 1:
                 # BinaryMutation(100.0 / m).mutate(g, 1)
-                # enemy_population_data.best_variables = BinaryDecoding(5, vars, var_size).decode(g)
+                # enemy_population_data["best_variables"] = BinaryDecoding(5, vars, var_size).decode(g)
                 global short_levels_and_enemy_positions
                 short_levels_and_enemy_positions = generate_mini_levels_and_enemy_positions()
                 enemy_callback(enemy_population_data, False)
@@ -636,7 +636,7 @@ def run_evolution_on_enemy():
 def run_evolution_on_copter():
 
     # enemy_population_data = load_population_data(enemy_subfoldername, -1)
-    # enemy_neural_net_integration.set_weights_and_possibly_initial_h(enemy_population_data.best_variables)
+    # enemy_neural_net_integration.set_weights_and_possibly_initial_h(enemy_population_data["best_variables"])
     # load_latest_enemy_network()
     s.end_when_copter_dies = True
     s.end_when_enemy_dies = False
@@ -670,13 +670,13 @@ def run_evolution_on_copter():
 
     watch_only = False
     copter_population_data = load_population_data(copter_subfoldername, -1)
-    # g = copter_population_data.best_individual_genes
+    # g = copter_population_data["best_individual_genes"]
 
     if True:
         if watch_only:
             while 1:
                 # BinaryMutation(100.0 / m).mutate(g, 1)
-                # copter_population_data.best_variables = BinaryDecoding(5, vars, var_size).decode(g)
+                # copter_population_data["best_variables"] = BinaryDecoding(5, vars, var_size).decode(g)
                 global short_levels_and_enemy_positions
                 short_levels_and_enemy_positions = generate_mini_levels_and_enemy_positions()
                 copter_callback(copter_population_data, True)
@@ -733,7 +733,7 @@ stats_handler = PSOStatsHandler()
 def run_pso_on_copter():
 
     # enemy_population_data = load_population_data(enemy_subfoldername, -1)
-    # enemy_neural_net_integration.set_weights_and_possibly_initial_h(enemy_population_data.best_variables)
+    # enemy_neural_net_integration.set_weights_and_possibly_initial_h(enemy_population_data["best_variables"])
     # load_latest_enemy_network()
     s.end_when_copter_dies = True
     s.end_when_enemy_dies = False
@@ -777,13 +777,13 @@ def run_pso_on_copter():
 
     watch_only = False
     copter_population_data = load_population_data(copter_subfoldername, -1)
-    # g = copter_population_data.best_individual_genes
+    # g = copter_population_data["best_individual_genes"]
 
     if True:
         if watch_only:
             while 1:
                 # BinaryMutation(100.0 / m).mutate(g, 1)
-                # copter_population_data.best_variables = BinaryDecoding(5, vars, var_size).decode(g)
+                # copter_population_data["best_variables"] = BinaryDecoding(5, vars, var_size).decode(g)
                 global short_levels_and_enemy_positions
                 short_levels_and_enemy_positions = generate_mini_levels_and_enemy_positions()
                 copter_callback(copter_population_data, True)
@@ -825,7 +825,7 @@ watch_copter()
 #
 #         if user_play != MAIN:
 #             # population_data = load_population_data(subfoldername, -1)
-#             # neural_net_integration.set_weights_and_possibly_initial_h(population_data.best_variables)
+#             # neural_net_integration.set_weights_and_possibly_initial_h(population_data["best_variables"])
 #             pass
 #         else:
 #             s.set_main_neural_net_integration(None)

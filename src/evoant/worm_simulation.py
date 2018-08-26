@@ -280,7 +280,7 @@ def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None)
             return
 
     # enemy_population_data = load_population_data(enemy_subfoldername, -1)
-    # enemy_neural_net_integration.set_weights_and_possibly_initial_h(enemy_population_data.best_variables)
+    # enemy_neural_net_integration.set_weights_and_possibly_initial_h(enemy_population_data["best_variables"])
     # load_latest_enemy_network()
 
     vars = left_neural_net_integration.get_number_of_variables()
@@ -335,13 +335,13 @@ def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None)
     watch_only = False
     global worm_population_data
     worm_population_data = load_population_data(worm_subfoldername, -1)
-    # # g = worm_population_data.best_individual_genes
+    # # g = worm_population_data["best_individual_genes"]
 
     if True:
         if watch_only:
             while 1:
                 # BinaryMutation(100.0 / m).mutate(g, 1)
-                # worm_population_data.best_variables = BinaryDecoding(5, vars, var_size).decode(g)
+                # worm_population_data["best_variables"] = BinaryDecoding(5, vars, var_size).decode(g)
                 global levels
                 levels = generate_levels()
                 worm_callback(worm_population_data, True)
@@ -414,13 +414,13 @@ def run_pso_on_worm(load_population_name="global", load_population_generation=-1
         worm_population_data = PSOPopulationData(p.generation, positions, velocities, fitness_scores, [None for _ in range(swarm_size)],
                                                  [float('-inf') for _ in range(swarm_size)], None, float('-inf'), initial_inertia_weight)
 
-    # # g = worm_population_data.best_individual_genes
+    # # g = worm_population_data["best_individual_genes"]
 
     if True:
         if watch_only:
             while 1:
                 # BinaryMutation(100.0 / m).mutate(g, 1)
-                # worm_population_data.best_variables = BinaryDecoding(5, vars, var_size).decode(g)
+                # worm_population_data["best_variables"] = BinaryDecoding(5, vars, var_size).decode(g)
                 global levels
                 levels = generate_levels()
                 worm_callback(worm_population_data, True)
@@ -435,13 +435,13 @@ def watch_best_worm():
     # worm_population_data = load_population_data(worm_subfoldername+"/pruned", 3)
     global levels
     levels = generate_levels()
-    fitness = run_worm_evaluation(worm_population_data.best_variables, True)
+    fitness = run_worm_evaluation(worm_population_data["best_variables"], True)
     print "Fitness: " + str(fitness)
 
 def load_latest_worm_network():
     worm_population_data = load_population_data(worm_subfoldername, -1)
     global left_neural_net_integration
-    left_neural_net_integration.set_weights_and_possibly_initial_h(worm_population_data.best_variables)
+    left_neural_net_integration.set_weights_and_possibly_initial_h(worm_population_data["best_variables"])
 
 
 # def multiprocess_evaluations(self, subfolder_name, decoded_variable_vectors, generation, num_processes,
@@ -461,8 +461,8 @@ def fitness_process(multiprocess_num_processes, multiprocess_index, fitness_func
         population_size = 140 # TODO: Remove this temporary code
         worm_population_data = None
     else:
-        generation = worm_population_data.generation
-        population_size = len(worm_population_data.population)
+        generation = worm_population_data["generation"]
+        population_size = len(worm_population_data["population"])
         worm_population_data = None # free memory
 
     while 1:
@@ -557,7 +557,7 @@ print "Enemy team set to team " + str(g)
 #     print p.generation, p.best_fitness, p.fitness_scores[:3], len(p.fitness_scores)
 # exit()
 
-stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=0)
+# stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=0)
 #stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=2)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
 

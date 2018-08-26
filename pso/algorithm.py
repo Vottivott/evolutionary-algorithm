@@ -36,10 +36,10 @@ class PrunedPSOPopulationData:
     Data from a run of a pso algorithm, containing information about the current population
     """
     def __init__(self, population_data):
-        self.generation = population_data.generation
-        self.fitness_scores = population_data.fitness_scores
-        self.swarm_best_position = population_data.swarm_best_position
-        self.swarm_best_performance = population_data.swarm_best_performance
+        self.generation = population_data["generation"]
+        self.fitness_scores = population_data["fitness_scores"]
+        self.swarm_best_position = population_data["swarm_best_position"]
+        self.swarm_best_performance = population_data["swarm_best_performance"]
 
 
 
@@ -84,10 +84,10 @@ class ParticleSwarmOptimizationAlgorithm:
             inertia_weight = self.initial_inertia_weight
             generation = 1
         else:
-            positions = population_data.positions
-            velocities = population_data.velocities
-            inertia_weight = population_data.inertia_weight
-            generation = population_data.generation
+            positions = population_data["positions"]
+            velocities = population_data["velocities"]
+            inertia_weight = population_data["inertia_weight"]
+            generation = population_data["generation"]
         fitness_scores = [None for _ in range(self.swarm_size)]
         particle_best_position = [None for _ in range(self.swarm_size)]
         particle_best_performance = [float('-inf') for _ in range(self.swarm_size)]
@@ -98,7 +98,7 @@ class ParticleSwarmOptimizationAlgorithm:
         while True:
 
 
-            if population_data is not None and population_data.swarm_best_position is not None:
+            if population_data is not None and population_data["swarm_best_position"] is not None:
 
                 # Use stored data first time if supplied
 
@@ -107,7 +107,7 @@ class ParticleSwarmOptimizationAlgorithm:
 
             else:
 
-                if population_data is not None and population_data.swarm_best_position is None:
+                if population_data is not None and population_data["swarm_best_position"] is None:
                     # Use converted stored data first time if supplied
                     positions, velocities, fitness_scores, particle_best_position, particle_best_performance, swarm_best_position, swarm_best_performance, inertia_weight = self.use_population_data(
                         population_data)
@@ -145,14 +145,14 @@ class ParticleSwarmOptimizationAlgorithm:
             inertia_weight = max(self.min_inertia_weight, inertia_weight * self.inertia_weight_decay)
 
     def use_population_data(self, population_data):
-        return population_data.positions,\
-        population_data.velocities,\
-        population_data.fitness_scores,\
-        population_data.particle_best_position,\
-        population_data.particle_best_performance,\
-        population_data.swarm_best_position,\
-        population_data.swarm_best_performance, \
-        population_data.inertia_weight
+        return population_data["positions"],\
+        population_data["velocities"],\
+        population_data["fitness_scores"],\
+        population_data["particle_best_position"],\
+        population_data["particle_best_performance"],\
+        population_data["swarm_best_position"],\
+        population_data["swarm_best_performance"], \
+        population_data["inertia_weight"]
 
 
 

@@ -48,11 +48,11 @@ class PrunedPopulationData:
     Data from a run of a genetic algorithm, containing information about the current population
     """
     def __init__(self, population_data):
-        self.generation = population_data.generation
-        self.fitness_scores = population_data.fitness_scores
-        self.best_individual_index = population_data.best_individual_index
-        self.best_variables = population_data.best_variables
-        self.best_fitness = population_data.best_fitness
+        self.generation = population_data["generation"]
+        self.fitness_scores = population_data["fitness_scores"]
+        self.best_individual_index = population_data["best_individual_index"]
+        self.best_variables = population_data["best_variables"]
+        self.best_fitness = population_data["best_fitness"]
 
 
 
@@ -121,8 +121,8 @@ class GeneticAlgorithm:
             population = [self.initialize_chromosome() for i in range(self.population_size)]
             generation = 1
         else:
-            population = population_data.population
-            generation = population_data.generation
+            population = population_data["population"]
+            generation = population_data["generation"]
 
         if multiprocess_num_processes > 1:
             while 1:
@@ -178,10 +178,10 @@ class GeneticAlgorithm:
             generation += 1
 
     def use_population_data(self, population_data):
-        return population_data.decoded_variable_vectors,\
-        population_data.fitness_scores,\
-        population_data.best_individual_index,\
-        np.copy(population_data.best_individual_genes)
+        return population_data["decoded_variable_vectors"],\
+        population_data["fitness_scores"],\
+        population_data["best_individual_index"],\
+        np.copy(population_data["best_individual_genes"])
 
 
 
