@@ -46,7 +46,7 @@ def save_temp_fitness(subfoldername, individual_index, individual_fitness):
     directory_path = get_main_dir() + subfoldername + "/temp/"
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)
-    temp_name = str(individual_index) + "=" + str(float(individual_fitness))
+    temp_name =  str(float(individual_fitness)) + "=" + str(individual_index)
     open(directory_path + temp_name, 'w').close()
 
 def load_temp_fitness_scores(subfoldername, population_size):
@@ -56,8 +56,8 @@ def load_temp_fitness_scores(subfoldername, population_size):
     for filename in files:
         if filename != "generation_and_decoded_variable_vectors.pkl":
             s = filename.split("=")
-            individual_index = int(s[0])
-            individual_fitness = float(s[1])
+            individual_fitness = float(s[0])
+            individual_index = int(s[1])
             fitness_scores[individual_index] = individual_fitness
     return fitness_scores
 

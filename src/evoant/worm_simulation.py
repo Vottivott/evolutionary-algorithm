@@ -92,15 +92,22 @@ class WormSimulation:
         # return (not (self.graphics and self.graphics.user_control)) and self.timestep > 150
         # return (not (self.graphics and self.graphics.user_control)) and self.timestep > 200
         if self.worm.football.position[0] >= self.level.right_goal_x:
-            self.score = 1000.0 - self.timestep
+            self.score = 500.0 * (
+            self.worm.football.position[0] - (self.level.left_goal_x + self.level.game_width / 2.0)) / (
+                         self.level.game_width / 2.0)
+            self.score = 500.0 + 1000.0 - self.timestep
+            # self.score = 1000.0 - self.timestep
             return True
         if self.worm.football.position[0] <= self.level.left_goal_x:
-            self.score = -(1000.0 - self.timestep)
+            self.score = -500.0 -(1000.0 - self.timestep)
+            # self.score = -(1000.0 - self.timestep)
             return True
         # return (not (self.graphics and self.graphics.user_control)) and self.timestep > 1000
         if (not (self.graphics and self.graphics.user_control)) and self.timestep > 1000:
-            if self.score == 0.0:
-                self.score = 10.0 * (self.worm.football.position[0] - (self.level.left_goal_x + self.level.game_width / 2.0)) / (self.level.game_width / 2.0)
+            self.score = 500.0 * (self.worm.football.position[0] - (self.level.left_goal_x + self.level.game_width / 2.0)) / (self.level.game_width / 2.0)
+
+            # if self.score == 0.0:
+            #     self.score = 10.0 * (self.worm.football.position[0] - (self.level.left_goal_x + self.level.game_width / 2.0)) / (self.level.game_width / 2.0)
             return True
         # return False
 
@@ -302,7 +309,7 @@ def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None)
         # # if p.generation == 100:
         if not watch_only:
             #if p.generation % 50 == 0: # Save only every 50th generation
-            save_population_data(worm_subfoldername, p, keep_last_n=15, keep_mod = None)
+            save_population_data(worm_subfoldername, p, keep_last_n=10, keep_mod = 10)
             save_stats(worm_subfoldername, stats_handler, p)
             stats = load_stats(worm_subfoldername)
             if stats is not None:# and (
@@ -527,18 +534,18 @@ s.right_neural_net_integration = right_neural_net_integration
 # worm_subfoldername = "EVO80 Large Doorway"
 # worm_subfoldername = "PSO35 Football from EVO80 41"
 # worm_subfoldername = "EVO80 Football 1" # Against static enemy, with random ball velocity ; 42 num_levels=5, against 41
-worm_subfoldername = "EVO140 Football Second Neural Net" # Against team 188 from "EVO80 Football 1", mutate_c=2, num_levels=30
+worm_subfoldername = "EVO140 Football Second Neural Net" # Against team 188 from "EVO80 Football 1", mutate_c=2, num_levels=15
 print worm_subfoldername
 
 special_message = ""
 
-num_levels = 30#5 #REMEMBER TO SET CORRECTLY   #10#30  #14#7#5#1#4#30#15#4#30#15
+num_levels = 15#5 #REMEMBER TO SET CORRECTLY   #10#30  #14#7#5#1#4#30#15#4#30#15
 
 
 
 enemy_subfoldername = "EVO80 Football 1"
 # g = ((get_latest_generation_number(enemy_subfoldername)) / 10)*10
-g = 188#174 # som hade 720
+g = 113   #188#174 # som hade 720
 enemy_variables = load_population_data(enemy_subfoldername, g).best_variables
 print "Enemy team set to team " + str(g)
 
@@ -548,7 +555,7 @@ print "Enemy team set to team " + str(g)
 #     print p.generation, p.best_fitness, p.fitness_scores[:3], len(p.fitness_scores)
 # exit()
 
-stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=0)
+# stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=0)
 #stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=2)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
 
