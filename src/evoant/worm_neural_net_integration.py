@@ -75,7 +75,7 @@ class WormNeuralNetIntegration:
         return self.neural_network.get_total_number_of_weights() + self.neural_network.get_h_size()
 
 # Version 1 middle_layer 65
-# Version 2 middle_layer 80 and added attribute radars to both goals
+# Version 2 middle_layer 80 and added attribute radars reacting to goal objects, and simplified shooting calculation by removing the need for the eighth output neuron
 #
 #
 def get_worm_neural_net_integration(worm_simulation, mirrored = False, version=1):
@@ -114,7 +114,8 @@ def get_worm_neural_net_integration(worm_simulation, mirrored = False, version=1
 
     output_layer_size = 4 # output acc +x, -x, +y, -y
     output_layer_size += 4 # football shoot velocity +x, -x, +y, -y
-    output_layer_size += 1 # football shoot velocity multiplier
+    if version == 1:
+        output_layer_size += 1 # football shoot velocity multiplier
     output_layer_size += 1 # football shoot true/false
 
     layer_sizes = (input_layer_size, middle_layer_size, output_layer_size)
@@ -228,22 +229,36 @@ def get_worm_neural_net_integration(worm_simulation, mirrored = False, version=1
                 f.velocity[1] += float(network_output[2, i] - network_output[3, i]) # * 1.0=acc
                 f.shoot_velocity[0] = -1.0 * float(network_output[4, i] - network_output[5, i])
                 f.shoot_velocity[1] = float(network_output[6, i] - network_output[7, i])
-                f.shoot_velocity = normalized(f.shoot_velocity) * float(network_output[8, i]) * sim.worm.max_shoot_velocity
-                if float(network_output[9, i]) >= 0.5:
-                    f.do_shoot = True
+                if version == 2:
+                    f.shoot_velocity *= min(1.0, 1.0/np.linalg.norm(f.shoot_velocity)) * sim.max_shoot_velocity
+                    if float(network_output[8,i]) >= 0.5:
+                        f.do_shoot = True
+                    else:
+                        f.do_shoot = False
                 else:
-                    f.do_shoot = False
+                    f.shoot_velocity = normalized(f.shoot_velocity) * float(network_output[8, i]) * sim.worm.max_shoot_velocity
+                    if float(network_output[9, i]) >= 0.5:
+                        f.do_shoot = True
+                    else:
+                        f.do_shoot = False
         else:
             for i,f in enumerate(sim.worm.left_fish):
                 f.velocity[0] += float(network_output[0, i] - network_output[1, i]) # * 1.0=acc
                 f.velocity[1] += float(network_output[2, i] - network_output[3, i]) # * 1.0=acc
                 f.shoot_velocity[0] = float(network_output[4, i] - network_output[5, i])
                 f.shoot_velocity[1] = float(network_output[6, i] - network_output[7, i])
-                f.shoot_velocity = normalized(f.shoot_velocity) * float(network_output[8, i]) * sim.worm.max_shoot_velocity
-                if float(network_output[9,i]) >= 0.5:
-                    f.do_shoot = True
+                if version == 2:
+                    f.shoot_velocity *= min(1.0, 1.0/np.linalg.norm(f.shoot_velocity)) * sim.max_shoot_velocity
+                    if float(network_output[8,i]) >= 0.5:
+                        f.do_shoot = True
+                    else:
+                        f.do_shoot = False
                 else:
-                    f.do_shoot = False
+                    f.shoot_velocity = normalized(f.shoot_velocity) * float(network_output[8, i]) * sim.worm.max_shoot_velocity
+                    if float(network_output[9,i]) >= 0.5:
+                        f.do_shoot = True
+                    else:
+                        f.do_shoot = False
 
 
 
