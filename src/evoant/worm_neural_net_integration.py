@@ -203,7 +203,7 @@ def get_worm_neural_net_integration(worm_simulation, mirrored = False, version=1
             index += num_attr_radars
 
             object_list = [sim.worm.football]
-            dist_vec, _ = f.radar_system.fish_radar.read_dist_vector_and_attribute_vectors(f.position,
+            dist_vec, _ = f.radar_system.noattributes_radar.read_dist_vector_and_attribute_vectors(f.position,
                                                                                                    object_list,
                                                                                                    worm_simulation.level)
             input[index:index + num_football_radars, i:i + 1] = dist_vec
@@ -211,7 +211,7 @@ def get_worm_neural_net_integration(worm_simulation, mirrored = False, version=1
 
             if version == 2:
                 object_list = [sim.level.left_goal, sim.level.right_goal]
-                dist_vec, _ = f.radar_system.fish_radar.read_dist_vector_and_attribute_vectors(f.position,
+                dist_vec, _ = f.radar_system.noattributes_radar.read_dist_vector_and_attribute_vectors(f.position,
                                                                                                object_list,
                                                                                                worm_simulation.level)
                 input[index:index + num_goal_radars, i:i + 1] = dist_vec

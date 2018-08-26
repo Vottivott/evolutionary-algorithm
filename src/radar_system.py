@@ -81,6 +81,7 @@ class FishRadarSystem:
 
         self.num_attr_radars = number_of_neurons_per_vector * (1 + len(attribute_functions))
         self.fish_radar = ObjectAttributeRadar(number_of_neurons_per_vector, x_step_size, max_num_steps, max_dist, only_left_half, attribute_functions, mirrored)
+        self.noattributes_radar = ObjectAttributeRadar(number_of_neurons_per_vector, x_step_size, max_num_steps, max_dist, only_left_half, [], mirrored)
         self.fish_radar_num_dirs = number_of_neurons_per_vector
 
 
