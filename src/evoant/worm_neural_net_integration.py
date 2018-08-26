@@ -230,7 +230,7 @@ def get_worm_neural_net_integration(worm_simulation, mirrored = False, version=1
                 f.shoot_velocity[0] = -1.0 * float(network_output[4, i] - network_output[5, i])
                 f.shoot_velocity[1] = float(network_output[6, i] - network_output[7, i])
                 if version == 2:
-                    f.shoot_velocity *= min(1.0, 1.0/np.linalg.norm(f.shoot_velocity)) * sim.max_shoot_velocity
+                    f.shoot_velocity *= min(1.0, 1.0/np.linalg.norm(f.shoot_velocity)) * sim.worm.max_shoot_velocity
                     if float(network_output[8,i]) >= 0.5:
                         f.do_shoot = True
                     else:
@@ -248,7 +248,7 @@ def get_worm_neural_net_integration(worm_simulation, mirrored = False, version=1
                 f.shoot_velocity[0] = float(network_output[4, i] - network_output[5, i])
                 f.shoot_velocity[1] = float(network_output[6, i] - network_output[7, i])
                 if version == 2:
-                    f.shoot_velocity *= min(1.0, 1.0/np.linalg.norm(f.shoot_velocity)) * sim.max_shoot_velocity
+                    f.shoot_velocity *= min(1.0, 1.0/np.linalg.norm(f.shoot_velocity)) * sim.worm.max_shoot_velocity
                     if float(network_output[8,i]) >= 0.5:
                         f.do_shoot = True
                     else:

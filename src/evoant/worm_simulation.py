@@ -449,9 +449,14 @@ def fitness_process(multiprocess_num_processes, multiprocess_index, fitness_func
 
     global worm_population_data
     worm_population_data = load_population_data(worm_subfoldername, -1)
-    generation = worm_population_data.generation
-    population_size = len(worm_population_data.population)
-    worm_population_data = None # free memory
+    if worm_population_data is None:
+        generation = 0
+        population_size = 140 # TODO: Remove this temporary code
+        worm_population_data = None
+    else:
+        generation = worm_population_data.generation
+        population_size = len(worm_population_data.population)
+        worm_population_data = None # free memory
 
     while 1:
 
@@ -522,18 +527,12 @@ s.right_neural_net_integration = right_neural_net_integration
 # worm_subfoldername = "EVO80 Large Doorway"
 # worm_subfoldername = "PSO35 Football from EVO80 41"
 # worm_subfoldername = "EVO80 Football 1" # Against static enemy, with random ball velocity ; 42 num_levels=5, against 41
-worm_subfoldername = "EVO140 Football Second Neural Net" # Against team 188 from "EVO80 Football 1", mutate_c=2
-# 0: num_levels = 5
-# 10: num_levels = 10
-# 20: num_levels = 15
-# 30: num_levels = 20
-# 50: num_levels = 25
-# 80: num_levels = 30
+worm_subfoldername = "EVO140 Football Second Neural Net" # Against team 188 from "EVO80 Football 1", mutate_c=2, num_levels=30
 print worm_subfoldername
 
 special_message = ""
 
-num_levels = 5 #REMEMBER TO SET CORRECTLY   #10#30  #14#7#5#1#4#30#15#4#30#15
+num_levels = 30#5 #REMEMBER TO SET CORRECTLY   #10#30  #14#7#5#1#4#30#15#4#30#15
 
 
 
