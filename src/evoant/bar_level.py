@@ -2,7 +2,7 @@ from itertools import izip
 
 import numpy as np
 
-from evoant.circular import Circular
+from circular import Circular
 from stone import Stone
 
 

@@ -1,5 +1,5 @@
 # from enemy import Enemy
-from evoant.circular import Circular
+from circular import Circular
 from ..neural_network import NeuralNetwork
 import numpy as np
 from ..evomath import *

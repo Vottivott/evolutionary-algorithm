@@ -535,6 +535,8 @@ s.right_neural_net_integration = right_neural_net_integration
 # worm_subfoldername = "PSO35 Football from EVO80 41"
 # worm_subfoldername = "EVO80 Football 1" # Against static enemy, with random ball velocity ; 42 num_levels=5, against 41
 worm_subfoldername = "EVO140 Football Second Neural Net" # Against team 188 from "EVO80 Football 1", mutate_c=2, num_levels=15
+# 14: changed scoring system
+
 print worm_subfoldername
 
 special_message = ""
@@ -545,7 +547,7 @@ num_levels = 15#5 #REMEMBER TO SET CORRECTLY   #10#30  #14#7#5#1#4#30#15#4#30#15
 
 enemy_subfoldername = "EVO80 Football 1"
 # g = ((get_latest_generation_number(enemy_subfoldername)) / 10)*10
-g = 113   #188#174 # som hade 720
+g = 188#174 # som hade 720
 enemy_variables = load_population_data(enemy_subfoldername, g).best_variables
 print "Enemy team set to team " + str(g)
 
