@@ -548,7 +548,7 @@ num_levels = 15#5 #REMEMBER TO SET CORRECTLY   #10#30  #14#7#5#1#4#30#15#4#30#15
 enemy_subfoldername = "EVO80 Football 1"
 # g = ((get_latest_generation_number(enemy_subfoldername)) / 10)*10
 g = 188#174 # som hade 720
-enemy_variables = load_population_data(enemy_subfoldername, g).best_variables
+enemy_variables = load_population_data(enemy_subfoldername, g)["best_variables"]
 print "Enemy team set to team " + str(g)
 
 # from evomath import *

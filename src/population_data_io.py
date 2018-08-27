@@ -31,8 +31,8 @@ def save_population_data(subfoldername, population_data, keep_last_n=None, keep_
     if keep_last_n:
         files = os.listdir(directory_path)
         for filename in files:
-            if filename[-4:]==".json":
-                num = int(filename[:-4])
+            if filename[-5:]==".json":
+                num = int(filename[:-5])
                 diff = population_data["generation"] - num
                 if diff >= keep_last_n and not (keep_mod is not None and num % keep_mod == 0):
                     prune_population_data(subfoldername, num)#os.remove(directory_path + filename)
@@ -49,7 +49,7 @@ def get_latest_generation_number(subfoldername):
     if not len(files):
         return None
 
-    nums = (int(file[:-4]) for file in (f for f in files if f[-4:] == ".json"))
+    nums = (int(file[:-5]) for file in (f for f in files if f[-5:] == ".json"))
     nums = sorted(nums)
     generation = nums[-1]
     return generation
@@ -65,7 +65,7 @@ def load_population_data(subfoldername, generation):
         if not len(files):
             return None
 
-        nums = (int(file[:-4]) for file in (f for f in files if f[-4:]==".json"))
+        nums = (int(file[:-5]) for file in (f for f in files if f[-5:]==".json"))
         nums = sorted(nums)
         if not len(nums):
             return None

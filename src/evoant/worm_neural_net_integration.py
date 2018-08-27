@@ -37,6 +37,7 @@ class WormNeuralNetIntegration:
     #     self.neural_network.set_custom_h_layer(h)
 
     def set_weights_and_possibly_initial_h(self, variables):
+        variables = np.array(variables)
         num_weights = self.neural_network.number_of_weights
         if len(variables) > num_weights:
             self.set_weights_and_initial_h(variables[:num_weights], np.hstack(np.array(variables[num_weights:]) for _ in range(self.concurrency)))
