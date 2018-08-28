@@ -114,7 +114,7 @@ class GeneticAlgorithm:
         while True:
             job = mw.find_next_open_job()
             if job is None:
-                print "The fitness scores were evaluated in " + str(time.time() - t0) + " seconds."
+                print "The fitness score was evaluated in " + str(time.time() - t0) + " seconds."
                 return mw.get_results()
             else:
                 mw.upload_result(self.evaluate(np.array(job), generation))
@@ -172,7 +172,9 @@ class GeneticAlgorithm:
                     if multicomputer:
                         mw.clear_folders_and_jobs()
                         for v in decoded_variable_vectors:
-                            mw.upload_job(v.tolist())
+                            t0 = time.time()
+                            mw.upload_job(v)
+                            print "Uploaded job in " + str(time.time() - t0) + " seconds."
                         fitness_scores = self.mw_work(mw, generation)
                     else:
                         save_temp_data(subfolder_name, "generation_and_decoded_variable_vectors", (int(generation), [v.tolist() for v in decoded_variable_vectors]))

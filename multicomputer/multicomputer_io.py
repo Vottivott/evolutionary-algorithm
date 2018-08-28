@@ -1,6 +1,7 @@
 from traceback import format_exception
 
 import googleapiclient
+import numpy as np
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from httplib2 import Http
@@ -97,7 +98,8 @@ class MulticomputerWorker:
                 print_error()
                 time.sleep(self.no_internet_check_interval)
 
-    def upload_job(self, float_list):
+    def upload_job(self, np_column_vec):
+        job_float_list = [e[0] for e in np_column_vec.tolist()]
         while 1:
             try:
                 job_n = self.num_jobs
@@ -105,7 +107,7 @@ class MulticomputerWorker:
                 if not os.path.exists("tmp/"):
                     os.makedirs("tmp/")
                 with open(temp_file_path, 'wb') as output_file:
-                    float_array = array('d', float_list)
+                    float_array = array('d', job_float_list)
                     float_array.tofile(output_file)
                 upload_file(self.files, str(job_n) + ".bin", "tmp/temp.bin", self.jobs_folder_id)
                 os.remove(temp_file_path)
@@ -120,13 +122,13 @@ class MulticomputerWorker:
             try:
                 result_path = download_file(self.files, job_file_id)
                 result = array('d')
-                with open(result_path) as f:
+                with open(result_path, "rb") as f:
                     result.fromstring(f.read())
                 try:
                     os.remove(result_path)
                 except WindowsError:
                     print "WindowsError in read_job. Temp file not removed."
-                return result
+                return np.expand_dims(np.array(result), axis=1)
             except googleapiclient.errors.HttpError:
                 print_error()
                 time.sleep(self.no_internet_check_interval)
