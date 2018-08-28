@@ -71,7 +71,7 @@ class MulticomputerWorker:
         while 1:
             try:
                 if file_exists_by_id(self.files, self.current_job_file_id):
-                    create_empty_file(self.files, str(self.current_job_n) + "=" + str(score), self.results_folder_id)
+                    create_empty_file(self.files, str(self.current_job_n) + "=" + str(float(score)), self.results_folder_id)
                     self.current_job_n = None
                     break
                 else:
