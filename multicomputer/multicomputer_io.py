@@ -118,9 +118,16 @@ class MulticomputerWorker:
                 temp_file_path = 'tmp/temp.bin'
                 if not os.path.exists("tmp/"):
                     os.makedirs("tmp/")
-                with open(temp_file_path, 'wb') as output_file:
-                    float_array = array('d', job_float_list)
-                    float_array.tofile(output_file)
+                while 1:
+                    try:
+                        with open(temp_file_path, 'wb') as output_file:
+                            float_array = array('d', job_float_list)
+                            float_array.tofile(output_file)
+                            break
+                    except IOError:
+                        print "IOError in upload_job. Waiting 5 seconds and trying again..."
+                        time.sleep(5.0)
+
                 upload_file(self.files, str(job_n) + ".bin", "tmp/temp.bin", self.jobs_folder_id)
                 try:
                     os.remove(temp_file_path)
