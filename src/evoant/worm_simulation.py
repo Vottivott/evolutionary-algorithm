@@ -1,6 +1,7 @@
 import numpy as np
 
 from evo_stats_handler import EvoStatsHandler
+from multicomputer.multicomputer_io import MulticomputerWorker
 from pso_stats_handler import PSOStatsHandler
 
 from mail import send_mail_message_with_image, send_mail_message
@@ -103,7 +104,7 @@ class WormSimulation:
             # self.score = -(1000.0 - self.timestep)
             return True
         # return (not (self.graphics and self.graphics.user_control)) and self.timestep > 1000
-        if (not (self.graphics and self.graphics.user_control)) and self.timestep > 1000:
+        if (not (self.graphics and self.graphics.user_control)) and self.timestep > 10:
             self.score = 500.0 * (self.worm.football.position[0] - (self.level.left_goal_x + self.level.game_width / 2.0)) / (self.level.game_width / 2.0)
 
             # if self.score == 0.0:
@@ -233,24 +234,24 @@ class WormFitnessFunction:
     def evaluate(self, variables, generation):
 
         #ONLY FOR EVO140 Football Second Neural Net
-        if generation == 0:
-            num_levels = 5
-            print "num_levels = %d" % num_levels
-        if generation == 10:
-            num_levels = 10
-            print "num_levels = %d" % num_levels
-        if generation == 20:
-            num_levels = 15
-            print "num_levels = %d" % num_levels
-        if generation == 30:
-            num_levels = 20
-            print "num_levels = %d" % num_levels
-        if generation == 50:
-            num_levels = 25
-            print "num_levels = %d" % num_levels
-        if generation == 80:
-            num_levels = 30
-            print "num_levels = %d" % num_levels
+        # if generation == 0:
+        #     num_levels = 5
+        #     print "num_levels = %d" % num_levels
+        # if generation == 10:
+        #     num_levels = 10
+        #     print "num_levels = %d" % num_levels
+        # if generation == 20:
+        #     num_levels = 15
+        #     print "num_levels = %d" % num_levels
+        # if generation == 30:
+        #     num_levels = 20
+        #     print "num_levels = %d" % num_levels
+        # if generation == 50:
+        #     num_levels = 25
+        #     print "num_levels = %d" % num_levels
+        # if generation == 80:
+        #     num_levels = 30
+        #     print "num_levels = %d" % num_levels
 
 
 
@@ -269,15 +270,20 @@ class WormFitnessFunction:
 
 
 
-def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None):
+def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None, multicomputer=False, main_multicomputer=False):
 
     fitness_function = WormFitnessFunction()
 
-    if multiprocess_num_processes > 1:
-        print "PROCESS " + str(multiprocess_index) + " OUT OF " + str(range(multiprocess_num_processes))
-        if multiprocess_index > 0:
-            fitness_process(multiprocess_num_processes, multiprocess_index, fitness_function)
+    if multicomputer:
+        if not main_multicomputer:
+            fitness_process_mw(fitness_function)
             return
+    else:
+        if multiprocess_num_processes > 1:
+            print "PROCESS " + str(multiprocess_index) + " OUT OF " + str(range(multiprocess_num_processes))
+            if multiprocess_index > 0:
+                fitness_process(multiprocess_num_processes, multiprocess_index, fitness_function)
+                return
 
     # enemy_population_data = load_population_data(enemy_subfoldername, -1)
     # enemy_neural_net_integration.set_weights_and_possibly_initial_h(enemy_population_data["best_variables"])
@@ -315,11 +321,11 @@ def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None)
             if stats is not None:# and (
                     # len(stats["best_fitness_all_time"]) < 2 or stats["best_fitness_all_time"][-1] != stats["best_fitness_all_time"][-2]):
                 stats_handler.produce_graph(stats, worm_subfoldername + ".png")
-                msg = str(float(p.best_fitness)) + "\ngeneration " + str(p.generation)
-                send_mail_message_with_image(worm_subfoldername, msg, worm_subfoldername + ".png", image_title="Gen: " + str(int(p.generation)) + "  Score: " + str(int(p.best_fitness)))
-        average_fitness = sum(p.fitness_scores) / len(p.fitness_scores)
-        print "\n[ " + str(p.generation) + ": " + str(
-            p.best_fitness) + " : " + str(
+                msg = str(float(p["best_fitness"])) + "\ngeneration " + str(p["generation"])
+                send_mail_message_with_image(worm_subfoldername, msg, worm_subfoldername + ".png", image_title="Gen: " + str(int(p["generation"])) + "  Score: " + str(int(p["best_fitness"])))
+        average_fitness = sum(p["fitness_scores"]) / len(p["fitness_scores"])
+        print "\n[ " + str(p["generation"]) + ": " + str(
+            p["best_fitness"]) + " : " + str(
             average_fitness) + " ]\n"
 
         # if p.generation % 10 == 0:
@@ -347,7 +353,7 @@ def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None)
                 worm_callback(worm_population_data, True)
                 # watch_run(worm_population_data)
         else:
-            ga.run(None, worm_callback, population_data=worm_population_data, multiprocess_num_processes=multiprocess_num_processes, multiprocess_index=multiprocess_index, subfolder_name=worm_subfoldername)
+            ga.run(None, worm_callback, population_data=worm_population_data, multiprocess_num_processes=multiprocess_num_processes, multiprocess_index=multiprocess_index, subfolder_name=worm_subfoldername, multicomputer=multicomputer)
 
 def run_pso_on_worm(load_population_name="global", load_population_generation=-1):
     if load_population_name == "global":
@@ -492,6 +498,26 @@ def fitness_process(multiprocess_num_processes, multiprocess_index, fitness_func
 
 
 
+def fitness_process_mw(fitness_function):
+    def extract_function(function_or_object_with_function, function_name):
+        x = function_or_object_with_function
+        return getattr(x, function_name, x)
+    evaluate = extract_function(fitness_function, "evaluate")
+
+    mw = MulticomputerWorker(worm_subfoldername)
+
+    while True:
+        t0 = time.time()
+        print "Waiting for job..."
+        job = mw.wait_for_next_job()
+        print "Found job after " + str(time.time() - t0) + " seconds."
+        t0 = time.time()
+        print "Beginning fitness evaluations..."
+        mw.upload_result(evaluate(np.array(job), None))
+        print "Finished fitness evaluations in " + str(time.time() - t0) + " seconds."
+
+
+
 levels = []
 
 
@@ -541,7 +567,7 @@ print worm_subfoldername
 
 special_message = ""
 
-num_levels = 15#5 #REMEMBER TO SET CORRECTLY   #10#30  #14#7#5#1#4#30#15#4#30#15
+num_levels = 1#15#5 #REMEMBER TO SET CORRECTLY   #10#30  #14#7#5#1#4#30#15#4#30#15
 
 
 
@@ -557,7 +583,9 @@ print "Enemy team set to team " + str(g)
 #     print p.generation, p.best_fitness, p.fitness_scores[:3], len(p.fitness_scores)
 # exit()
 
-# stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=0)
+
+
+stats_handler = EvoStatsHandler(); run_evolution_on_worm(multicomputer=True, main_multicomputer=False)
 # stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=0)
 #stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=2)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)

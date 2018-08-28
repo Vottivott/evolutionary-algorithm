@@ -24,6 +24,7 @@ import time
 from temp_data_io import save_temp_data, save_temp_fitness, wait_for_temp_fitness_scores, \
     load_temp_fitness_scores, clear_temp_folder
 
+from multicomputer.multicomputer_io import MulticomputerWorker
 
 def extract_function(function_or_object_with_function, function_name):
     x = function_or_object_with_function
@@ -108,13 +109,26 @@ class GeneticAlgorithm:
         print "The fitness scores were evaluated in " + str(time.time() - t0) + " seconds."
         return fitness_scores
 
-    def run(self, num_generations=None, generation_callback=None, population_data=None, multiprocess_num_processes=1, multiprocess_index=None, subfolder_name=None):
+    def mw_work(self, mw, generation):
+        t0 = time.time()
+        while True:
+            job = mw.find_next_open_job()
+            if job is None:
+                print "The fitness scores were evaluated in " + str(time.time() - t0) + " seconds."
+                return mw.get_results()
+            else:
+                mw.upload_result(self.evaluate(np.array(job), generation))
+
+
+    def run(self, num_generations=None, generation_callback=None, population_data=None, multiprocess_num_processes=1, multiprocess_index=None, subfolder_name=None, multicomputer=False):
         """
         :param num_generations: the number of generations, or None to continue indefinitely
         :param generation_callback: an optional function generation_callback(population_data) returning a boolean True to continue or False to stop.
         :param population_data: if None, a new population is initialized using the specified initialization_algorithm. Otherwise, the population in the specified population data is used.
         :return: an instance of PopulationData with information about the final population
         """
+
+
         # Initialize population
         if population_data is None:
             population = [self.initialize_chromosome() for i in range(self.population_size)]
@@ -123,14 +137,19 @@ class GeneticAlgorithm:
             population = population_data["population"]
             generation = population_data["generation"]
 
+        mw = None
         if multiprocess_num_processes > 1:
-            while 1:
-                try:
-                    clear_temp_folder(subfolder_name)
-                    break
-                except WindowsError:
-                    print "WindowsError in clear_temp_folder()"
-                time.sleep(0.2)
+            if multicomputer:
+                mw = MulticomputerWorker(subfolder_name)
+                mw.clear_folders_and_jobs()
+            else:
+                while 1:
+                    try:
+                        clear_temp_folder(subfolder_name)
+                        break
+                    except WindowsError:
+                        print "WindowsError in clear_temp_folder()"
+                    time.sleep(0.2)
 
         while True:
 
@@ -150,8 +169,14 @@ class GeneticAlgorithm:
                 if multiprocess_num_processes == 1:
                     fitness_scores = [self.evaluate(vector, generation) for vector in decoded_variable_vectors]
                 else:
-                    save_temp_data(subfolder_name, "generation_and_decoded_variable_vectors", (int(generation), [v.tolist() for v in decoded_variable_vectors]))
-                    fitness_scores = self.multiprocess_evaluations(subfolder_name, decoded_variable_vectors, generation, multiprocess_num_processes, multiprocess_index)
+                    if multicomputer:
+                        mw.clear_folders_and_jobs()
+                        for v in decoded_variable_vectors:
+                            mw.upload_job(v.tolist())
+                        fitness_scores = self.mw_work(mw, generation)
+                    else:
+                        save_temp_data(subfolder_name, "generation_and_decoded_variable_vectors", (int(generation), [v.tolist() for v in decoded_variable_vectors]))
+                        fitness_scores = self.multiprocess_evaluations(subfolder_name, decoded_variable_vectors, generation, multiprocess_num_processes, multiprocess_index)
 
                 best_individual_index = max(xrange(len(fitness_scores)), key=fitness_scores.__getitem__)
                 best_individual = np.copy(population[best_individual_index])
