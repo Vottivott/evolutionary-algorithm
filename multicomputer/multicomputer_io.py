@@ -179,6 +179,10 @@ class MulticomputerWorker:
     def find_next_open_job(self):
         while 1:
             try:
+                if not self.main_process:
+                    print "Updating folder ids"
+                    self.jobs_folder_id = get_folder(self.files, self.project_name + " JOBS")
+                    self.results_folder_id = get_folder(self.files, self.project_name + " RESULTS")
                 candidates = set()
                 locked = set()
                 file_id = {}
@@ -212,10 +216,6 @@ class MulticomputerWorker:
                     return None
             except googleapiclient.errors.HttpError:
                 print_error()
-                if not self.main_process:
-                    print "Updating folder ids"
-                    self.jobs_folder_id = get_folder(self.files, self.project_name + " JOBS")
-                    self.results_folder_id = get_folder(self.files, self.project_name + " RESULTS")
                 time.sleep(self.no_internet_check_interval)
 
 if __name__ == "__main__":
