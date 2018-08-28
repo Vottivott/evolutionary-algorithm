@@ -574,7 +574,7 @@ num_levels = 15#15#5 #REMEMBER TO SET CORRECTLY   #10#30  #14#7#5#1#4#30#15#4#30
 
 
 
-enemy_subfoldername = "EVO80 Football 1"
+enemy_subfoldername = "EVO80 Football 1 pruned enemy"
 # g = ((get_latest_generation_number(enemy_subfoldername)) / 10)*10
 g = 188#174 # som hade 720
 enemy_variables = load_population_data(enemy_subfoldername, g)["best_variables"]
@@ -588,7 +588,7 @@ print "Enemy team set to team " + str(g)
 
 
 
-stats_handler = EvoStatsHandler(); run_evolution_on_worm(multicomputer=True, main_multicomputer=True)
+stats_handler = EvoStatsHandler(); run_evolution_on_worm(multicomputer=True, main_multicomputer=False)
 # stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=0)
 #stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=2)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
