@@ -82,7 +82,10 @@ def download_file(files, file_id):
     request = files.get_media(fileId=file_id)
     result_path = "tmp/" + file_id + " " + str(time.time())#datetime.datetime.now().strftime("%Y-%m-%d %H.%M.%S")
     if not os.path.exists("tmp/"):
-        os.makedirs("tmp/")
+        try:
+            os.makedirs("tmp/")
+        except OSError:
+            print("OSError in download_file.")
     fh = io.FileIO(result_path, mode='w')#io.BytesIO()
     downloader = MediaIoBaseDownload(fh, request)
     done = False
