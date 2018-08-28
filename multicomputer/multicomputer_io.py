@@ -126,6 +126,8 @@ class MulticomputerWorker:
                     os.remove(temp_file_path)
                 except WindowsError:
                     print "Could not remove temp.bin"
+                except OSError:
+                    print "Could not remove temp.bin"
                 self.num_jobs += 1
                 break
             except googleapiclient.errors.HttpError:
@@ -141,6 +143,8 @@ class MulticomputerWorker:
             os.remove(result_path)
         except WindowsError:
             print "WindowsError in read_job. Temp file not removed."
+        except OSError:
+            print "OSError in read_job. Temp file not removed."
         return np.expand_dims(np.array(result), axis=1)
 
     def get_results(self):

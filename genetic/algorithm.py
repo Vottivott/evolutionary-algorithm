@@ -105,6 +105,8 @@ class GeneticAlgorithm:
                 break
             except WindowsError:
                 print "WindowsError in clear_temp_folder()"
+            except OSError:
+                print "OSError in clear_temp_folder()"
             time.sleep(0.2)
         print "The fitness scores were evaluated in " + str(time.time() - t0) + " seconds."
         return fitness_scores
@@ -156,6 +158,8 @@ class GeneticAlgorithm:
                         break
                     except WindowsError:
                         print "WindowsError in clear_temp_folder()"
+                    except OSError:
+                        print "OSError in clear_temp_folder()"
                     time.sleep(0.2)
 
         while True:

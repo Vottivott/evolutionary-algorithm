@@ -32,6 +32,8 @@ def wait_and_open_temp_data(subfoldername, temp_name):
             print "ValueError in wait_and_open_temp_data()"
         except WindowsError:
             print "WindowsError in wait_and_open_temp_data()"
+        except OSError:
+            print "OSError in wait_and_open_temp_data()"
         except KeyError:
             print "KeyError in wait_and_open_temp_data()"
         except EOFError:
