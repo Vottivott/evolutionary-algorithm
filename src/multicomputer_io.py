@@ -121,7 +121,10 @@ class MulticomputerWorker:
                 result = array('d')
                 with open(result_path) as f:
                     result.fromstring(f.read())
-                os.remove(result_path)
+                try:
+                    os.remove(result_path)
+                except WindowsError:
+                    print "WindowsError in read_job. Temp file not removed."
                 return result
             except googleapiclient.errors.HttpError:
                 print_error()
