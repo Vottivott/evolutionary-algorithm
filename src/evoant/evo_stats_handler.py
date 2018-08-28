@@ -36,10 +36,10 @@ class EvoStatsHandler:
         #     del old_stats["best_fitness"][-diff:]
         #     del old_stats["best_fitness_all_time"][-diff:]
         #     del old_stats["avg_fitness"][-diff:]
-        old_stats["generations"].append(population_data["generation"])
-        old_stats["best_fitness"].append(population_data["best_fitness"])
-        old_stats["best_fitness_all_time"].append(max(old_stats["best_fitness"]))
-        old_stats["avg_fitness"].append(mean(population_data["fitness_scores"]))
+        old_stats["generations"].append(int(population_data["generation"]))
+        old_stats["best_fitness"].append(float(population_data["best_fitness"]))
+        old_stats["best_fitness_all_time"].append(float(max(old_stats["best_fitness"])))
+        old_stats["avg_fitness"].append(float(mean(population_data["fitness_scores"])))
         old_stats["decoded_variable_vectors"] = np.ndarray.flatten(np.array(population_data["decoded_variable_vectors"])).tolist()
         return old_stats
 

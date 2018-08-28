@@ -1,8 +1,11 @@
 import json
 import os
+import numpy as np
 
 from genetic.algorithm import PrunedPopulationData
 from pso.algorithm import PrunedPSOPopulationData
+
+import numbers
 
 def get_main_dir():
     directory_path = "saved_populations/"
@@ -10,6 +13,23 @@ def get_main_dir():
         return directory_path
     else:
         return "../saved_populations/"
+
+
+def convert_ndarrays_to_list(x):
+    if type(x) is dict:
+        y = {}
+        for key,value in x.items():
+            y[key] = convert_ndarrays_to_list(value)
+        return y
+    if type(x) is list:
+        if len(x) > 0 and isinstance(x[0], numbers.Number):
+            return x
+        else:
+            return map(convert_ndarrays_to_list, x)
+    if type(x) is np.ndarray or type(x) is np.array:
+        return x.tolist()
+    return x
+
 
 def prune_population_data(subfoldername, num):
     p = load_population_data(subfoldername, num)
@@ -20,7 +40,7 @@ def prune_population_data(subfoldername, num):
     directory_path = get_main_dir() + subfoldername + "/pruned/"
     if not os.path.exists(directory_path):
         os.makedirs(directory_path)
-    with open(directory_path + str(pruned.generation) + ".json", 'w') as out:
+    with open(directory_path + str(pruned["generation"]) + ".json", 'w') as out:
         json.dump(pruned, out, separators=(',',':'))
     os.remove(get_main_dir() + subfoldername + "/" + str(num) + ".json")
 
@@ -37,7 +57,7 @@ def save_population_data(subfoldername, population_data, keep_last_n=None, keep_
                 if diff >= keep_last_n and not (keep_mod is not None and num % keep_mod == 0):
                     prune_population_data(subfoldername, num)#os.remove(directory_path + filename)
     with open(directory_path + str(population_data["generation"]) + ".json", 'w') as out:
-        json.dump(population_data, out, separators=(',',':'))
+        json.dump(convert_ndarrays_to_list(population_data), out, separators=(',',':'))
 
 
 def get_latest_generation_number(subfoldername):
