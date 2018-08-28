@@ -183,6 +183,11 @@ class MulticomputerWorker:
                     print "Updating folder ids"
                     self.jobs_folder_id = get_folder(self.files, self.project_name + " JOBS")
                     self.results_folder_id = get_folder(self.files, self.project_name + " RESULTS")
+                    while self.jobs_folder_id is None or self.results_folder_id is None:
+                        time.sleep(self.job_check_interval)
+                        self.jobs_folder_id = get_folder(self.files, self.project_name + " JOBS")
+                        self.results_folder_id = get_folder(self.files, self.project_name + " RESULTS")
+
                 candidates = set()
                 locked = set()
                 file_id = {}
