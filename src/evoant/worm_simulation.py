@@ -19,7 +19,7 @@ from genetic.initialization.binary import BinaryInitialization
 from genetic.mutation.binary import BinaryMutation
 from genetic.mutation.creep import CreepMutation
 from genetic.selection.tournament import TournamentSelection
-from worm_graphics import WormGraphics
+
 from bar_level import generate_bar_level_with_stones, generate_planar_bar_level, get_soccer_level
 from ..neural_net_integration import evocopter_neural_net_integration, black_neural_net_integration
 from ..population_data_io import save_population_data, load_population_data, get_latest_generation_number
@@ -30,7 +30,6 @@ from ..shot import Shot
 from ..smoke import Smoke
 
 
-import pygame
 import time
 
 from worm_neural_net_integration import get_worm_neural_net_integration
@@ -593,6 +592,8 @@ stats_handler = EvoStatsHandler(); run_evolution_on_worm(multicomputer=True, mai
 #stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=2)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
 
+from worm_graphics import WormGraphics
+import pygame
 # graphics = WormGraphics(); graphics.who_to_follow = None
 # graphics = None
 while 1:
