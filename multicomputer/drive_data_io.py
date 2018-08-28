@@ -111,8 +111,17 @@ def get_files_in_folder(files, folder_id):
     return items
 
 def clear_folder(files, folder_id, folder_name):
-    files.delete(fileId=folder_id).execute()
-    return get_or_create_folder(files, folder_name)
+    while 1:
+        try:
+            files.delete(fileId=folder_id).execute()
+            return get_or_create_folder(files, folder_name)
+        except googleapiclient.errors.HttpError as e:
+            if "status" in e.resp and e.resp["status"] == 404:
+                print("googleapiclient.errors.HttpError (404 File not found) in clear_folder. Assuming that the folder is already cleared.")
+                return get_or_create_folder(files, folder_name)
+            else:
+                print("googleapiclient.errors.HttpError in clear_folder")
+                time.sleep(5.0)
 
 def clear_folder_expensive(service, folder_id):
     def delete_file(request_id, response, exception):
@@ -162,6 +171,13 @@ def main():
     # float_array.tofile(output_file)
     # output_file.close()
     # upload_file(service.files(), "array.bin", "array.bin", get_folder(service.files(), "Hej"))
+
+    try:
+        service.files().delete(fileId="absdfeaef").execute()
+    except googleapiclient.errors.HttpError as e:
+        print(e)
+    exit(0)
+
 
     print(get_folder(service.files(), "Hej"))
     print(get_folder(service.files(), "HejHej"))
