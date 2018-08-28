@@ -15,6 +15,7 @@ import datetime
 # If modifying these scopes, delete the file token.json.
 #SCOPES = 'https://www.googleapis.com/auth/drive.metadata.readonly'
 SCOPES = 'https://www.googleapis.com/auth/drive'
+DRIVE_PAGE_SIZE = 1000
 
 def create_folder(files, folder_name, parent_folder=None):
     if parent_folder is None:
@@ -33,7 +34,7 @@ def create_folder(files, folder_name, parent_folder=None):
 
 
 def get_folder(files, folder_name):
-    results = files.list(q="name = '" + folder_name + "' and mimeType = 'application/vnd.google-apps.folder'").execute()
+    results = files.list(pageSize=DRIVE_PAGE_SIZE, q="name = '" + folder_name + "' and mimeType = 'application/vnd.google-apps.folder'").execute()
     items = results.get('files', [])
     if len(items) == 0:
         return create_folder(files, folder_name)['id']
@@ -84,7 +85,7 @@ def download_file(files, file_id):
 
 
 def file_exists(files, folder_id, file_name):
-    results = files.list(q="'" + folder_id + "' in parents and name = '" + file_name + "'").execute()
+    results = files.list(pageSize=DRIVE_PAGE_SIZE, q="'" + folder_id + "' in parents and name = '" + file_name + "'").execute()
     items = results.get('files', [])
     return len(items) > 0
 
@@ -97,7 +98,7 @@ def file_exists_by_id(files, file_id):
         return False
 
 def get_files_in_folder(files, folder_id):
-    results = files.list(q="'" + folder_id + "' in parents").execute()
+    results = files.list(pageSize=DRIVE_PAGE_SIZE, q="'" + folder_id + "' in parents").execute()
     items = results.get('files', [])
     return items
 
