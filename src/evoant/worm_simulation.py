@@ -507,13 +507,13 @@ def fitness_process_mw(fitness_function):
         return getattr(x, function_name, x)
     evaluate = extract_function(fitness_function, "evaluate")
 
-    mw = MulticomputerWorker(worm_subfoldername)
+    mw = MulticomputerWorker(worm_subfoldername, False)
 
     while True:
         t0 = time.time()
         print "Waiting for job..."
         job = mw.wait_for_next_job()
-        print "Found job after " + str(time.time() - t0) + " seconds."
+        print "Found job " + str(mw.current_job_n) + " after " + str(time.time() - t0) + " seconds."
         t0 = time.time()
         print "Beginning fitness evaluation..."
         mw.upload_result(evaluate(np.array(job), None))

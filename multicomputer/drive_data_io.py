@@ -33,6 +33,14 @@ def create_folder(files, folder_name, parent_folder=None):
 
 
 
+def get_or_create_folder(files, folder_name):
+    results = files.list(pageSize=DRIVE_PAGE_SIZE, q="name = '" + folder_name + "' and mimeType = 'application/vnd.google-apps.folder'").execute()
+    items = results.get('files', [])
+    if len(items) == 0:
+        return create_folder(files, folder_name)['id']
+    else:
+        return items[0]['id']
+
 def get_folder(files, folder_name):
     results = files.list(pageSize=DRIVE_PAGE_SIZE, q="name = '" + folder_name + "' and mimeType = 'application/vnd.google-apps.folder'").execute()
     items = results.get('files', [])
@@ -102,7 +110,11 @@ def get_files_in_folder(files, folder_id):
     items = results.get('files', [])
     return items
 
-def clear_folder(service, folder_id):
+def clear_folder(files, folder_id, folder_name):
+    files.delete(fileId=folder_id).execute()
+    return get_or_create_folder(files, folder_name)
+
+def clear_folder_expensive(service, folder_id):
     def delete_file(request_id, response, exception):
         if exception is not None:
             print("Exception in delete_file batch: " + str(exception))

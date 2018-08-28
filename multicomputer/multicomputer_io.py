@@ -16,7 +16,7 @@ def mean(list):
     return sum(list) / float(len(list))
 
 from drive_data_io import get_folder, get_files_in_folder, create_empty_file, upload_file, download_file, clear_folder, \
-    file_exists_by_id, remove_files
+    file_exists_by_id, remove_files, get_or_create_folder
 
 
 def print_error():
@@ -26,14 +26,19 @@ def print_error():
     print
 
 class MulticomputerWorker:
-    def __init__(self, project_name):
+    def __init__(self, project_name, main_process=False):
         self.init_files_service()
         self.project_name = project_name
-        self.jobs_folder_id = get_folder(self.files, project_name + " JOBS")
-        self.results_folder_id = get_folder(self.files, project_name + " RESULTS")
+        if main_process:
+            self.jobs_folder_id = get_or_create_folder(self.files, project_name + " JOBS")
+            self.results_folder_id = get_or_create_folder(self.files, project_name + " RESULTS")
+        else:
+            self.jobs_folder_id = get_folder(self.files, project_name + " JOBS")
+            self.results_folder_id = get_folder(self.files, project_name + " RESULTS")
         self.job_check_interval = 5.0
         self.no_internet_check_interval = 5.0
         self.num_jobs = 0
+        self.main_process = main_process
 
         # State
         self.current_job_n = None
@@ -44,8 +49,8 @@ class MulticomputerWorker:
         while 1:
             try:
                 self.num_jobs = 0
-                clear_folder(self.service, self.jobs_folder_id)
-                clear_folder(self.service, self.results_folder_id)
+                self.jobs_folder_id = clear_folder(self.files, self.jobs_folder_id, self.project_name + " JOBS")
+                self.results_folder_id = clear_folder(self.files, self.results_folder_id, self.project_name + " RESULTS")
                 print "Cleared folders"
                 break
             except googleapiclient.errors.HttpError:
@@ -66,6 +71,9 @@ class MulticomputerWorker:
                     time.sleep(self.job_check_interval)
             except googleapiclient.errors.HttpError:
                 print_error()
+                print "Updating folder ids"
+                self.jobs_folder_id = get_folder(self.files, self.project_name + " JOBS")
+                self.results_folder_id = get_folder(self.files, self.project_name + " RESULTS")
                 time.sleep(self.no_internet_check_interval)
 
     """
@@ -125,20 +133,15 @@ class MulticomputerWorker:
                 time.sleep(self.no_internet_check_interval)
 
     def read_job(self, job_file_id):
-        while 1:
-            try:
-                result_path = download_file(self.files, job_file_id)
-                result = array('d')
-                with open(result_path, "rb") as f:
-                    result.fromstring(f.read())
-                try:
-                    os.remove(result_path)
-                except WindowsError:
-                    print "WindowsError in read_job. Temp file not removed."
-                return np.expand_dims(np.array(result), axis=1)
-            except googleapiclient.errors.HttpError:
-                print_error()
-                time.sleep(self.no_internet_check_interval)
+        result_path = download_file(self.files, job_file_id)
+        result = array('d')
+        with open(result_path, "rb") as f:
+            result.fromstring(f.read())
+        try:
+            os.remove(result_path)
+        except WindowsError:
+            print "WindowsError in read_job. Temp file not removed."
+        return np.expand_dims(np.array(result), axis=1)
 
     def get_results(self):
         while 1:
@@ -209,6 +212,10 @@ class MulticomputerWorker:
                     return None
             except googleapiclient.errors.HttpError:
                 print_error()
+                if not self.main_process:
+                    print "Updating folder ids"
+                    self.jobs_folder_id = get_folder(self.files, self.project_name + " JOBS")
+                    self.results_folder_id = get_folder(self.files, self.project_name + " RESULTS")
                 time.sleep(self.no_internet_check_interval)
 
 if __name__ == "__main__":

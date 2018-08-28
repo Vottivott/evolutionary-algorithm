@@ -145,7 +145,7 @@ class GeneticAlgorithm:
         mw = None
         if multiprocess_num_processes > 1:
             if multicomputer:
-                mw = MulticomputerWorker(subfolder_name)
+                mw = MulticomputerWorker(subfolder_name, True)
                 mw.clear_folders_and_jobs()
             else:
                 while 1:
@@ -176,10 +176,10 @@ class GeneticAlgorithm:
                 else:
                     if multicomputer:
                         mw.clear_folders_and_jobs()
-                        for v in decoded_variable_vectors:
+                        for i,v in enumerate(decoded_variable_vectors):
                             t0 = time.time()
                             mw.upload_job(v)
-                            print "Uploaded job in " + str(time.time() - t0) + " seconds."
+                            print "Uploaded job " + str(i) + " in " + str(time.time() - t0) + " seconds."
                         fitness_scores = self.mw_work(mw, generation)
                     else:
                         save_temp_data(subfolder_name, "generation_and_decoded_variable_vectors", (int(generation), [v.tolist() for v in decoded_variable_vectors]))
