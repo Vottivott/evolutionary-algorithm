@@ -17,6 +17,12 @@ import datetime
 SCOPES = 'https://www.googleapis.com/auth/drive'
 DRIVE_PAGE_SIZE = 1000
 
+def print_error():
+    # print str(sys.exc_info()[0])
+    # print str(sys.exc_info()[1])
+    print str(''.join(format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2], None)))
+    print
+
 def create_folder(files, folder_name, parent_folder=None):
     if parent_folder is None:
         metadata = {
@@ -123,7 +129,9 @@ def clear_folder(files, folder_id, folder_name):
                 print("googleapiclient.errors.HttpError (404 File not found) in clear_folder. Assuming that the folder is already cleared.")
                 return get_or_create_folder(files, folder_name)
             else:
-                print("googleapiclient.errors.HttpError in clear_folder")
+                print("googleapiclient.errors.HttpError in clear_folder:")
+                print_error()
+                print()
                 time.sleep(5.0)
 
 def clear_folder_expensive(service, folder_id):
