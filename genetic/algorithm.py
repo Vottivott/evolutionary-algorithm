@@ -118,7 +118,7 @@ class GeneticAlgorithm:
                 print "The fitness scores were evaluated in " + str(time.time() - t0) + " seconds."
                 return results
             else:
-                print "TOTAL PROGRESS: " + str(int(100*(1.0-len(missing)/self.population_size))) + "%"
+                print "TOTAL PROGRESS: " + str(int(100*(1.0-float(len(missing))/self.population_size))) + "%"
 
             job = mw.find_next_open_job()
             if job is None:
