@@ -1,8 +1,10 @@
 from __future__ import print_function
 
 import os
+from traceback import format_exception
 
 import googleapiclient
+import sys
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from httplib2 import Http
@@ -20,8 +22,8 @@ DRIVE_PAGE_SIZE = 1000
 def print_error():
     # print str(sys.exc_info()[0])
     # print str(sys.exc_info()[1])
-    print str(''.join(format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2], None)))
-    print
+    print(str(''.join(format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2], None))))
+    print()
 
 def create_folder(files, folder_name, parent_folder=None):
     if parent_folder is None:
