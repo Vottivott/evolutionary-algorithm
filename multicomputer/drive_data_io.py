@@ -127,9 +127,14 @@ def clear_folder(files, folder_id, folder_name):
             files.delete(fileId=folder_id).execute()
             return get_or_create_folder(files, folder_name)
         except googleapiclient.errors.HttpError as e:
-            if "status" in e.resp and e.resp["status"] == 404:
+            if e.resp["status"] == 404:
                 print("googleapiclient.errors.HttpError (404 File not found) in clear_folder. Assuming that the folder is already cleared.")
                 return get_or_create_folder(files, folder_name)
+            elif e.resp["status"] == 403:
+                print("googleapiclient.errors.HttpError (403 Limit exceeded) in clear_folder. Waiting 5 seconds and trying again...")
+                print_error()
+                print()
+                time.sleep(5.0)
             else:
                 print("googleapiclient.errors.HttpError in clear_folder:")
                 print_error()
