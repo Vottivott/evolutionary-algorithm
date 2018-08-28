@@ -1,8 +1,15 @@
 from __future__ import print_function
+
+import os
+
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
+from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from httplib2 import Http
 from oauth2client import file, client, tools
+import io, time
+from array import array
+
+import datetime
 
 # If modifying these scopes, delete the file token.json.
 #SCOPES = 'https://www.googleapis.com/auth/drive.metadata.readonly'
@@ -17,10 +24,11 @@ def create_folder(files, folder_name, parent_folder=None):
     else:
         metadata = {
             'name': folder_name,
-            'parents': [parent_folder]
+            'parents': [parent_folder],
             'mimeType': 'application/vnd.google-apps.folder'
         }
     return files.create(body=metadata, fields='id').execute()
+
 
 
 def get_folder(files, folder_name):
@@ -31,28 +39,72 @@ def get_folder(files, folder_name):
     else:
         return items[0]['id']
 
-def upload_file(files, folder_id, file_name, file_on_disk):
+def create_empty_file(files, file_name, parent_folder=None):
+    if parent_folder is None:
+        metadata = {
+            'name': file_name,
+        }
+    else:
+        metadata = {
+            'name': file_name,
+            'parents': [parent_folder],
+        }
+    return files.create(body=metadata, fields='id').execute()
+
+
+def upload_file(files, file_name, file_on_disk, folder_id=None):
     media_body = MediaFileUpload(file_on_disk, mimetype='text/plain', resumable=True)
-    body = {
-      'name': file_name,
-      'parents': [folder_id]
-      'mimeType': 'text/plain'
-    }
+    if folder_id is None:
+        body = {
+          'name': file_name,
+          'mimeType': 'text/plain'
+        }
+    else:
+        body = {
+          'name': file_name,
+          'parents': [folder_id],
+          'mimeType': 'text/plain'
+        }
+
     newfile = files.create(body=body, media_body=media_body).execute()
 
+def download_file(files, file_id):
+    request = files.get_media(fileId=file_id)
+    result_path = "tmp/" + file_id + " " + str(time.time())#datetime.datetime.now().strftime("%Y-%m-%d %H.%M.%S")
+    if not os.path.exists("tmp/"):
+        os.makedirs("tmp/")
+    fh = io.FileIO(result_path, mode='w')#io.BytesIO()
+    downloader = MediaIoBaseDownload(fh, request)
+    done = False
+    while done is False:
+        status, done = downloader.next_chunk()
+        print("Download %d%%." % int(status.progress() * 100))
+    return result_path
+
+
 def file_exists(files, folder_id, file_name):
-    results = files.list(q="'" + folder_name + "' in parents and name = '" + file_name + "'").execute()
+    results = files.list(q="'" + folder_id + "' in parents and name = '" + file_name + "'").execute()
     items = results.get('files', [])
     return len(items) > 0
 
 def get_files_in_folder(files, folder_id):
-    results = files.list(q="'" + folder_name + "' in parents").execute()
+    results = files.list(q="'" + folder_id + "' in parents").execute()
     items = results.get('files', [])
     return items
 
-def clear_folder(files, folder_id):
-    for file in get_files_in_folder(files, folder_id):
-        files.delete(fileId=file_id).execute()
+def clear_folder(service, folder_id):
+    def delete_file(request_id, response, exception):
+        if exception is not None:
+            print("Exception in delete_file batch: " + str(exception))
+        else:
+            pass
+    batch = service.new_batch_http_request(callback=delete_file)
+    for file in get_files_in_folder(service.files(), folder_id):
+        batch.add(service.files().delete(fileId=file['id']))
+    batch.execute()
+
+def delete_file(files, file_id):
+    files.delete(fileId=file_id).execute()
 
 def main():
     """Shows basic usage of the Drive v3 API.
@@ -67,26 +119,39 @@ def main():
 
     # Call the Drive v3 API
 
+    # from array import array
+    # output_file = open('array.bin', 'wb')
+    # float_array = array('d', [3.14, 2.7, 0.0, -1.0, 1.1])
+    # float_array.tofile(output_file)
+    # output_file.close()
+    # upload_file(service.files(), "array.bin", "array.bin", get_folder(service.files(), "Hej"))
+
     print(get_folder(service.files(), "Hej"))
     print(get_folder(service.files(), "HejHej"))
     print(get_folder(service.files(), "HejHejHej"))
+
+
+
+    create_empty_file(service.files(), "hehehe.txt")
+    create_empty_file(service.files(), "hahaha.txt", get_folder(service.files(), "HejHejHej"))
+
     #service.files().create(body="Once upon a time...", media_mime_type="text/plain").execute()
 
     #for i in range(140):
-    FILENAME = "short_file.txt" #"13.json"
-    media_body = MediaFileUpload(FILENAME, mimetype='text/plain', resumable=True)
-    body = {
-      'title': 'My document',
-      'description': 'A test document',
-      'name': 'file ',
-      'mimeType': 'text/plain'
-    }
-    newfile = service.files().create(body=body, media_body=media_body).execute()
-        #print(i)
-    print(newfile)
+    # FILENAME = "short_file.txt" #"13.json"
+    # media_body = MediaFileUpload(FILENAME, mimetype='text/plain', resumable=True)
+    # body = {
+    #   'title': 'My document',
+    #   'description': 'A test document',
+    #   'name': 'file ',
+    #   'mimeType': 'text/plain'
+    # }
+    # newfile = service.files().create(body=body, media_body=media_body).execute()
+    #     #print(i)
+    # print(newfile)
 
     results = service.files().list(
-        pageSize=10, fields="nextPageToken, files(id, name)").execute()
+        pageSize=None, fields="nextPageToken, files(id, name)").execute()
     items = results.get('files', [])
 
     if not items:
@@ -95,7 +160,10 @@ def main():
         print('Files:')
         for item in items:
             print('{0} ({1})'.format(item['name'], item['id']))
-            print(service.files().get(fileId=item['id']).execute())
+            # print(service.files().get(fileId=item['id']).execute())
+            if item['name'] == "array.bin":
+                download_file(service.files(), item['id'])
+
 
 if __name__ == '__main__':
     main()
