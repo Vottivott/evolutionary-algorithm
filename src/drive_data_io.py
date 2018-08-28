@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import os
 
+import googleapiclient
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from httplib2 import Http
@@ -87,6 +88,14 @@ def file_exists(files, folder_id, file_name):
     items = results.get('files', [])
     return len(items) > 0
 
+def file_exists_by_id(files, file_id):
+    try:
+        items = files.get(fileId=file_id).execute()#files.list(q="id = '" + file_id + "'").execute()
+        # items = results.get('files', [])
+        return len(items) > 0
+    except googleapiclient.errors.HttpError:
+        return False
+
 def get_files_in_folder(files, folder_id):
     results = files.list(q="'" + folder_id + "' in parents").execute()
     items = results.get('files', [])
@@ -130,7 +139,9 @@ def main():
     print(get_folder(service.files(), "HejHej"))
     print(get_folder(service.files(), "HejHejHej"))
 
-
+    print(file_exists_by_id(service.files(), get_folder(service.files(), "Hej")))
+    print(file_exists_by_id(service.files(), "abcd"))
+    print()
 
     create_empty_file(service.files(), "hehehe.txt")
     create_empty_file(service.files(), "hahaha.txt", get_folder(service.files(), "HejHejHej"))

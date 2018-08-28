@@ -10,7 +10,9 @@ from array import array
 
 import random, time, os, sys
 
-from drive_data_io import get_folder, get_files_in_folder, create_empty_file, upload_file, download_file, clear_folder
+from drive_data_io import get_folder, get_files_in_folder, create_empty_file, upload_file, download_file, clear_folder, \
+    file_exists_by_id
+
 
 def print_error():
     # print str(sys.exc_info()[0])
@@ -30,6 +32,7 @@ class MulticomputerWorker:
 
         # State
         self.current_job_n = None
+        self.current_job_file_id = None
 
 
     def clear_folders(self):
@@ -65,9 +68,13 @@ class MulticomputerWorker:
     def upload_result(self, score):
         while 1:
             try:
-                create_empty_file(self.files, str(self.current_job_n) + "=" + str(score), self.results_folder_id)
-                self.current_job_n = None
-                break
+                if file_exists_by_id(self.files, self.current_job_file_id):
+                    create_empty_file(self.files, str(self.current_job_n) + "=" + str(score), self.results_folder_id)
+                    self.current_job_n = None
+                    break
+                else:
+                    print "Initial job file not found! It seems that the completed job is no longer wanted done, probably because someone else completed it before you. Looking for a new job..."
+                    return
             except googleapiclient.errors.HttpError:
                 print_error()
                 time.sleep(self.no_internet_check_interval)
@@ -165,6 +172,7 @@ class MulticomputerWorker:
                     create_empty_file(self.files, str(job_n) + " IN_PROGRESS", self.jobs_folder_id)
 
                     self.current_job_n = job_n
+                    self.current_job_file_id = job_file_id
                     return self.read_job(job_file_id)
                 else:
                     return None
