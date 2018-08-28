@@ -35,9 +35,10 @@ class MulticomputerWorker:
         self.current_job_file_id = None
 
 
-    def clear_folders(self):
+    def clear_folders_and_jobs(self):
         while 1:
             try:
+                self.num_jobs = 0
                 clear_folder(self.service, self.jobs_folder_id)
                 clear_folder(self.service, self.results_folder_id)
                 print "Cleared folders"
@@ -187,7 +188,7 @@ if __name__ == "__main__":
     process_id = 0
     w = MulticomputerWorker("TestProj2")
     if process_id == 0:
-        w.clear_folders()
+        w.clear_folders_and_jobs()
     def work():
         while True:
             if process_id == 0:
