@@ -112,10 +112,15 @@ class GeneticAlgorithm:
     def mw_work(self, mw, generation):
         t0 = time.time()
         while True:
+
+            missing, results = mw.get_results()
+            if missing is None:
+                print "The fitness scores were evaluated in " + str(time.time() - t0) + " seconds."
+                return results
+
             job = mw.find_next_open_job()
             if job is None:
-                print "The fitness score was evaluated in " + str(time.time() - t0) + " seconds."
-                return mw.get_results()
+                mw.remove_progress_files(missing)
             else:
                 mw.upload_result(self.evaluate(np.array(job), generation))
 

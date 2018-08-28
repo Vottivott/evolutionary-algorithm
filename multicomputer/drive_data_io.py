@@ -113,6 +113,21 @@ def clear_folder(service, folder_id):
         batch.add(service.files().delete(fileId=file['id']))
     batch.execute()
 
+
+def remove_files(service, file_names, folder_id):
+    def delete_file(request_id, response, exception):
+        if exception is not None:
+            print("Exception in delete_file batch: " + str(exception))
+        else:
+            pass
+
+    batch = service.new_batch_http_request(callback=delete_file)
+    for file in get_files_in_folder(service.files(), folder_id):
+        if file['name'] in file_names:
+            batch.add(service.files().delete(fileId=file['id']))
+            print("Removing " + file['name'])
+    batch.execute()
+
 def delete_file(files, file_id):
     files.delete(fileId=file_id).execute()
 

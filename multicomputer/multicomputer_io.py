@@ -11,8 +11,12 @@ from array import array
 
 import random, time, os, sys
 
+
+def mean(list):
+    return sum(list) / float(len(list))
+
 from drive_data_io import get_folder, get_files_in_folder, create_empty_file, upload_file, download_file, clear_folder, \
-    file_exists_by_id
+    file_exists_by_id, remove_files
 
 
 def print_error():
@@ -110,7 +114,10 @@ class MulticomputerWorker:
                     float_array = array('d', job_float_list)
                     float_array.tofile(output_file)
                 upload_file(self.files, str(job_n) + ".bin", "tmp/temp.bin", self.jobs_folder_id)
-                os.remove(temp_file_path)
+                try:
+                    os.remove(temp_file_path)
+                except WindowsError:
+                    print "Could not remove temp.bin"
                 self.num_jobs += 1
                 break
             except googleapiclient.errors.HttpError:
@@ -136,17 +143,35 @@ class MulticomputerWorker:
     def get_results(self):
         while 1:
             try:
-                result = [0] * self.num_jobs
+                # TODO: Fix checking whether all results are done
+                result_multiple = [[] for _ in range(self.num_jobs)]
                 for file in get_files_in_folder(self.files, self.results_folder_id):
                     splt = file['name'].split("=")
                     if len(splt) == 2:
                         n = int(splt[0])
                         score = float(splt[1])
-                        result[n] = score
-                return result
+                        # result[n] = score
+                        result_multiple[n].append(score)
+                missing = []
+                for i in range(self.num_jobs):
+                    if len(result_multiple[i]) == 0:
+                        missing.append(i)
+                if len(missing) == 0:
+                    result = map(mean, result_multiple)
+                    return None, result
+                else:
+                    return missing, None
             except googleapiclient.errors.HttpError:
                 print_error()
                 time.sleep(self.no_internet_check_interval)
+
+    def remove_progress_files(self, job_indices):
+        try:
+            file_names = map(lambda x: str(x) + " IN_PROGRESS", job_indices)
+            remove_files(self.service, file_names, self.jobs_folder_id)
+        except googleapiclient.errors.HttpError:
+            print_error()
+            time.sleep(self.no_internet_check_interval)
 
     def find_next_open_job(self):
         while 1:

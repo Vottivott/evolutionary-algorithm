@@ -104,7 +104,7 @@ class WormSimulation:
             # self.score = -(1000.0 - self.timestep)
             return True
         # return (not (self.graphics and self.graphics.user_control)) and self.timestep > 1000
-        if (not (self.graphics and self.graphics.user_control)) and self.timestep > 10:
+        if (not (self.graphics and self.graphics.user_control)) and self.timestep > 1000:
             self.score = 500.0 * (self.worm.football.position[0] - (self.level.left_goal_x + self.level.game_width / 2.0)) / (self.level.game_width / 2.0)
 
             # if self.score == 0.0:
@@ -570,7 +570,7 @@ print worm_subfoldername
 
 special_message = ""
 
-num_levels = 1#15#5 #REMEMBER TO SET CORRECTLY   #10#30  #14#7#5#1#4#30#15#4#30#15
+num_levels = 15#15#5 #REMEMBER TO SET CORRECTLY   #10#30  #14#7#5#1#4#30#15#4#30#15
 
 
 
@@ -588,7 +588,7 @@ print "Enemy team set to team " + str(g)
 
 
 
-stats_handler = EvoStatsHandler(); run_evolution_on_worm(multicomputer=True, main_multicomputer=False)
+stats_handler = EvoStatsHandler(); run_evolution_on_worm(multicomputer=True, main_multicomputer=True)
 # stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=0)
 #stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=2)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
