@@ -150,7 +150,7 @@ class GeneticAlgorithm:
                 if multiprocess_num_processes == 1:
                     fitness_scores = [self.evaluate(vector, generation) for vector in decoded_variable_vectors]
                 else:
-                    save_temp_data(subfolder_name, "generation_and_decoded_variable_vectors", (generation, decoded_variable_vectors.tolist()))
+                    save_temp_data(subfolder_name, "generation_and_decoded_variable_vectors", (int(generation), [v.tolist() for v in decoded_variable_vectors]))
                     fitness_scores = self.multiprocess_evaluations(subfolder_name, decoded_variable_vectors, generation, multiprocess_num_processes, multiprocess_index)
 
                 best_individual_index = max(xrange(len(fitness_scores)), key=fitness_scores.__getitem__)
