@@ -278,6 +278,9 @@ def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None,
         if not main_multicomputer:
             fitness_process_mw(fitness_function)
             return
+        else:
+            multiprocess_index = 0
+            multiprocess_num_processes = 2
     else:
         if multiprocess_num_processes > 1:
             print "PROCESS " + str(multiprocess_index) + " OUT OF " + str(range(multiprocess_num_processes))
@@ -585,7 +588,7 @@ print "Enemy team set to team " + str(g)
 
 
 
-stats_handler = EvoStatsHandler(); run_evolution_on_worm(multicomputer=True, main_multicomputer=False)
+stats_handler = EvoStatsHandler(); run_evolution_on_worm(multicomputer=True, main_multicomputer=True)
 # stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=0)
 #stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=2)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
