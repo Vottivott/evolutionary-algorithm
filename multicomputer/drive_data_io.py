@@ -67,7 +67,7 @@ def create_empty_file(files, file_name, parent_folder=None):
             'name': file_name,
             'parents': [parent_folder],
         }
-    return files.create(body=metadata, fields='id').execute()
+    return files.create(body=metadata, fields='id').execute()['id']
 
 
 def upload_file(files, file_name, file_on_disk, folder_id=None):

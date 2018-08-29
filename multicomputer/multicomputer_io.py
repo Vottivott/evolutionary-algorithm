@@ -246,11 +246,16 @@ class MulticomputerWorker:
                 time.sleep(self.no_internet_check_interval)
 
     def is_superfluous(self):
+        # print "STARTING IS_SUPERFLUOUS"
         try:
+            own_job_file_exists = False
             own_progress_file = None
             competing_progress_files = []
             for file in get_files_in_folder(self.files, self.jobs_folder_id):
-                if not (len(file['name']) >=4 and file['name'][-4:]==".bin"):
+                if len(file['name']) >=4 and file['name'][-4:]==".bin":
+                    if file['id'] == self.current_job_file_id:
+                        own_job_file_exists = True
+                else:
                     splt = file['name'].split(" ")
                     if len(splt) == 2:
                         try:
@@ -262,11 +267,17 @@ class MulticomputerWorker:
                                         competing_progress_files.append(file)
                         except ValueError:
                             print "Unexpected file name in jobs folder (progress file) in cancel_if_superfluous"
-            if own_progress_file is None:
+            if not own_job_file_exists:
+                print "The job has been cancelled or completed by someone else. Looking for a new job..."
                 return True
+            elif own_progress_file is None:
+                # print "NO OWN PROGRESS FILE"
+                return False
             elif len(competing_progress_files) == 0:
+                # print "NO COMPETING PROGRESS FILES"
                 return False
             else:
+                # print "COMPARING DATE TO COMPETING PROGRESS FILES"
                 own_date = to_datetime(own_progress_file['createdTime'])
                 competing_date = min(map(lambda f: to_datetime(f['createdTime']), competing_progress_files))
                 if competing_date < own_date:
@@ -277,6 +288,7 @@ class MulticomputerWorker:
                         print "HttpError when deleting progress file in is_superfluous"
                     return True
                 else:
+                    # print "STARTED BEFORE OF ALL COMPETITORS. CONTINUING EVALUATION... "
                     return False
         except googleapiclient.errors.HttpError:
             print_error()
