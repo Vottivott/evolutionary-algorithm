@@ -51,7 +51,7 @@ class EvoStatsHandler:
 
     def produce_graph(self, stats, filename):
         plt.clf()
-        plt.figure(1, figsize=(5, 1.5*3 * 3.13), facecolor='whitesmoke')
+        plt.figure(1, figsize=(1.5*5, 3 * 3.13), facecolor='whitesmoke')
         num_plots = 3
         current_plot = 1
         fitness_plot = plt.subplot(num_plots, 1, current_plot)
@@ -63,6 +63,7 @@ class EvoStatsHandler:
         #     vline(i * 10)
         current_plot += 1
 
+        evaltime_plot = plt.subplot(num_plots, 1, current_plot)
         plt.plot(stats["generations"], np.array(stats["evaluation_time"])/60.0, "g") # Time in minutes
         current_plot += 1
 
