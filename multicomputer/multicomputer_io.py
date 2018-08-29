@@ -10,13 +10,14 @@ from oauth2client import file, client, tools
 from array import array
 
 import random, time, os, sys
+from datetime import datetime
 
 
 def mean(list):
     return sum(list) / float(len(list))
 
 from drive_data_io import get_folder, get_files_in_folder, create_empty_file, upload_file, download_file, clear_folder, \
-    file_exists_by_id, remove_files, get_or_create_folder
+    file_exists_by_id, remove_files, get_or_create_folder, delete_file
 
 
 def print_error():
@@ -24,6 +25,11 @@ def print_error():
     # print str(sys.exc_info()[1])
     print str(''.join(format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2], None)))
     print
+
+
+def to_datetime(drive_api_date_string):
+    return datetime.strptime(drive_api_date_string, '%Y-%m-%dT%H:%M:%S.%fZ')
+
 
 class MulticomputerWorker:
     def __init__(self, project_name, main_process=False):
@@ -43,6 +49,7 @@ class MulticomputerWorker:
         # State
         self.current_job_n = None
         self.current_job_file_id = None
+        self.current_job_progress_file_id = None
 
 
     def clear_folders_and_jobs(self):
@@ -227,7 +234,7 @@ class MulticomputerWorker:
                     job_n = random.choice(possible_jobs)
                     job_file_id = file_id[job_n]
 
-                    create_empty_file(self.files, str(job_n) + " IN_PROGRESS", self.jobs_folder_id)
+                    self.current_job_progress_file_id = create_empty_file(self.files, str(job_n) + " IN_PROGRESS", self.jobs_folder_id)
 
                     self.current_job_n = job_n
                     self.current_job_file_id = job_file_id
@@ -237,6 +244,44 @@ class MulticomputerWorker:
             except googleapiclient.errors.HttpError:
                 print_error()
                 time.sleep(self.no_internet_check_interval)
+
+    def is_superfluous(self):
+        try:
+            own_progress_file = None
+            competing_progress_files = []
+            for file in get_files_in_folder(self.files, self.jobs_folder_id):
+                if not (len(file['name']) >=4 and file['name'][-4:]==".bin"):
+                    splt = file['name'].split(" ")
+                    if len(splt) == 2:
+                        try:
+                            if splt[1] == "IN_PROGRESS":
+                                if int(splt[0]) == self.current_job_n:
+                                    if file['id'] == self.current_job_progress_file_id:
+                                        own_progress_file = file
+                                    else:
+                                        competing_progress_files.append(file)
+                        except ValueError:
+                            print "Unexpected file name in jobs folder (progress file) in cancel_if_superfluous"
+            if own_progress_file is None:
+                return True
+            elif len(competing_progress_files) == 0:
+                return False
+            else:
+                own_date = to_datetime(own_progress_file['createdTime'])
+                competing_date = min(map(lambda f: to_datetime(f['createdTime']), competing_progress_files))
+                if competing_date < own_date:
+                    try:
+                        delete_file(self.files, self.current_job_progress_file_id)
+                        print "The job was already taken by someone else. Progress file removed. Looking for a new job..."
+                    except googleapiclient.errors.HttpError:
+                        print "HttpError when deleting progress file in is_superfluous"
+                    return True
+                else:
+                    return False
+        except googleapiclient.errors.HttpError:
+            print_error()
+            time.sleep(self.no_internet_check_interval)
+        return False
 
 if __name__ == "__main__":
     process_id = 0

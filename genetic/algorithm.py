@@ -21,6 +21,7 @@ import time
 #random.seed(random_seed)
 
 # TODO: Fix import
+from src.abort_evaluation_exception import AbortEvaluationException
 from temp_data_io import save_temp_data, save_temp_fitness, wait_for_temp_fitness_scores, \
     load_temp_fitness_scores, clear_temp_folder
 
@@ -113,6 +114,13 @@ class GeneticAlgorithm:
 
     def mw_work(self, mw, generation):
         t0 = time.time()
+        missing, results = None, None
+        # stop_working_and_only_wait_for_completion_instead = False
+
+        def micro_callback():
+            if mw.is_superfluous():
+                raise AbortEvaluationException()
+
         while True:
 
             missing, results = mw.get_results()
@@ -124,9 +132,23 @@ class GeneticAlgorithm:
 
             job = mw.find_next_open_job()
             if job is None:
-                mw.remove_progress_files(missing)
+                while 1:
+                    mw.remove_progress_files(missing)
+                    # stop_working_and_only_wait_for_completion_instead = True # We are probably close to finishing
+                    for i in range(int(600.0 / 5.0)):
+                        missing, results = mw.get_results()
+                        if missing is None:
+                            print "The fitness scores were evaluated in " + str(time.time() - t0) + " seconds."
+                            return results
+                        else:
+                            print "TOTAL PROGRESS: " + str(
+                                int(100 * (1.0 - float(len(missing)) / self.population_size))) + "%"
+                        time.sleep(5.0)
             else:
-                mw.upload_result(self.evaluate(np.array(job), generation))
+                try:
+                    mw.upload_result(self.evaluate(np.array(job), generation, micro_callback=micro_callback))
+                except AbortEvaluationException:
+                    pass
 
 
     def run(self, num_generations=None, generation_callback=None, population_data=None, multiprocess_num_processes=1, multiprocess_index=None, subfolder_name=None, multicomputer=False):

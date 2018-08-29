@@ -8,6 +8,7 @@ from mail import send_mail_message_with_image, send_mail_message
 from genetic.decoding.real_number import RealNumberDecoding
 from genetic.initialization.real_number import RealNumberInitialization
 from pso.algorithm import ParticleSwarmOptimizationAlgorithm, PSOPopulationData
+from ..abort_evaluation_exception import AbortEvaluationException
 from ..stats_data_io import save_stats, load_stats
 from worm_radar_system import WormRadarSystem
 from worm import Worm
@@ -197,20 +198,22 @@ def run_evaluation(level, fitness_calculator, use_graphics=False):
     #     print fitness
     return fitness_calculator(s)
 
-def run_evaluations(levels, fitness_calculator, use_graphics=False):
+def run_evaluations(levels, fitness_calculator, use_graphics=False, micro_callback=None):
     fitness_total = 0.0
     for level in levels:
         fitness_total += run_evaluation(level, fitness_calculator, use_graphics)
+        if micro_callback:
+            micro_callback()
     return fitness_total / num_levels
 
 
-def run_worm_evaluation(variables, use_graphics=False):
+def run_worm_evaluation(variables, use_graphics=False, micro_callback=None):
     left_neural_net_integration.set_weights_and_possibly_initial_h(variables)
     if right_neural_net_integration is not None:
         right_neural_net_integration.set_weights_and_possibly_initial_h(enemy_variables)
     def fitness_calculator(sim):
         return sim.score
-    return run_evaluations(levels, fitness_calculator, use_graphics)
+    return run_evaluations(levels, fitness_calculator, use_graphics, micro_callback)
 
 
 
@@ -230,7 +233,7 @@ class WormFitnessFunction:
         self.last_generation = -1
         self.debug_ind_n = 1
 
-    def evaluate(self, variables, generation):
+    def evaluate(self, variables, generation, micro_callback=None):
 
         #ONLY FOR EVO140 Football Second Neural Net
         # if generation == 0:
@@ -261,7 +264,7 @@ class WormFitnessFunction:
             global levels
             levels = generate_levels()
             self.debug_ind_n = 1
-        fitness = run_worm_evaluation(variables, False)
+        fitness = run_worm_evaluation(variables, False, micro_callback=micro_callback)
         print get_color_from_score(fitness, False) + str(int(fitness)),
         #print "("+str(self.debug_ind_n) + "): " + str(fitness)
         self.debug_ind_n += 1
@@ -508,6 +511,10 @@ def fitness_process_mw(fitness_function):
 
     mw = MulticomputerWorker(worm_subfoldername, False)
 
+    def micro_callback():
+        if mw.is_superfluous():
+            raise AbortEvaluationException()
+
     while True:
         t0 = time.time()
         print "Waiting for job..."
@@ -515,8 +522,12 @@ def fitness_process_mw(fitness_function):
         print "Found job " + str(mw.current_job_n) + " after " + str(time.time() - t0) + " seconds."
         t0 = time.time()
         print "Beginning fitness evaluation..."
-        mw.upload_result(evaluate(np.array(job), None))
-        print "Finished fitness evaluation in " + str(time.time() - t0) + " seconds."
+        try:
+            mw.upload_result(evaluate(np.array(job), None, micro_callback=micro_callback))
+            print "Finished fitness evaluation in " + str(time.time() - t0) + " seconds."
+        except AbortEvaluationException:
+            pass
+
 
 
 

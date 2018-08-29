@@ -117,7 +117,8 @@ def file_exists_by_id(files, file_id):
         return False
 
 def get_files_in_folder(files, folder_id):
-    results = files.list(pageSize=DRIVE_PAGE_SIZE, q="'" + folder_id + "' in parents").execute()
+    results = files.list(pageSize=DRIVE_PAGE_SIZE, q="'" + folder_id + "' in parents",
+                         fields="nextPageToken, files(id, name, createdTime)").execute()
     items = results.get('files', [])
     return items
 
@@ -136,10 +137,12 @@ def clear_folder(files, folder_id, folder_name):
                 print()
                 time.sleep(5.0)
             else:
-                print("googleapiclient.errors.HttpError in clear_folder:")
+                print("googleapiclient.errors.HttpError in clear_folder: " + str(e.resp["status"]))
                 print_error()
+                print("Assuming the folder is already cleared.")
                 print()
-                time.sleep(5.0)
+                return get_or_create_folder(files, folder_name)
+                # time.sleep(5.0)
 
 def clear_folder_expensive(service, folder_id):
     def delete_file(request_id, response, exception):
@@ -190,23 +193,23 @@ def main():
     # output_file.close()
     # upload_file(service.files(), "array.bin", "array.bin", get_folder(service.files(), "Hej"))
 
-    try:
-        service.files().delete(fileId="absdfeaef").execute()
-    except googleapiclient.errors.HttpError as e:
-        print(e)
-    exit(0)
+    # try:
+    #     service.files().delete(fileId="absdfeaef").execute()
+    # except googleapiclient.errors.HttpError as e:
+    #     print(e)
+    # exit(0)
 
 
-    print(get_folder(service.files(), "Hej"))
-    print(get_folder(service.files(), "HejHej"))
-    print(get_folder(service.files(), "HejHejHej"))
+    # print(get_folder(service.files(), "Hej"))
+    # print(get_folder(service.files(), "HejHej"))
+    # print(get_folder(service.files(), "HejHejHej"))
+    #
+    # print(file_exists_by_id(service.files(), get_folder(service.files(), "Hej")))
+    # print(file_exists_by_id(service.files(), "abcd"))
+    # print()
 
-    print(file_exists_by_id(service.files(), get_folder(service.files(), "Hej")))
-    print(file_exists_by_id(service.files(), "abcd"))
-    print()
-
-    create_empty_file(service.files(), "hehehe.txt")
-    create_empty_file(service.files(), "hahaha.txt", get_folder(service.files(), "HejHejHej"))
+    # create_empty_file(service.files(), "hehehe.txt")
+    # create_empty_file(service.files(), "hahaha.txt", get_folder(service.files(), "HejHejHej"))
 
     #service.files().create(body="Once upon a time...", media_mime_type="text/plain").execute()
 
@@ -224,7 +227,7 @@ def main():
     # print(newfile)
 
     results = service.files().list(
-        pageSize=None, fields="nextPageToken, files(id, name)").execute()
+        pageSize=None, fields="nextPageToken, files(id, name, createdTime)").execute()
     items = results.get('files', [])
 
     if not items:
@@ -233,6 +236,10 @@ def main():
         print('Files:')
         for item in items:
             print('{0} ({1})'.format(item['name'], item['id']))
+            print(item['createdTime'])
+            from datetime import datetime
+            dt = datetime.strptime(item['createdTime'], '%Y-%m-%dT%H:%M:%S.%fZ')
+            print(dt)
             # print(service.files().get(fileId=item['id']).execute())
             if item['name'] == "array.bin":
                 download_file(service.files(), item['id'])

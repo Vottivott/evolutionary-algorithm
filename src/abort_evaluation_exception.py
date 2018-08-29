@@ -1,0 +1,2 @@
+class AbortEvaluationException(Exception):
+    pass
