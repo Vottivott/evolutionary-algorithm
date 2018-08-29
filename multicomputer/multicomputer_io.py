@@ -251,6 +251,9 @@ class MulticomputerWorker:
             except googleapiclient.errors.HttpError:
                 print_error()
                 time.sleep(self.no_internet_check_interval)
+            except IOError:
+                print_error()
+                time.sleep(5.0)
 
     def is_superfluous(self):
         # print "STARTING IS_SUPERFLUOUS"
