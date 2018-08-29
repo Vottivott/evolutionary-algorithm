@@ -153,7 +153,14 @@ class MulticomputerWorker:
                 time.sleep(self.no_internet_check_interval)
 
     def read_job(self, job_file_id):
-        result_path = download_file(self.files, job_file_id)
+        while 1:
+            try:
+                result_path = download_file(self.files, job_file_id)
+                break
+            except OSError:
+                print "OSError in read_job:download_file. Waiting 5 seconds and trying download_file again..."
+                print_error()
+                time.sleep(5.0)
         result = array('d')
         with open(result_path, "rb") as f:
             result.fromstring(f.read())
