@@ -35,26 +35,47 @@ def extract_function(function_or_object_with_function, function_name):
 """
 Data from a run of a genetic algorithm, containing information about the current population
 """
-def PopulationData(generation, population, decoded_variable_vectors, fitness_scores, best_individual_index):
-    return {"generation": generation,
-    "population": population,
-    "decoded_variable_vectors": decoded_variable_vectors,
-    "fitness_scores": fitness_scores,
-    "best_individual_index": best_individual_index,
-    "best_individual_genes": population[best_individual_index],
-    "best_variables": decoded_variable_vectors[best_individual_index],
-    "best_fitness": fitness_scores[best_individual_index]}
+def PopulationData(generation, population, decoded_variable_vectors, fitness_scores, best_individual_index, evaluation_time=None):
+    if evaluation_time is None:
+        return {"generation": generation,
+        "population": population,
+        "decoded_variable_vectors": decoded_variable_vectors,
+        "fitness_scores": fitness_scores,
+        "best_individual_index": best_individual_index,
+        "best_individual_genes": population[best_individual_index],
+        "best_variables": decoded_variable_vectors[best_individual_index],
+        "best_fitness": fitness_scores[best_individual_index]}
+    else:
+        return {"generation": generation,
+        "population": population,
+        "decoded_variable_vectors": decoded_variable_vectors,
+        "fitness_scores": fitness_scores,
+        "best_individual_index": best_individual_index,
+        "best_individual_genes": population[best_individual_index],
+        "best_variables": decoded_variable_vectors[best_individual_index],
+        "best_fitness": fitness_scores[best_individual_index],
+        "evaluation_time": evaluation_time}
+
 
 """
 Data from a run of a genetic algorithm, containing information about the current population
 """
 def PrunedPopulationData(population_data):
-    return {"generation": population_data["generation"],
-            "fitness_scores": population_data["fitness_scores"],
-            "best_individual_index": population_data["best_individual_index"],
-            "best_variables": population_data["best_variables"],
-            "best_fitness": population_data["best_fitness"],
-            }
+    if "evaluation_time" in population_data:
+        return {"generation": population_data["generation"],
+                "fitness_scores": population_data["fitness_scores"],
+                "best_individual_index": population_data["best_individual_index"],
+                "best_variables": population_data["best_variables"],
+                "best_fitness": population_data["best_fitness"],
+                "evaluation_time": population_data["evaluation_time"]
+                }
+    else:
+        return {"generation": population_data["generation"],
+                "fitness_scores": population_data["fitness_scores"],
+                "best_individual_index": population_data["best_individual_index"],
+                "best_variables": population_data["best_variables"],
+                "best_fitness": population_data["best_fitness"],
+                }
 
 
 
@@ -198,6 +219,8 @@ class GeneticAlgorithm:
 
                 # Evaluate population
 
+                evaluation_time_t0 = time.time()
+
                 decoded_variable_vectors = map(self.decode, population)
                 if multiprocess_num_processes == 1:
                     fitness_scores = [self.evaluate(vector, generation) for vector in decoded_variable_vectors]
@@ -216,10 +239,11 @@ class GeneticAlgorithm:
                 best_individual_index = max(xrange(len(fitness_scores)), key=fitness_scores.__getitem__)
                 best_individual = np.copy(population[best_individual_index])
 
+                evaluation_time = time.time() - evaluation_time_t0
 
                 # Call optional callback function and check if finished
 
-                data = PopulationData(generation, population, decoded_variable_vectors, fitness_scores, best_individual_index)
+                data = PopulationData(generation, population, decoded_variable_vectors, fitness_scores, best_individual_index, evaluation_time)
                 if (generation_callback is not None and generation_callback(data) is False) or generation == num_generations:
                     return data
 

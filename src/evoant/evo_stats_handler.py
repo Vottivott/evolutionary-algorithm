@@ -41,12 +41,18 @@ class EvoStatsHandler:
         old_stats["best_fitness_all_time"].append(float(max(old_stats["best_fitness"])))
         old_stats["avg_fitness"].append(float(mean(population_data["fitness_scores"])))
         old_stats["decoded_variable_vectors"] = np.ndarray.flatten(np.array(population_data["decoded_variable_vectors"])).tolist()
+        if "evaluation_time" not in old_stats:
+            old_stats["evaluation_time"] = [0] * (len(old_stats["generations"])-1)
+        if "evaluation_time" in population_data:
+            old_stats["evaluation_time"].append(population_data["evaluation_time"])
+        else:
+            old_stats["evaluation_time"].append(0)
         return old_stats
 
     def produce_graph(self, stats, filename):
         plt.clf()
-        plt.figure(1, figsize=(5, 3 * 3.13), facecolor='whitesmoke')
-        num_plots = 2
+        plt.figure(1, figsize=(5, 1.5*3 * 3.13), facecolor='whitesmoke')
+        num_plots = 3
         current_plot = 1
         fitness_plot = plt.subplot(num_plots, 1, current_plot)
         # plt.title('Fitness')
@@ -55,6 +61,9 @@ class EvoStatsHandler:
                  stats["generations"], stats["avg_fitness"], "b")
         # for i in range(stats["generations"][-1]/10 + 1):
         #     vline(i * 10)
+        current_plot += 1
+
+        plt.plot(stats["generations"], np.array(stats["evaluation_time"])/60.0, "g") # Time in minutes
         current_plot += 1
 
         positions_plot = plt.subplot(num_plots, 1, current_plot)
