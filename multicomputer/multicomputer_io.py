@@ -89,9 +89,13 @@ class MulticomputerWorker:
                 else:
                     print "Initial job file not found! It seems that the completed job is no longer wanted done, probably because someone else completed it before you. Looking for a new job..."
                     return
-            except googleapiclient.errors.HttpError:
-                print_error()
-                time.sleep(self.no_internet_check_interval)
+            except googleapiclient.errors.HttpError as e:
+                if e.resp["status"] == 404:
+                    print "googleapiclient.errors.HttpError (404 File not found) in upload_result(). Assuming that the result is already computed. Looking for a new job..."
+                    return
+                else:
+                    print_error()
+                    time.sleep(self.no_internet_check_interval)
 
     def init_files_service(self):
         while 1:
