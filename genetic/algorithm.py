@@ -21,6 +21,7 @@ import time
 #random.seed(random_seed)
 
 # TODO: Fix import
+from multicomputer.drive_data_io import get_files_in_folder
 from src.abort_evaluation_exception import AbortEvaluationException
 from temp_data_io import save_temp_data, save_temp_fitness, wait_for_temp_fitness_scores, \
     load_temp_fitness_scores, clear_temp_folder
@@ -139,9 +140,20 @@ class GeneticAlgorithm:
         # stop_working_and_only_wait_for_completion_instead = False
 
         def micro_callback():
-            if mw.is_superfluous():
-                raise AbortEvaluationException()
+            job_files = get_files_in_folder(mw.files, mw.jobs_folder_id)
 
+            missing, results = mw.get_results()
+            if missing is None:
+                raise AbortEvaluationException()
+            else:
+                print "(TOTAL PROGRESS: " + str(int(100 * (1.0 - float(len(missing)) / self.population_size))) + "%)"
+
+            if not mw.still_jobs_left(job_files):
+                print "(Removing progress files from within main micro_callback)"
+                mw.remove_progress_files(missing)
+
+            if mw.is_superfluous(job_files):
+                raise AbortEvaluationException()
         while True:
 
             missing, results = mw.get_results()

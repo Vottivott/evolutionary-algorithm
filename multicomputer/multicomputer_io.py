@@ -205,7 +205,7 @@ class MulticomputerWorker:
             print_error()
             time.sleep(self.no_internet_check_interval)
 
-    def find_next_open_job(self):
+    def find_next_open_job(self, existing_list_of_job_files_to_use=None):
         while 1:
             try:
                 if not self.main_process:
@@ -220,7 +220,11 @@ class MulticomputerWorker:
                 candidates = set()
                 locked = set()
                 file_id = {}
-                for file in get_files_in_folder(self.files, self.jobs_folder_id):
+                if existing_list_of_job_files_to_use is not None:
+                    job_files = existing_list_of_job_files_to_use
+                else:
+                    job_files = get_files_in_folder(self.files, self.jobs_folder_id)
+                for file in job_files:
                     if len(file['name']) >=4 and file['name'][-4:]==".bin":
                         try:
                             n = int(file['name'][:-4])
@@ -252,13 +256,47 @@ class MulticomputerWorker:
                 print_error()
                 time.sleep(self.no_internet_check_interval)
 
-    def is_superfluous(self):
+    def still_jobs_left(self, job_files):
+        try:
+            candidates = set()
+            locked = set()
+            file_id = {}
+            for file in job_files:
+                if len(file['name']) >=4 and file['name'][-4:]==".bin":
+                    try:
+                        n = int(file['name'][:-4])
+                        candidates.add(n)
+                        file_id[n] = file['id']
+                    except ValueError:
+                        print "Unexpected file name in jobs folder (job file)"
+                else:
+                    splt = file['name'].split(" ")
+                    if len(splt) == 2:
+                        try:
+                            if splt[1] == "IN_PROGRESS":
+                                locked.add(int(splt[0]))
+                        except ValueError:
+                            print "Unexpected file name in jobs folder (progress file)"
+            possible_jobs = list(candidates - locked)
+            if len(possible_jobs) > 0:
+                return True
+            else:
+                return False
+        except googleapiclient.errors.HttpError:
+            print_error()
+            return False
+
+    def is_superfluous(self, existing_list_of_job_files_to_use=None):
         # print "STARTING IS_SUPERFLUOUS"
         try:
             own_job_file_exists = False
             own_progress_file = None
             competing_progress_files = []
-            for file in get_files_in_folder(self.files, self.jobs_folder_id):
+            if existing_list_of_job_files_to_use is not None:
+                job_files = existing_list_of_job_files_to_use
+            else:
+                job_files = get_files_in_folder(self.files, self.jobs_folder_id)
+            for file in job_files:
                 if len(file['name']) >=4 and file['name'][-4:]==".bin":
                     if file['id'] == self.current_job_file_id:
                         own_job_file_exists = True
