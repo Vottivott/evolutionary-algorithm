@@ -303,15 +303,16 @@ def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None,
     population_size = 140#80
     mutate_c = 2.0#1.5
     crossover_p = 0.75
+    elitism_n = 2
 
-    send_mail_message(worm_subfoldername, special_message + "\n\n" + "population_size = " + str(population_size) + "\nmutate_c = " + str(mutate_c) + "\ncrossover_p = " + str(crossover_p))
+    send_mail_message(worm_subfoldername, special_message + "\n\n" + "population_size = " + str(population_size) + "\nmutate_c = " + str(mutate_c) + "\ncrossover_p = " + str(crossover_p) + "\nelitism_n = " + str(elitism_n))
 
     ga = GeneticAlgorithm(population_size,#150,
                           fitness_function,
                           TournamentSelection(0.75, 3),
                           SinglePointCrossover(crossover_p),#0.9),
                           CreepMutation(mutate_c / vars, 0.8, 0.005, True), #BinaryMutation(2.0 / m),
-                          Elitism(1),
+                          Elitism(elitism_n),
                           RealNumberDecoding(5.0), #BinaryDecoding(5, vars, var_size),
                           RealNumberInitialization(vars))# BinaryInitialization(m))
 
@@ -598,7 +599,7 @@ print "Enemy team set to team " + str(g)
 
 
 
-stats_handler = EvoStatsHandler(); run_evolution_on_worm(multicomputer=True, main_multicomputer=False)
+stats_handler = EvoStatsHandler(); run_evolution_on_worm(multicomputer=True, main_multicomputer=True)
 # stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=0)
 #stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=2)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
