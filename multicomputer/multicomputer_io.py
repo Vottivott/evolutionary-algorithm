@@ -63,6 +63,9 @@ class MulticomputerWorker:
             except googleapiclient.errors.HttpError:
                 print_error()
                 time.sleep(self.no_internet_check_interval)
+            except googleapiclient.http.socket.error:
+                print_error()
+                time.sleep(5.0)
 
 
     """
@@ -77,6 +80,12 @@ class MulticomputerWorker:
                 else:
                     time.sleep(self.job_check_interval)
             except googleapiclient.errors.HttpError:
+                print_error()
+                print "Updating folder ids"
+                self.jobs_folder_id = get_folder(self.files, self.project_name + " JOBS")
+                self.results_folder_id = get_folder(self.files, self.project_name + " RESULTS")
+                time.sleep(self.no_internet_check_interval)
+            except googleapiclient.http.socket.error:
                 print_error()
                 print "Updating folder ids"
                 self.jobs_folder_id = get_folder(self.files, self.project_name + " JOBS")
@@ -103,6 +112,9 @@ class MulticomputerWorker:
                 else:
                     print_error()
                     time.sleep(self.no_internet_check_interval)
+            except googleapiclient.http.socket.error:
+                print_error()
+                time.sleep(5.0)
 
     def init_files_service(self):
         while 1:
@@ -120,6 +132,9 @@ class MulticomputerWorker:
             except googleapiclient.errors.HttpError:
                 print_error()
                 time.sleep(self.no_internet_check_interval)
+            except googleapiclient.http.socket.error:
+                print_error()
+                time.sleep(5.0)
 
     def upload_job(self, np_column_vec):
         job_float_list = [e[0] for e in np_column_vec.tolist()]
@@ -151,6 +166,9 @@ class MulticomputerWorker:
             except googleapiclient.errors.HttpError:
                 print_error()
                 time.sleep(self.no_internet_check_interval)
+            except googleapiclient.http.socket.error:
+                print_error()
+                time.sleep(5.0)
 
     def read_job(self, job_file_id):
         while 1:
@@ -196,6 +214,9 @@ class MulticomputerWorker:
             except googleapiclient.errors.HttpError:
                 print_error()
                 time.sleep(self.no_internet_check_interval)
+            except googleapiclient.http.socket.error:
+                print_error()
+                time.sleep(5.0)
 
     def remove_progress_files(self, job_indices):
         try:
@@ -204,6 +225,9 @@ class MulticomputerWorker:
         except googleapiclient.errors.HttpError:
             print_error()
             time.sleep(self.no_internet_check_interval)
+        except googleapiclient.http.socket.error:
+            print_error()
+            time.sleep(5.0)
 
     def find_next_open_job(self, existing_list_of_job_files_to_use=None):
         while 1:
@@ -255,6 +279,9 @@ class MulticomputerWorker:
             except googleapiclient.errors.HttpError:
                 print_error()
                 time.sleep(self.no_internet_check_interval)
+            except googleapiclient.http.socket.error:
+                print_error()
+                time.sleep(5.0)
 
     def still_jobs_left(self, job_files):
         try:
@@ -283,6 +310,9 @@ class MulticomputerWorker:
             else:
                 return False
         except googleapiclient.errors.HttpError:
+            print_error()
+            return False
+        except googleapiclient.http.socket.error:
             print_error()
             return False
 
@@ -331,6 +361,8 @@ class MulticomputerWorker:
                         print "The job was already taken by someone else. Progress file removed. Looking for a new job..."
                     except googleapiclient.errors.HttpError:
                         print "HttpError when deleting progress file in is_superfluous"
+                    except googleapiclient.http.socket.error:
+                        print_error()
                     return True
                 else:
                     # print "STARTED BEFORE OF ALL COMPETITORS. CONTINUING EVALUATION... "
@@ -338,6 +370,9 @@ class MulticomputerWorker:
         except googleapiclient.errors.HttpError:
             print_error()
             time.sleep(self.no_internet_check_interval)
+        except googleapiclient.http.socket.error:
+            print_error()
+            time.sleep(5.0)
         return False
 
 if __name__ == "__main__":

@@ -115,6 +115,8 @@ def file_exists_by_id(files, file_id):
         return len(items) > 0
     except googleapiclient.errors.HttpError:
         return False
+    except googleapiclient.http.socket.error:
+        return False
 
 def get_files_in_folder(files, folder_id):
     results = files.list(pageSize=DRIVE_PAGE_SIZE, q="'" + folder_id + "' in parents",
@@ -143,6 +145,9 @@ def clear_folder(files, folder_id, folder_name):
                 print()
                 return get_or_create_folder(files, folder_name)
                 # time.sleep(5.0)
+        except googleapiclient.http.socket.error:
+            print_error()
+            time.sleep(5.0)
 
 def clear_folder_expensive(service, folder_id):
     def delete_file(request_id, response, exception):
