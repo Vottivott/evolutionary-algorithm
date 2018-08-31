@@ -281,6 +281,9 @@ class MulticomputerWorker:
             except googleapiclient.http.socket.error:
                 print_error()
                 time.sleep(5.0)
+            except IOError:
+                print_error()
+                time.sleep(5.0)
 
     def still_jobs_left(self, job_files):
         try:
