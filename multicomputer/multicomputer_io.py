@@ -43,6 +43,7 @@ class MulticomputerWorker:
             self.results_folder_id = get_folder(self.files, project_name + " RESULTS")
         self.job_check_interval = 5.0
         self.no_internet_check_interval = 5.0
+        self.job_checking_interval = 5.0
         self.num_jobs = 0
         self.main_process = main_process
 
@@ -75,22 +76,20 @@ class MulticomputerWorker:
         while True:
             try:
                 next_job = self.find_next_open_job()
+                self.job_checking_interval = 5.0
                 if next_job is not None:
                     return next_job
                 else:
                     time.sleep(self.job_check_interval)
-            except googleapiclient.errors.HttpError:
+            except (googleapiclient.errors.HttpError, googleapiclient.http.socket.error) as e:
                 print_error()
                 print "Updating folder ids"
                 self.jobs_folder_id = get_folder(self.files, self.project_name + " JOBS")
                 self.results_folder_id = get_folder(self.files, self.project_name + " RESULTS")
-                time.sleep(self.no_internet_check_interval)
-            except googleapiclient.http.socket.error:
-                print_error()
-                print "Updating folder ids"
-                self.jobs_folder_id = get_folder(self.files, self.project_name + " JOBS")
-                self.results_folder_id = get_folder(self.files, self.project_name + " RESULTS")
-                time.sleep(self.no_internet_check_interval)
+                time.sleep(self.job_checking_interval)
+                self.job_checking_interval += 5.0
+                if self.job_checking_interval > 30.0:
+                    self.job_checking_interval = 30.0
 
     """
         Uploads the result from the current job
