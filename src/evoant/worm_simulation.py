@@ -97,6 +97,9 @@ class WormSimulation:
             self.worm.football.position[0] - (self.level.left_goal_x + self.level.game_width / 2.0)) / (
                          self.level.game_width / 2.0)
             self.score = 500.0 + 1000.0 - self.timestep
+
+            print "BLUE GOAL!!!!!!"
+
             # self.score = 1000.0 - self.timestep
             return True
         if self.worm.football.position[0] <= self.level.left_goal_x:
@@ -606,7 +609,7 @@ stats_handler = EvoStatsHandler(); run_evolution_on_worm(multicomputer=True, mai
 
 from worm_graphics import WormGraphics
 import pygame
-# graphics = WormGraphics(); graphics.who_to_follow = None
+graphics = WormGraphics(); graphics.who_to_follow = None
 # graphics = None
 while 1:
     watch_best_worm()
