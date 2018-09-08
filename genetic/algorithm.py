@@ -1,3 +1,4 @@
+import googleapiclient
 import numpy as np
 from itertools import count, imap, chain
 
@@ -140,7 +141,14 @@ class GeneticAlgorithm:
         # stop_working_and_only_wait_for_completion_instead = False
 
         def micro_callback():
-            job_files = get_files_in_folder(mw.files, mw.jobs_folder_id)
+            try:
+                job_files = get_files_in_folder(mw.files, mw.jobs_folder_id)
+            except googleapiclient.errors.HttpError:
+                print "HttpError in micro_callback in algorithm"
+                time.sleep(5.0)
+            except googleapiclient.http.socket.error:
+                print "socket.error in micro_callback in algorithm"
+                time.sleep(5.0)
 
             missing, results = mw.get_results()
             if missing is None:
