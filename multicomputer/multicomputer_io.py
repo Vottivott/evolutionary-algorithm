@@ -46,13 +46,13 @@ class MulticomputerWorker:
                 break
             except googleapiclient.errors.HttpError:
                 print "HttpError in micro_callback in multicomputer init"
-                time.sleep(5.0)
+                time.sleep(10.0)
             except googleapiclient.http.socket.error:
                 print "socket.error in micro_callback in multicomputer init"
-                time.sleep(5.0)
-        self.job_check_interval = 5.0
-        self.no_internet_check_interval = 5.0
-        self.job_checking_interval = 5.0
+                time.sleep(10.0)
+        self.job_check_interval = 10.0
+        self.no_internet_check_interval = 10.0
+        self.job_checking_interval = 10.0
         self.num_jobs = 0
         self.main_process = main_process
 
@@ -75,7 +75,7 @@ class MulticomputerWorker:
                 time.sleep(self.no_internet_check_interval)
             except googleapiclient.http.socket.error:
                 print_error()
-                time.sleep(5.0)
+                time.sleep(10.0)
 
 
     """
@@ -85,7 +85,7 @@ class MulticomputerWorker:
         while True:
             try:
                 next_job = self.find_next_open_job()
-                self.job_checking_interval = 5.0
+                self.job_checking_interval = 10.0
                 if next_job is not None:
                     return next_job
                 else:
@@ -122,7 +122,7 @@ class MulticomputerWorker:
                     time.sleep(self.no_internet_check_interval)
             except googleapiclient.http.socket.error:
                 print_error()
-                time.sleep(5.0)
+                time.sleep(10.0)
 
     def init_files_service(self):
         while 1:
@@ -142,7 +142,7 @@ class MulticomputerWorker:
                 time.sleep(self.no_internet_check_interval)
             except googleapiclient.http.socket.error:
                 print_error()
-                time.sleep(5.0)
+                time.sleep(10.0)
 
     def upload_job(self, np_column_vec):
         job_float_list = [e[0] for e in np_column_vec.tolist()]
@@ -160,7 +160,7 @@ class MulticomputerWorker:
                             break
                     except IOError:
                         print "IOError in upload_job. Waiting 5 seconds and trying again..."
-                        time.sleep(5.0)
+                        time.sleep(10.0)
 
                 upload_file(self.files, str(job_n) + ".bin", "tmp/temp.bin", self.jobs_folder_id)
                 try:
@@ -176,7 +176,7 @@ class MulticomputerWorker:
                 time.sleep(self.no_internet_check_interval)
             except googleapiclient.http.socket.error:
                 print_error()
-                time.sleep(5.0)
+                time.sleep(10.0)
 
     def read_job(self, job_file_id):
         while 1:
@@ -186,7 +186,7 @@ class MulticomputerWorker:
             except OSError:
                 print "OSError in read_job:download_file. Waiting 5 seconds and trying download_file again..."
                 print_error()
-                time.sleep(5.0)
+                time.sleep(10.0)
         result = array('d')
         with open(result_path, "rb") as f:
             result.fromstring(f.read())
@@ -224,7 +224,7 @@ class MulticomputerWorker:
                 time.sleep(self.no_internet_check_interval)
             except googleapiclient.http.socket.error:
                 print_error()
-                time.sleep(5.0)
+                time.sleep(10.0)
 
     def remove_progress_files(self, job_indices):
         try:
@@ -235,7 +235,7 @@ class MulticomputerWorker:
             time.sleep(self.no_internet_check_interval)
         except googleapiclient.http.socket.error:
             print_error()
-            time.sleep(5.0)
+            time.sleep(10.0)
 
     def find_next_open_job(self, existing_list_of_job_files_to_use=None):
         while 1:
@@ -289,10 +289,10 @@ class MulticomputerWorker:
                 time.sleep(self.no_internet_check_interval)
             except googleapiclient.http.socket.error:
                 print_error()
-                time.sleep(5.0)
+                time.sleep(10.0)
             except IOError:
                 print_error()
-                time.sleep(5.0)
+                time.sleep(10.0)
 
     def still_jobs_left(self, job_files):
         try:
@@ -383,7 +383,7 @@ class MulticomputerWorker:
             time.sleep(self.no_internet_check_interval)
         except googleapiclient.http.socket.error:
             print_error()
-            time.sleep(5.0)
+            time.sleep(10.0)
         return False
 
 if __name__ == "__main__":

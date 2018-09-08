@@ -137,17 +137,17 @@ def clear_folder(files, folder_id, folder_name):
                 print("googleapiclient.errors.HttpError (403 Limit exceeded) in clear_folder. Waiting 5 seconds and trying again...")
                 print_error()
                 print()
-                time.sleep(5.0)
+                time.sleep(10.0)
             else:
                 print("googleapiclient.errors.HttpError in clear_folder: " + str(e.resp["status"]))
                 print_error()
                 print("Assuming the folder is already cleared.")
                 print()
                 return get_or_create_folder(files, folder_name)
-                # time.sleep(5.0)
+                # time.sleep(10.0)
         except googleapiclient.http.socket.error:
             print_error()
-            time.sleep(5.0)
+            time.sleep(10.0)
 
 def clear_folder_expensive(service, folder_id):
     def delete_file(request_id, response, exception):
