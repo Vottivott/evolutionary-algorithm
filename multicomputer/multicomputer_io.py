@@ -45,10 +45,10 @@ class MulticomputerWorker:
                     self.results_folder_id = get_folder(self.files, project_name + " RESULTS")
                 break
             except googleapiclient.errors.HttpError:
-                print "HttpError in micro_callback in algorithm"
+                print "HttpError in micro_callback in multicomputer init"
                 time.sleep(5.0)
             except googleapiclient.http.socket.error:
-                print "socket.error in micro_callback in algorithm"
+                print "socket.error in micro_callback in multicomputer init"
                 time.sleep(5.0)
         self.job_check_interval = 5.0
         self.no_internet_check_interval = 5.0
