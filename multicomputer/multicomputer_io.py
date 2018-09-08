@@ -35,12 +35,21 @@ class MulticomputerWorker:
     def __init__(self, project_name, main_process=False):
         self.init_files_service()
         self.project_name = project_name
-        if main_process:
-            self.jobs_folder_id = get_or_create_folder(self.files, project_name + " JOBS")
-            self.results_folder_id = get_or_create_folder(self.files, project_name + " RESULTS")
-        else:
-            self.jobs_folder_id = get_folder(self.files, project_name + " JOBS")
-            self.results_folder_id = get_folder(self.files, project_name + " RESULTS")
+        while 1:
+            try:
+                if main_process:
+                    self.jobs_folder_id = get_or_create_folder(self.files, project_name + " JOBS")
+                    self.results_folder_id = get_or_create_folder(self.files, project_name + " RESULTS")
+                else:
+                    self.jobs_folder_id = get_folder(self.files, project_name + " JOBS")
+                    self.results_folder_id = get_folder(self.files, project_name + " RESULTS")
+                break
+            except googleapiclient.errors.HttpError:
+                print "HttpError in micro_callback in algorithm"
+                time.sleep(5.0)
+            except googleapiclient.http.socket.error:
+                print "socket.error in micro_callback in algorithm"
+                time.sleep(5.0)
         self.job_check_interval = 5.0
         self.no_internet_check_interval = 5.0
         self.job_checking_interval = 5.0
