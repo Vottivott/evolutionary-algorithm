@@ -186,6 +186,7 @@ class GeneticAlgorithm:
                         else:
                             print "TOTAL PROGRESS: " + str(
                                 int(100 * (1.0 - float(len(missing)) / self.population_size))) + "%"
+                        mw.remove_progress_files(missing)
                         time.sleep(5.0)
             else:
                 try:
