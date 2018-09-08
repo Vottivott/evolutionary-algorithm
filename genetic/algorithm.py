@@ -146,9 +146,11 @@ class GeneticAlgorithm:
             except googleapiclient.errors.HttpError:
                 print "HttpError in micro_callback in algorithm"
                 time.sleep(5.0)
+                return
             except googleapiclient.http.socket.error:
                 print "socket.error in micro_callback in algorithm"
                 time.sleep(5.0)
+                return
 
             missing, results = mw.get_results()
             if missing is None:
