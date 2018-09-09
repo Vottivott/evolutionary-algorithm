@@ -1,8 +1,13 @@
 import numpy as np
 
-from evo_stats_handler import EvoStatsHandler
+
+graphicsless = True
+
+if not graphicsless:
+    from evo_stats_handler import EvoStatsHandler
+    from pso_stats_handler import PSOStatsHandler
+
 from multicomputer.multicomputer_io import MulticomputerWorker
-from pso_stats_handler import PSOStatsHandler
 
 from mail import send_mail_message_with_image, send_mail_message
 from genetic.decoding.real_number import RealNumberDecoding
@@ -36,7 +41,6 @@ import time
 from worm_neural_net_integration import get_worm_neural_net_integration
 
 import sys
-
 
 
 
@@ -329,9 +333,10 @@ def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None,
             stats = load_stats(worm_subfoldername)
             if stats is not None:# and (
                     # len(stats["best_fitness_all_time"]) < 2 or stats["best_fitness_all_time"][-1] != stats["best_fitness_all_time"][-2]):
-                stats_handler.produce_graph(stats, worm_subfoldername + ".png")
-                msg = str(float(p["best_fitness"])) + "\ngeneration " + str(p["generation"])
-                send_mail_message_with_image(worm_subfoldername, msg, worm_subfoldername + ".png", image_title="Gen: " + str(int(p["generation"])) + "  Score: " + str(int(p["best_fitness"])))
+                if stats_handler is not None:
+                    stats_handler.produce_graph(stats, worm_subfoldername + ".png")
+                    msg = str(float(p["best_fitness"])) + "\ngeneration " + str(p["generation"])
+                    send_mail_message_with_image(worm_subfoldername, msg, worm_subfoldername + ".png", image_title="Gen: " + str(int(p["generation"])) + "  Score: " + str(int(p["best_fitness"])))
         average_fitness = sum(p["fitness_scores"]) / len(p["fitness_scores"])
         print "\n[ " + str(p["generation"]) + ": " + str(
             p["best_fitness"]) + " : " + str(
@@ -402,9 +407,10 @@ def run_pso_on_worm(load_population_name="global", load_population_generation=-1
             save_stats(worm_subfoldername, stats_handler, p)
             stats = load_stats(worm_subfoldername)
             if stats is not None and (len(stats["best_fitness"]) < 2 or stats["best_fitness"][-1] != stats["best_fitness"][-2]):
-                stats_handler.produce_graph(stats, worm_subfoldername + ".png")
-                msg = str(float(p.best_fitness)) + "\ngeneration " + str(p.generation)
-                send_mail_message_with_image(worm_subfoldername, msg, worm_subfoldername + ".png", image_title="Gen: " + str(int(p.generation)) + "  Score: " + str(int(p.best_fitness)))
+                if stats_handler is not None:
+                    stats_handler.produce_graph(stats, worm_subfoldername + ".png")
+                    msg = str(float(p.best_fitness)) + "\ngeneration " + str(p.generation)
+                    send_mail_message_with_image(worm_subfoldername, msg, worm_subfoldername + ".png", image_title="Gen: " + str(int(p.generation)) + "  Score: " + str(int(p.best_fitness)))
 
         average_fitness = sum(p.fitness_scores) / len(p.fitness_scores)
         print "\n[ " + str(p.generation) + ": " + str(
@@ -602,7 +608,7 @@ print "Enemy team set to team " + str(g)
 
 
 
-stats_handler = EvoStatsHandler(); run_evolution_on_worm(multicomputer=True, main_multicomputer=False)
+stats_handler = (not graphicsless) and EvoStatsHandler() or None; run_evolution_on_worm(multicomputer=True, main_multicomputer=False)
 # stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=0)
 #stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=2)
 # stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
