@@ -219,13 +219,23 @@ class WormGraphics:
             self.draw_dynamic_fish(f, worm_simulation)
             # self.draw_one_fish(f, worm_simulation)
 
-    def get_fish_color(self, energy, age):
+    def get_fish_color(self, worm_simulation, energy, age):
         energy = float(np.clip(energy, 0.0, 1.0))
         age = float(np.clip(age, 0.0, 1.0))
+        # if energy < 0.5:
+        #     color = [a * (1.0 - energy / 0.5) + b * energy / 0.5 for a, b in zip(self.starve_color, self.middle_color)]
+        # else:
+        #     color = [a * (1.0 - (energy-0.5) / 0.5) + b * (energy-0.5) / 0.5 for a, b in zip(self.middle_color, self.full_color)]
+        # if age > 0.9:
+        #     color = [a * (1.0 - (age-0.9)/0.1) for a in color]
         if energy < 0.5:
-            color = [a * (1.0 - energy / 0.5) + b * energy / 0.5 for a, b in zip(self.starve_color, self.middle_color)]
+            if worm_simulation.level.enemy == 1:
+                color = [a * (1.0 - energy / 0.5) + b * energy / 0.5 for a, b in zip(self.starve_color, self.middle_color)]
+            else:
+                color = [a * (1.0 - (energy) / 0.5) + b * (energy) / 0.5 for a, b in
+                         zip(self.full_color, self.middle_color)]
         else:
-            color = [a * (1.0 - (energy-0.5) / 0.5) + b * (energy-0.5) / 0.5 for a, b in zip(self.middle_color, self.full_color)]
+            color = [a * (1.0 - (energy-0.5) / 0.5) + b * (energy-0.5) / 0.5 for a, b in zip(self.middle_color, (0, 255, 0))]
         if age > 0.9:
             color = [a * (1.0 - (age-0.9)/0.1) for a in color]
         return color
@@ -242,7 +252,7 @@ class WormGraphics:
 
     def draw_one_fish(self, fish, worm_simulation):
         pos = self.np_to_screen_coord(fish.position, worm_simulation)
-        pygame.draw.circle(self.screen, self.get_fish_color(fish.energy, fish.age),
+        pygame.draw.circle(self.screen, self.get_fish_color(worm_simulation, fish.energy, fish.age),
                            pos, int(fish.radius))
 
     def draw_debug_bounces(self, worm, worm_simulation):
@@ -301,7 +311,7 @@ class WormGraphics:
                 dist = max(0, 5.0*t - 0.7*t**2)# - 1.0*max(0, t-8.0)**2
                 d = normalized(f.animation_foot_dir) * dist
                 self.draw_dynamic_fish_part(f.position + d, worm_simulation, 5.0,
-                                            self.get_fish_color(f.energy, f.age))
+                                            self.get_fish_color(worm_simulation, f.energy, f.age))
 
 
 
@@ -313,8 +323,8 @@ class WormGraphics:
         dir = delta / length
         d = 8.0
 
-        self.draw_dynamic_fish_part(a + dir * d, worm_simulation, 5.0, self.get_fish_color(muscle.b1.energy, muscle.b1.age))
-        self.draw_dynamic_fish_part(b - dir * d, worm_simulation, 5.0, self.get_fish_color(muscle.b2.energy, muscle.b2.age))
+        self.draw_dynamic_fish_part(a + dir * d, worm_simulation, 5.0, self.get_fish_color(worm_simulation, muscle.b1.energy, muscle.b1.age))
+        self.draw_dynamic_fish_part(b - dir * d, worm_simulation, 5.0, self.get_fish_color(worm_simulation, muscle.b2.energy, muscle.b2.age))
 
 
 
@@ -371,7 +381,7 @@ class WormGraphics:
             worm_frac = (i+0.5)/n
             p = a + delta * worm_frac
             extra = extra_base / (0.4 + abs(worm_frac-0.85)*abs(worm_frac-0.85))
-            self.draw_dynamic_fish_part(p, worm_simulation, r + extra, self.get_fish_color(fish.energy, fish.age))
+            self.draw_dynamic_fish_part(p, worm_simulation, r + extra, self.get_fish_color(worm_simulation, fish.energy, fish.age))
 
     def draw_dynamic_fish_part(self, position, worm_simulation, radius, color):
         pos = self.np_to_screen_coord(position, worm_simulation)

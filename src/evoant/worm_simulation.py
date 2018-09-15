@@ -88,7 +88,8 @@ class WormSimulation:
         self.timestep = 0
         self.time_since_improvement = 0
         self.left_neural_net_integration = None
-        self.right_neural_net_integration = None
+        self.right1_neural_net_integration = None
+        self.right2_neural_net_integration = None
         self.water_modulator = WaterModulator()
 
     def termination_condition(self):
@@ -129,8 +130,10 @@ class WormSimulation:
 
             if self.left_neural_net_integration is not None:
                 self.left_neural_net_integration.run_network(self)
-                if self.right_neural_net_integration is not None:
-                    self.right_neural_net_integration.run_network(self)
+                if self.level.enemy == 1 and self.right1_neural_net_integration is not None:
+                    self.right1_neural_net_integration.run_network(self)
+                if self.level.enemy == 2 and self.right2_neural_net_integration is not None:
+                    self.right2_neural_net_integration.run_network(self)
             elif self.graphics is not None and self.graphics.user_control:
                 if self.graphics.keys is not None:
                     acc = 1.0
@@ -194,6 +197,12 @@ def get_corridor_fish_start_pos(lvl, i):
 
 
 def run_evaluation(level, fitness_calculator, use_graphics=False):
+
+    if level.enemy == 1 and right1_neural_net_integration is not None:
+        right1_neural_net_integration.set_weights_and_possibly_initial_h(enemy1_variables)
+    if level.enemy == 2 and right2_neural_net_integration is not None:
+        right2_neural_net_integration.set_weights_and_possibly_initial_h(enemy2_variables)
+
     s.level = level
     s.left_neural_net_integration = left_neural_net_integration
     if s.left_neural_net_integration is not None:
@@ -216,8 +225,6 @@ def run_evaluations(levels, fitness_calculator, use_graphics=False, micro_callba
 
 def run_worm_evaluation(variables, use_graphics=False, micro_callback=None):
     left_neural_net_integration.set_weights_and_possibly_initial_h(variables)
-    if right_neural_net_integration is not None:
-        right_neural_net_integration.set_weights_and_possibly_initial_h(enemy_variables)
     def fitness_calculator(sim):
         return sim.score
     return run_evaluations(levels, fitness_calculator, use_graphics, micro_callback)
@@ -231,6 +238,10 @@ def generate_levels(close_end=True):
         # level = generate_bar_level_with_stones(level_length, close_end)
         # level = generate_planar_bar_level(level_length, close_end)
         level = get_soccer_level(1200, num_segments+1, True)
+        if i % 2 == 0:
+            level.enemy = 1
+        else:
+            level.enemy = 2
         result.append(level)
     return result
 
@@ -310,7 +321,7 @@ def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None,
     population_size = 140#80
     mutate_c = 2.0#1.5
     crossover_p = 0.75
-    elitism_n = 2
+    elitism_n = 1#2
 
     send_mail_message(worm_subfoldername, special_message + "\n\n" + "population_size = " + str(population_size) + "\nmutate_c = " + str(mutate_c) + "\ncrossover_p = " + str(crossover_p) + "\nelitism_n = " + str(elitism_n))
 
@@ -525,8 +536,6 @@ def fitness_process_mw(fitness_function):
         if mw.is_superfluous():
             raise AbortEvaluationException()
 
-    exit(0)
-
     while True:
         t0 = time.time()
         print "Waiting for job..."
@@ -565,8 +574,12 @@ left_neural_net_integration = get_worm_neural_net_integration(s, version=2) # Se
 s.left_neural_net_integration = left_neural_net_integration
 
 # right_neural_net_integration = None
-right_neural_net_integration = get_worm_neural_net_integration(s, mirrored = True, version=1)
-s.right_neural_net_integration = right_neural_net_integration
+
+right1_neural_net_integration = get_worm_neural_net_integration(s, mirrored = True, version=1)
+s.right1_neural_net_integration = right1_neural_net_integration
+
+right2_neural_net_integration = get_worm_neural_net_integration(s, mirrored = True, version=2)
+s.right2_neural_net_integration = right2_neural_net_integration
 
 
 # import sys
@@ -585,22 +598,26 @@ s.right_neural_net_integration = right_neural_net_integration
 # worm_subfoldername = "EVO80 Large Doorway"
 # worm_subfoldername = "PSO35 Football from EVO80 41"
 # worm_subfoldername = "EVO80 Football 1" # Against static enemy, with random ball velocity ; 42 num_levels=5, against 41
-worm_subfoldername = "EVO140 Football Second Neural Net" # Against team 188 from "EVO80 Football 1", mutate_c=2, num_levels=15
+worm_subfoldername = "EVO140 Football Third Neural Net" # Against team 188 from "EVO80 Football 1", mutate_c=2, num_levels=15
 # 14: changed scoring system
 
 print worm_subfoldername
 
 special_message = ""
 
-num_levels = 15#15#5 #REMEMBER TO SET CORRECTLY   #10#30  #14#7#5#1#4#30#15#4#30#15
+num_levels = 18#15#15#5 #REMEMBER TO SET CORRECTLY   #10#30  #14#7#5#1#4#30#15#4#30#15
 
 
 
-enemy_subfoldername = "EVO80 Football 1 pruned enemy"
-# g = ((get_latest_generation_number(enemy_subfoldername)) / 10)*10
-g = 188#174 # som hade 720
-enemy_variables = load_population_data(enemy_subfoldername, g)["best_variables"]
-print "Enemy team set to team " + str(g)
+enemy1_subfoldername = "EVO80 Football 1 pruned enemy"
+g1 = 188#174 # som hade 720
+enemy1_variables = load_population_data(enemy1_subfoldername, g1)["best_variables"]
+print "Enemy 1 team set to team " + str(g1)
+
+enemy2_subfoldername = "EVO140 Football Second Neural Net pruned enemy"
+g2 = 512
+enemy2_variables = load_population_data(enemy2_subfoldername, g2)["best_variables"]
+print "Enemy 2 team set to team " + str(g2)
 
 # from evomath import *
 # for i in range(44, 58+1):

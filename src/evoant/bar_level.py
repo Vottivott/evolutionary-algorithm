@@ -262,6 +262,8 @@ class BarLevel:
         self.ground = ground
         self.bar_width = bar_width
 
+        self.enemy = None
+
 
     def get_ceiling(self, x):
         index = x/self.bar_width
