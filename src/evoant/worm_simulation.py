@@ -525,6 +525,8 @@ def fitness_process_mw(fitness_function):
         if mw.is_superfluous():
             raise AbortEvaluationException()
 
+    exit(0)
+
     while True:
         t0 = time.time()
         print "Waiting for job..."
