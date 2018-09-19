@@ -551,7 +551,7 @@ def fitness_process_mw(fitness_function, drivevariant=None):
 
 
 def main(drivevariant):
-        global left_neural_net_integration; global right_neural_net_integration; global levels; global special_message; global num_levels; global enemy1_variables; global enemy2_variables; global stats_handler; global graphics; global s; global left_neural_net_integration; global right_neural_net_integration; global new_level;
+        global left_neural_net_integration; global right_neural_net_integration; global levels; global special_message; global num_levels; global enemy1_variables; global enemy2_variables; global stats_handler; global graphics; global s; global left_neural_net_integration; global right_neural_net_integration; global new_level; global left1_neural_net_integration; global right1_neural_net_integration; global left2_neural_net_integration; global right2_neural_net_integration;
 	levels = []
 
 
