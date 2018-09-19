@@ -195,7 +195,7 @@ class GeneticAlgorithm:
                     pass
 
 
-    def run(self, num_generations=None, generation_callback=None, population_data=None, multiprocess_num_processes=1, multiprocess_index=None, subfolder_name=None, multicomputer=False):
+    def run(self, num_generations=None, generation_callback=None, population_data=None, multiprocess_num_processes=1, multiprocess_index=None, subfolder_name=None, multicomputer=False, drivevariant=None):
         """
         :param num_generations: the number of generations, or None to continue indefinitely
         :param generation_callback: an optional function generation_callback(population_data) returning a boolean True to continue or False to stop.
@@ -215,7 +215,7 @@ class GeneticAlgorithm:
         mw = None
         if multiprocess_num_processes > 1:
             if multicomputer:
-                mw = MulticomputerWorker(subfolder_name, True)
+                mw = MulticomputerWorker(subfolder_name, True, drivevariant)
                 mw.clear_folders_and_jobs()
             else:
                 while 1:

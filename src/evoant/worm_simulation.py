@@ -290,13 +290,13 @@ class WormFitnessFunction:
 
 
 
-def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None, multicomputer=False, main_multicomputer=False):
+def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None, multicomputer=False, main_multicomputer=False, drivevariant=None):
 
     fitness_function = WormFitnessFunction()
 
     if multicomputer:
         if not main_multicomputer:
-            fitness_process_mw(fitness_function)
+            fitness_process_mw(fitness_function, drivevariant)
             return
         else:
             multiprocess_index = 0
@@ -378,7 +378,7 @@ def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None,
                 worm_callback(worm_population_data, True)
                 # watch_run(worm_population_data)
         else:
-            ga.run(None, worm_callback, population_data=worm_population_data, multiprocess_num_processes=multiprocess_num_processes, multiprocess_index=multiprocess_index, subfolder_name=worm_subfoldername, multicomputer=multicomputer)
+            ga.run(None, worm_callback, population_data=worm_population_data, multiprocess_num_processes=multiprocess_num_processes, multiprocess_index=multiprocess_index, subfolder_name=worm_subfoldername, multicomputer=multicomputer, drivevariant=drivevariant)
 
 def run_pso_on_worm(load_population_name="global", load_population_generation=-1):
     if load_population_name == "global":
@@ -524,13 +524,13 @@ def fitness_process(multiprocess_num_processes, multiprocess_index, fitness_func
 
 
 
-def fitness_process_mw(fitness_function):
+def fitness_process_mw(fitness_function, drivevariant=None):
     def extract_function(function_or_object_with_function, function_name):
         x = function_or_object_with_function
         return getattr(x, function_name, x)
     evaluate = extract_function(fitness_function, "evaluate")
 
-    mw = MulticomputerWorker(worm_subfoldername, False)
+    mw = MulticomputerWorker(worm_subfoldername, False, drivevariant)
 
     def micro_callback():
         if mw.is_superfluous():
@@ -550,113 +550,120 @@ def fitness_process_mw(fitness_function):
             pass
 
 
+def main(drivevariant):
+
+	levels = []
 
 
-levels = []
+	level_length = 10000
 
-
-level_length = 10000
-
-new_level = get_soccer_level(1200, num_segments+1, True)
-# new_level = get_soccer_level(1200, num_segments+1, True)
-
-
-
-# new_level = generate_bar_level_with_stones(5000)
-# new_level = generate_planar_bar_level(5000)
-# s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant))
-s = WormSimulation(new_level,
-                   Worm([get_corridor_fish_start_pos(new_level, i) for i in range(num_segments + 1)], ball_radius,
-                        segment_size, num_segments, ball_ball_restitution, ball_ground_restitution,
-                        ball_ground_friction, ball_mass, spring_constant, new_level.football_initial_position, new_level.football_initial_y_velocity))
-
-left_neural_net_integration = get_worm_neural_net_integration(s, version=2) # Second neural net version
-s.left_neural_net_integration = left_neural_net_integration
-
-# right_neural_net_integration = None
-
-right1_neural_net_integration = get_worm_neural_net_integration(s, mirrored = True, version=1)
-s.right1_neural_net_integration = right1_neural_net_integration
-
-right2_neural_net_integration = get_worm_neural_net_integration(s, mirrored = True, version=2)
-s.right2_neural_net_integration = right2_neural_net_integration
-
-
-# import sys
-# old_stdout = sys.stdout
-# log_file = open("evolution.txt","w")
-# sys.stdout = log_file
-
-
-# worm_subfoldername = "worm_b"
-# worm_subfoldername = "worm_2segs_planar"
-# worm_subfoldername = "PSO_worm_3segs_planar"
-# worm_subfoldername = "PSO_worm_6segs_planar"
-# worm_subfoldername = "PSO_worm_1seg"
-# worm_subfoldername = "EVO150 Doorway"
-# worm_subfoldername = "PSO35 Large Doorway"
-# worm_subfoldername = "EVO80 Large Doorway"
-# worm_subfoldername = "PSO35 Football from EVO80 41"
-# worm_subfoldername = "EVO80 Football 1" # Against static enemy, with random ball velocity ; 42 num_levels=5, against 41
-worm_subfoldername = "EVO140 Football Third Neural Net" # Against team 188 from "EVO80 Football 1", mutate_c=2, num_levels=15
-# 14: changed scoring system
-
-print worm_subfoldername
-
-special_message = ""
-
-num_levels = 18#15#15#5 #REMEMBER TO SET CORRECTLY   #10#30  #14#7#5#1#4#30#15#4#30#15
+	new_level = get_soccer_level(1200, num_segments+1, True)
+	# new_level = get_soccer_level(1200, num_segments+1, True)
 
 
 
-enemy1_subfoldername = "EVO80 Football 1 pruned enemy"
-g1 = 188#174 # som hade 720
-enemy1_variables = load_population_data(enemy1_subfoldername, g1)["best_variables"]
-print "Enemy 1 team set to team " + str(g1)
+	# new_level = generate_bar_level_with_stones(5000)
+	# new_level = generate_planar_bar_level(5000)
+	# s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant))
+	s = WormSimulation(new_level,
+		           Worm([get_corridor_fish_start_pos(new_level, i) for i in range(num_segments + 1)], ball_radius,
+		                segment_size, num_segments, ball_ball_restitution, ball_ground_restitution,
+		                ball_ground_friction, ball_mass, spring_constant, new_level.football_initial_position, new_level.football_initial_y_velocity))
 
-enemy2_subfoldername = "EVO140 Football Second Neural Net pruned enemy"
-g2 = 512
-enemy2_variables = load_population_data(enemy2_subfoldername, g2)["best_variables"]
-print "Enemy 2 team set to team " + str(g2)
+	left_neural_net_integration = get_worm_neural_net_integration(s, version=2) # Second neural net version
+	s.left_neural_net_integration = left_neural_net_integration
 
-# from evomath import *
-# for i in range(44, 58+1):
-#     p = load_population_data(worm_subfoldername, i)
-#     print p.generation, p.best_fitness, p.fitness_scores[:3], len(p.fitness_scores)
-# exit()
+	# right_neural_net_integration = None
 
+	right1_neural_net_integration = get_worm_neural_net_integration(s, mirrored = True, version=1)
+	s.right1_neural_net_integration = right1_neural_net_integration
 
-
-stats_handler = (not graphicsless) and EvoStatsHandler() or None; run_evolution_on_worm(multicomputer=True, main_multicomputer=False)
-# stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=0)
-#stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=2)
-# stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
-
-from worm_graphics import WormGraphics
-import pygame
-graphics = WormGraphics(); graphics.who_to_follow = None
-# graphics = None
-while 1:
-    watch_best_worm()
-# exit(0)
+	right2_neural_net_integration = get_worm_neural_net_integration(s, mirrored = True, version=2)
+	s.right2_neural_net_integration = right2_neural_net_integration
 
 
+	# import sys
+	# old_stdout = sys.stdout
+	# log_file = open("evolution.txt","w")
+	# sys.stdout = log_file
 
-while 1:
+
+	# worm_subfoldername = "worm_b"
+	# worm_subfoldername = "worm_2segs_planar"
+	# worm_subfoldername = "PSO_worm_3segs_planar"
+	# worm_subfoldername = "PSO_worm_6segs_planar"
+	# worm_subfoldername = "PSO_worm_1seg"
+	# worm_subfoldername = "EVO150 Doorway"
+	# worm_subfoldername = "PSO35 Large Doorway"
+	# worm_subfoldername = "EVO80 Large Doorway"
+	# worm_subfoldername = "PSO35 Football from EVO80 41"
+	# worm_subfoldername = "EVO80 Football 1" # Against static enemy, with random ball velocity ; 42 num_levels=5, against 41
+	#worm_subfoldername = "EVO140 Football Third Neural Net" # Against team 188 from "EVO80 Football 1", mutate_c=2, num_levels=15
+	# 14: changed scoring system
+        global worm_subfoldername
+	worm_subfoldername = "NO DRIVEVARIANT SPECIFIED"
+	if drivevariant == "2":
+	    worm_subfoldername = "EVO140 Football Third Neural Net"
+	elif drivevariant == "3":
+	    worm_subfoldername = "EVO140 Football Third Neural Net 2nd Instance"
+	print worm_subfoldername
+
+	special_message = ""
+
+	num_levels = 18#15#15#5 #REMEMBER TO SET CORRECTLY   #10#30  #14#7#5#1#4#30#15#4#30#15
+
+	print "drivevariant = " + str(drivevariant)
 
 
 
-    # new_level = generate_bar_level_with_stones(5000)
-    # new_level = generate_planar_bar_level(5000)
-    # np.random.seed(0)
-    new_level = get_soccer_level(1200, num_segments+1, True)
-    graphics.who_to_follow = None
+	enemy1_subfoldername = "EVO80 Football 1 pruned enemy"
+	g1 = 188#174 # som hade 720
+	enemy1_variables = load_population_data(enemy1_subfoldername, g1)["best_variables"]
+	print "Enemy 1 team set to team " + str(g1)
 
-    s = WormSimulation(new_level, Worm([get_corridor_fish_start_pos(new_level, i) for i in range(num_segments+1)], ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant, new_level.football_initial_position, new_level.football_initial_y_velocity))
-    # s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant))
+	enemy2_subfoldername = "EVO140 Football Second Neural Net pruned enemy"
+	g2 = 512
+	enemy2_variables = load_population_data(enemy2_subfoldername, g2)["best_variables"]
+	print "Enemy 2 team set to team " + str(g2)
 
-    # worm_neural_net_integration = get_worm_neural_net_integration(s)
+	# from evomath import *
+	# for i in range(44, 58+1):
+	#     p = load_population_data(worm_subfoldername, i)
+	#     print p.generation, p.best_fitness, p.fitness_scores[:3], len(p.fitness_scores)
+	# exit()
 
-    graphics.user_control = True
 
-    s.run(graphics)
+
+	stats_handler = (not graphicsless) and EvoStatsHandler() or None; run_evolution_on_worm(multicomputer=True, main_multicomputer=False, drivevariant=drivevariant)
+	# stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=0)
+	#stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=2)
+	# stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
+
+	from worm_graphics import WormGraphics
+	import pygame
+	graphics = WormGraphics(); graphics.who_to_follow = None
+	# graphics = None
+	while 1:
+	    watch_best_worm()
+	# exit(0)
+
+
+
+	while 1:
+
+
+
+	    # new_level = generate_bar_level_with_stones(5000)
+	    # new_level = generate_planar_bar_level(5000)
+	    # np.random.seed(0)
+	    new_level = get_soccer_level(1200, num_segments+1, True)
+	    graphics.who_to_follow = None
+
+	    s = WormSimulation(new_level, Worm([get_corridor_fish_start_pos(new_level, i) for i in range(num_segments+1)], ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant, new_level.football_initial_position, new_level.football_initial_y_velocity))
+	    # s = WormSimulation(new_level, Worm(np.array([[start_x], [new_level.y_center(start_x)]]), ball_radius, segment_size, num_segments, ball_ball_restitution, ball_ground_restitution, ball_ground_friction, ball_mass, spring_constant))
+
+	    # worm_neural_net_integration = get_worm_neural_net_integration(s)
+
+	    graphics.user_control = True
+
+	    s.run(graphics)

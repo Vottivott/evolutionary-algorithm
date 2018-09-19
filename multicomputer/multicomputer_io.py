@@ -32,7 +32,11 @@ def to_datetime(drive_api_date_string):
 
 
 class MulticomputerWorker:
-    def __init__(self, project_name, main_process=False):
+    def __init__(self, project_name, main_process=False, drivevariant=None):
+        if drivevariant is None:
+            self.drivevariant = ""
+        else:
+            self.drivevariant = drivevariant
         self.init_files_service()
         self.project_name = project_name
         while 1:
@@ -55,6 +59,7 @@ class MulticomputerWorker:
         self.job_checking_interval = 10.0
         self.num_jobs = 0
         self.main_process = main_process
+        
 
         # State
         self.current_job_n = None
@@ -128,10 +133,10 @@ class MulticomputerWorker:
         while 1:
             try:
                 SCOPES = 'https://www.googleapis.com/auth/drive'
-                store = file.Storage('token.json')
+                store = file.Storage('token' + self.drivevariant + '.json')
                 creds = store.get()
                 if not creds or creds.invalid:
-                    flow = client.flow_from_clientsecrets('credentials.json', SCOPES)
+                    flow = client.flow_from_clientsecrets('credentials' + self.drivevariant + '.json', SCOPES)
                     creds = tools.run_flow(flow, store)
                 service = build('drive', 'v3', http=creds.authorize(Http()))
                 self.service = service
