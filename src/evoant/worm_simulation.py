@@ -551,7 +551,7 @@ def fitness_process_mw(fitness_function, drivevariant=None):
 
 
 def main(drivevariant):
-
+        global left_neural_net_integration; global right_neural_net_integration; global levels; global special_message;
 	levels = []
 
 
@@ -634,7 +634,7 @@ def main(drivevariant):
 
 
 
-	stats_handler = (not graphicsless) and EvoStatsHandler() or None; run_evolution_on_worm(multicomputer=True, main_multicomputer=False, drivevariant=drivevariant)
+	stats_handler = (not graphicsless) and EvoStatsHandler() or None; run_evolution_on_worm(multicomputer=True, main_multicomputer=True, drivevariant=drivevariant)
 	# stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=0)
 	#stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=2)
 	# stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
