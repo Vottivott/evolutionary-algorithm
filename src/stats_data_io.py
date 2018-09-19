@@ -20,6 +20,8 @@ def save_stats(subfilename, stats_handler, population_data):
     try:
         with open(directory_path + subfilename + ".json") as file:
             old_stats = json.load(file)
+    except ValueError:
+        old_stats = None
     except IOError:
         old_stats = None
     with open(directory_path + subfilename + ".json", 'w') as out:
