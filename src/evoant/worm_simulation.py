@@ -314,7 +314,7 @@ def run_evolution_on_worm(multiprocess_num_processes=1, multiprocess_index=None,
     # var_size = 30
     # m = vars * var_size
 
-    population_size = 140#80
+    population_size = 1000#140#80
     mutate_c = 2.0#1.5
     crossover_p = 0.75
     elitism_n = 1#2
