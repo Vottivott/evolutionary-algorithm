@@ -1,11 +1,7 @@
 import numpy as np
 
 
-graphicsless = True
 
-if not graphicsless:
-    from evo_stats_handler import EvoStatsHandler
-    from pso_stats_handler import PSOStatsHandler
 
 from multicomputer.multicomputer_io import MulticomputerWorker
 
@@ -550,8 +546,15 @@ def fitness_process_mw(fitness_function, drivevariant=None):
             pass
 
 
-def main(drivevariant):
+def main(drivevariant, maincomp):
         global left_neural_net_integration; global right_neural_net_integration; global levels; global special_message; global num_levels; global enemy1_variables; global enemy2_variables; global stats_handler; global graphics; global s; global left_neural_net_integration; global right_neural_net_integration; global new_level; global left1_neural_net_integration; global right1_neural_net_integration; global left2_neural_net_integration; global right2_neural_net_integration;
+
+        graphicsless = not maincomp
+
+        if not graphicsless:
+            from evo_stats_handler import EvoStatsHandler
+            from pso_stats_handler import PSOStatsHandler
+
 	levels = []
 
 
@@ -605,7 +608,7 @@ def main(drivevariant):
 	if drivevariant == "2":
 	    worm_subfoldername = "EVO140 Football Third Neural Net"
 	elif drivevariant == "3":
-	    worm_subfoldername = "EVO140 Football Third Neural Net 2nd Instance"
+	    worm_subfoldername = "EVO1000 Football Third Neural Net"
 	print worm_subfoldername
 
 	special_message = ""
@@ -634,7 +637,7 @@ def main(drivevariant):
 
 
 
-	stats_handler = (not graphicsless) and EvoStatsHandler() or None; run_evolution_on_worm(multicomputer=True, main_multicomputer=False, drivevariant=drivevariant)
+	stats_handler = (not graphicsless) and EvoStatsHandler() or None; run_evolution_on_worm(multicomputer=True, main_multicomputer=maincomp, drivevariant=drivevariant)
 	# stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=7, multiprocess_index=0)
 	#stats_handler = EvoStatsHandler(); run_evolution_on_worm(multiprocess_num_processes=3, multiprocess_index=2)
 	# stats_handler = PSOStatsHandler(); run_pso_on_worm()#"EVO80 Football 1", 41)
